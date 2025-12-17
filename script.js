@@ -1,95 +1,112 @@
-const allUniversities = {
-  "بغداد": [
-    {name:"جامعة بغداد", rating:0},
-    {name:"الجامعة المستنصرية", rating:0},
-    {name:"الجامعة التقنية", rating:0},
-    {name:"الجامعة العراقية", rating:0},
-    {name:"جامعة تكنولوجيا المعلومات والاتصالات", rating:0},
-    {name:"جامعة النهرين", rating:0},
-    {name:"الجامعة التقنية الوسطى", rating:0},
-    {name:"جامعة البيان", rating:0},
-    {name:"جامعة التراث", rating:0},
-    {name:"كلية المنصور الجامعة", rating:0},
-    {name:"كلية الرافدين الجامعة", rating:0},
-    {name:"كلية المأمون الجامعة", rating:0},
-    {name:"كلية بغداد للعلوم الاقتصادية الجامعة", rating:0},
-    {name:"كلية الأسراء الجامعة", rating:0},
-    {name:"الجامعة الأمريكية في العراق", rating:0},
-    {name:"كلية دجلة الجامعة", rating:0},
-    {name:"كلية الأمَل الجامعة", rating:0},
-    {name:"كلية الرشيد الجامعة", rating:0},
-    {name:"كلية الكتب الجامعة", rating:0}
-  ],
-  "البصرة":[
-    {name:"جامعة البصرة", rating:0},
-    {name:"كلية شط العرب الجامعة", rating:0},
-    {name:"كلية الكونوز الجامعة", rating:0}
-  ],
-  "النجف":[
-    {name:"جامعة الكوفة", rating:0},
-    {name:"الجامعة الإسلامية – النجف", rating:0},
-    {name:"جامعة الكفيل", rating:0},
-    {name:"كلية الشيخ الطوسي الجامعة", rating:0}
-  ],
-  "كربلاء":[
-    {name:"جامعة أهل البيت", rating:0},
-    {name:"كلية الصفوة الجامعة", rating:0},
-    {name:"كلية الحسين الجامعة", rating:0}
-  ],
-  "نينوى":[
-    {name:"جامعة الموصل", rating:0},
-    {name:"جامعة الحدباء – كلية الحدباء الجامعة", rating:0}
-  ],
-  "صلاح الدين":[
-    {name:"جامعة تكريت", rating:0},
-    {name:"جامعة سوران", rating:0}
-  ],
-  "اربيل":[
-    {name:"جامعة صلاح الدين – أربيل", rating:0},
-    {name:"جامعة السليمانية", rating:0},
-    {name:"جامعة دهوك", rating:0},
-    {name:"جامعة هولير للطب", rating:0},
-    {name:"جامعة كوية", rating:0},
-    {name:"جامعة زاخو", rating:0},
-    {name:"جامعة رابارين", rating:0},
-    {name:"جامعة حلبجة", rating:0},
-    {name:"جامعة غربيان", rating:0},
-    {name:"جامعة اربيل التقنية", rating:0},
-    {name:"جامعة السليمانية التقنية", rating:0},
-    {name:"جامعة دهوك التقنية", rating:0},
-    {name:"الجامعة الأمريكية في كردستان", rating:0},
-    {name:"الجامعة اللبنانية الفرنسية", rating:0},
-    {name:"جامعة المعرفة", rating:0},
-    {name:"جامعة جيهان – أربيل", rating:0}
-  ],
-  "ذي قار":[
-    {name:"جامعة ذي قار", rating:0}
-  ],
-  "القادسية":[
-    {name:"جامعة القادسية", rating:0}
-  ],
-  "ميسان":[
-    {name:"جامعة ميسان", rating:0}
-  ],
-  "ديالى":[
-    {name:"جامعة ديالى", rating:0},
-    {name:"كلية اليرموك الجامعة", rating:0}
-  ],
-  "الأنبار":[
-    {name:"جامعة الأنبار", rating:0},
-    {name:"كلية المعارف الجامعة", rating:0}
-  ],
-  "بابل":[
-    {name:"جامعة بابل", rating:0},
-    {name:"الجامعة الإسلامية – بابل", rating:0},
-    {name:"كلية العشتار الجامعة", rating:0},
-    {name:"جامعة القاسم الخضراء", rating:0},
-    {name:"كلية المستقبل الجامعة", rating:0}
-  ],
-  "المثنى":[
-    {name:"جامعة المثنى", rating:0}
-  ],
-  "واسط":[
-    {name:"جامعة واسط", rating:0}
-  ]
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+  authDomain: "a3len-3ad54.firebaseapp.com",
+  databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+  projectId: "a3len-3ad54",
+  storageBucket: "a3len-3ad54.firebasestorage.app",
+  messagingSenderId: "767338034080",
+  appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+firebase.auth().signInAnonymously();
+
+let userUID = null;
+firebase.auth().onAuthStateChanged(u=>{
+    if(u) userUID = u.uid;
+});
+
+// كل الجامعات لكل المحافظات (18 محافظة)
+const allUniversities = {
+  "بغداد":["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
+  "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
+  "البصرة":["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
+  "الموصل":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
+  "كربلاء":["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
+  "النجف":["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
+  "واسط":["جامعة واسط"],
+  "ذي قار":["جامعة ذي قار"],
+  "المثنى":["جامعة المثنى"],
+  "القادسية":["جامعة القادسية"],
+  "ميسان":["جامعة ميسان"],
+  "بابل":["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
+  "الديوانية":["جامعة القادسية"],
+  "دهوك":["جامعة دهوك"],
+  "السليمانية":["جامعة السليمانية"],
+  "ديالى":["جامعة ديالى","كلية اليرموك الجامعة"],
+  "الأنبار":["جامعة الأنبار","كلية المعارف الجامعة"],
+  "صلاح الدين":["جامعة تكريت","جامعة سوران"],
+  "نينوى":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"]
+};
+
+// عناصر الصفحة
+const provinceEl = document.getElementById("province");
+const listEl = document.getElementById("list");
+const searchEl = document.getElementById("search");
+
+// توليد المحافظات
+Object.keys(allUniversities).forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value=p; opt.textContent=p;
+    if(p==="بغداد") opt.selected=true;
+    provinceEl.appendChild(opt);
+});
+
+// عرض الجامعات
+function render(){
+    listEl.innerHTML="";
+    const prov = provinceEl.value;
+    const filter = searchEl.value || "";
+
+    allUniversities[prov].filter(u=>u.includes(filter)).forEach(name=>{
+        const li=document.createElement("li");
+        li.textContent=name;
+
+        const rating=document.createElement("span");
+        rating.className="rating";
+        rating.textContent="0 ⭐";
+        li.appendChild(rating);
+
+        for(let i=1;i<=5;i++){
+            const b=document.createElement("button");
+            b.textContent="★";
+            b.className="star-btn";
+            b.onclick=()=>rate(name,i);
+            li.appendChild(b);
+        }
+
+        listEl.appendChild(li);
+        loadRating(name,rating);
+    });
+}
+
+// تحميل التقييم من Firebase
+function loadRating(name,el){
+    db.ref("ratings/"+name.replace(/\./g,'')).on("value",s=>{
+        const d=s.val();
+        if(d) el.textContent=d.avg.toFixed(1)+" ⭐ ("+d.count+")";
+    });
+}
+
+// إضافة تقييم
+function rate(name,score){
+    if(!userUID) return;
+    const ref = db.ref("ratings/"+name.replace(/\./g,''));
+    ref.transaction(c=>{
+        if(!c) return {sum:score,count:1,users:{[userUID]:score},avg:score};
+        if(c.users && c.users[userUID]){
+            c.sum = c.sum - c.users[userUID] + score;
+        } else { c.sum += score; c.count++; }
+        c.users[userUID]=score;
+        c.avg=c.sum/c.count;
+        return c;
+    });
+}
+
+// أحداث الصفحة
+provinceEl.onchange = render;
+searchEl.onkeyup = render;
+
+render();
