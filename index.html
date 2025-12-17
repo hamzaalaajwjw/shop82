@@ -82,31 +82,98 @@ li:hover {
 
     <div class="province-container">
         <label for="province">اختر المحافظة:</label>
-        <select id="province" onchange="changeProvince()">
-            <option value="بغداد" selected>بغداد</option>
-            <option value="اربيل">اربيل</option>
-            <option value="البصرة">البصرة</option>
-            <option value="الموصل">الموصل</option>
-            <option value="كربلاء">كربلاء</option>
-            <option value="النجف">النجف</option>
-            <option value="واسط">واسط</option>
-            <option value="ذي قار">ذي قار</option>
-            <option value="المثنى">المثنى</option>
-            <option value="صلاح الدين">صلاح الدين</option>
-            <option value="دهوك">دهوك</option>
-            <option value="السليمانية">السليمانية</option>
-            <option value="القادسية">القادسية</option>
-            <option value="نينوى">نينوى</option>
-            <option value="ميسان">ميسان</option>
-            <option value="بابل">بابل</option>
-            <option value="الديوانية">الديوانية</option>
-        </select>
+        <select id="province" onchange="changeProvince()"></select>
     </div>
 
     <input type="text" id="search" placeholder="ابحث عن جامعة..." onkeyup="filterList()">
 
     <button onclick="sortByRating()">فرز حسب التقييم الأعلى</button>
 
+    <ul id="list"></ul>
+</div>
+
+<script>
+const allUniversities = {
+  "بغداد": ["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
+  "البصرة":["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
+  "النجف":["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
+  "كربلاء":["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
+  "نينوى":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
+  "صلاح الدين":["جامعة تكريت","جامعة سوران"],
+  "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
+  "ذي قار":["جامعة ذي قار"],
+  "القادسية":["جامعة القادسية"],
+  "ميسان":["جامعة ميسان"],
+  "ديالى":["جامعة ديالى","كلية اليرموك الجامعة"],
+  "الأنبار":["جامعة الأنبار","كلية المعارف الجامعة"],
+  "بابل":["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
+  "المثنى":["جامعة المثنى"],
+  "واسط":["جامعة واسط"],
+  "الديوانية":["جامعة القادسية"],
+  "دهوك":["جامعة دهوك"],
+  "السليمانية":["جامعة السليمانية"]
+};
+
+const listEl = document.getElementById('list');
+const provinceEl = document.getElementById('province');
+const searchEl = document.getElementById('search');
+
+// توليد المحافظات تلقائيًا
+Object.keys(allUniversities).forEach((province,i)=>{
+    const option = document.createElement('option');
+    option.value = province;
+    option.textContent = province;
+    if(province==="بغداد") option.selected=true;
+    provinceEl.appendChild(option);
+});
+
+let ratings = {}; // لتخزين تقييم كل جامعة
+
+function renderList(province){
+    listEl.innerHTML = '';
+    const universities = allUniversities[province] || [];
+    universities.forEach(u=>{
+        const li = document.createElement('li');
+        li.textContent = u;
+        const span = document.createElement('span');
+        span.className='rating';
+        span.textContent = ratings[u] || '';
+        li.appendChild(span);
+        listEl.appendChild(li);
+    });
+}
+
+function changeProvince(){
+    renderList(provinceEl.value);
+    searchEl.value='';
+}
+
+function filterList(){
+    const filter = searchEl.value;
+    const universities = allUniversities[provinceEl.value] || [];
+    listEl.innerHTML='';
+    universities.filter(u=>u.includes(filter)).forEach(u=>{
+        const li = document.createElement('li');
+        li.textContent = u;
+        const span = document.createElement('span');
+        span.className='rating';
+        span.textContent=ratings[u]||'';
+        li.appendChild(span);
+        listEl.appendChild(li);
+    });
+}
+
+function sortByRating(){
+    const universities = allUniversities[provinceEl.value] || [];
+    universities.sort((a,b)=>(ratings[b]||0)-(ratings[a]||0));
+    renderList(provinceEl.value);
+}
+
+// التحميل الافتراضي
+renderList(provinceEl.value);
+</script>
+</body>
+</html>
     <ul id="list"></ul>
 </div>
 
@@ -259,3 +326,4 @@ renderList(provinceEl.value);
 </script>
 </body>
 </html>
+
