@@ -28,7 +28,7 @@ imageRef.put(imageFile).then(() => {
       description,
       whatsapp,
       image: url,
-      status: 'pending'
+      status: 'approved'
     });
 
     document.getElementById('msg').innerText = 'تم إرسال الإعلان بانتظار الموافقة';
@@ -39,3 +39,4 @@ imageRef.put(imageFile).then(() => {
 }); }
 
 // عرض الإعلانات المقبولة const productsDiv = document.getElementById('products'); if (productsDiv) { db.ref('products').on('value', (snapshot) => { productsDiv.innerHTML = ''; snapshot.forEach((child) => { const data = child.val(); if (data.status === 'approved') { productsDiv.innerHTML += <div class="card"> <img src="${data.image}"> <h3>${data.name}</h3> <p>${data.category}</p> <p class="price">${data.price} IQD</p> <p>${data.description}</p> <a class="whatsapp" target="_blank" href="https://wa.me/${data.whatsapp}?text=مرحبا شفت إعلانك على a3len بخصوص ${data.name}">تواصل واتساب</a> </div>; } }); }); }
+
