@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>a3len | إضافة إعلان</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body><header class="header">
+  <h1>a3len</h1>
+  <p>إضافة إعلان قطعة PC</p>
+</header><nav class="nav">
+  <a href="index.html">الرئيسية</a>
+</nav><main class="container">
+  <h2>بيانات الإعلان</h2>  <form id="addForm"><input type="text" placeholder="اسم القطعة" id="name" required>
+<br><br>
+
+<select id="category" required>
+  <option value="">اختر القسم</option>
+  <option>CPU</option>
+  <option>GPU</option>
+  <option>RAM</option>
+  <option>Motherboard</option>
+  <option>SSD / HDD</option>
+  <option>PSU</option>
+  <option>Case</option>
+  <option>Cooling</option>
+  <option>Accessories</option>
+</select>
+<br><br>
+
+<input type="number" placeholder="السعر (IQD)" id="price" required>
+<br><br>
+
+<textarea placeholder="وصف القطعة" id="description" rows="4" required></textarea>
+<br><br>
+
+<input type="file" id="image" accept="image/*" required>
+<br><br>
+
+<input type="text" placeholder="رقم واتساب" id="whatsapp" required>
+<br><br>
+
+<button type="submit" class="whatsapp">إرسال الإعلان</button>
+
+  </form>  <p id="msg"></p>
+</main><footer class="footer">
+  <p>سيتم نشر الإعلان بعد موافقة الإدارة</p>
+</footer><script src="js/firebase.js"></script><script src="js/app.js"></script></body>
+</html>
