@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقييم جامعات العراق - كامل</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<style>
+body{
+    font-family: 'Arial', sans-serif;
+    background:#111; color:#eee; margin:0; padding:0;
+}
+.container{ max-width:900px; margin:30px auto; padding:20px; background:#1a1a1a; border-radius:10px;}
+header{text-align:center;font-size:24px;margin-bottom:20px;}
+select,input[type=text]{width:100%;padding:10px;margin:5px 0;font-size:16px;border-radius:5px;border:none;background:#333;color:#eee;}
+input::placeholder{color:#aaa;}
+ul{list-style:none;padding:0;}
+li{padding:12px 15px;margin-bottom:10px;background:#222;border-radius:5px;transition:0.3s;}
+li:hover{background:#444;}
+.rating{float:right;color:#ffb400;font-weight:bold;margin-left:10px;}
+.star-btn{font-size:14px;padding:2px 4px;margin-left:3px;background:#333;color:#ffb400;border:none;border-radius:3px;}
+.star-btn:hover{background:#444;cursor:pointer;}
+@media(max-width:600px){select,input[type=text]{font-size:14px;}}
+</style>
+
+</head>
+<body>
+
+<header>⭐ تقييم جامعات العراق</header>
+<div class="container">
+    <select id="province"></select>
+    <input type="text" id="search" placeholder="ابحث عن جامعة...">
+    <ul id="list"></ul>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
