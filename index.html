@@ -4,88 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تقييم جامعات العراق - احترافي</title>
-<style>
-@font-face {
-    font-family: 'MyFont';
-    src: url('font.ttf') format('truetype');
-}
-body {
-    font-family: 'MyFont', sans-serif;
-    margin:0;
-    padding:0;
-    background: linear-gradient(135deg,#0d0d0d,#1a1a1a);
-    color:#eee;
-}
-header {
-    text-align:center;
-    padding:30px 0;
-    font-size:32px;
-    font-weight:bold;
-    letter-spacing:1px;
-    background: linear-gradient(90deg,#ff7f50,#ffb400);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.container {
-    max-width:1000px;
-    margin:20px auto;
-    padding:20px;
-}
-.controls {
-    display:flex;
-    flex-wrap:wrap;
-    gap:15px;
-    margin-bottom:20px;
-}
-select, input[type="text"], button {
-    flex:1;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-    outline:none;
-    background:#222;
-    color:#eee;
-    transition:0.3s;
-}
-select:hover,input:hover,button:hover {
-    background:#333;
-    cursor:pointer;
-}
-button {
-    background: linear-gradient(90deg,#ff7f50,#ffb400);
-    color:#111;
-    font-weight:bold;
-}
-ul {
-    list-style:none;
-    padding:0;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:15px;
-}
-li {
-    background:#1a1a1a;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.6);
-    transition:0.3s;
-}
-li:hover {
-    transform:translateY(-5px);
-    box-shadow:0 12px 25px rgba(0,0,0,0.7);
-}
-.rating {
-    float:right;
-    color:#ffb400;
-    font-weight:bold;
-    font-size:18px;
-}
-@media(max-width:600px){
-    .controls {flex-direction:column;}
-    ul {grid-template-columns:1fr;}
-}
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 <header>⭐ تقييم جامعات المحافظات</header>
@@ -93,81 +15,153 @@ li:hover {
     <div class="controls">
         <select id="province" onchange="changeProvince()"></select>
         <input type="text" id="search" placeholder="ابحث عن جامعة..." onkeyup="filterList()">
-        <button onclick="sortByRating()">فرز حسب التقييم الأعلى</button>
     </div>
     <ul id="list"></ul>
 </div>
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+  authDomain: "a3len-3ad54.firebaseapp.com",
+  projectId: "a3len-3ad54",
+  storageBucket: "a3len-3ad54.firebasestorage.app",
+  messagingSenderId: "767338034080",
+  appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+firebase.auth().signInAnonymously();
+
+// كل الجامعات لكل المحافظات
 const allUniversities = {
   "بغداد": ["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
-  "البصرة":["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
-  "النجف":["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
-  "كربلاء":["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
-  "نينوى":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
-  "صلاح الدين":["جامعة تكريت","جامعة سوران"],
-  "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
-  "ذي قار":["جامعة ذي قار"],
-  "القادسية":["جامعة القادسية"],
-  "ميسان":["جامعة ميسان"],
-  "ديالى":["جامعة ديالى","كلية اليرموك الجامعة"],
-  "الأنبار":["جامعة الأنبار","كلية المعارف الجامعة"],
-  "بابل":["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
-  "المثنى":["جامعة المثنى"],
-  "واسط":["جامعة واسط"],
-  "الديوانية":["جامعة القادسية"],
-  "دهوك":["جامعة دهوك"],
-  "السليمانية":["جامعة السليمانية"]
+  "اربيل": ["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
+  "البصرة": ["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
+  "الموصل": ["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
+  "كربلاء": ["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
+  "النجف": ["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
+  "واسط": ["جامعة واسط"],
+  "ذي قار": ["جامعة ذي قار"],
+  "المثنى": ["جامعة المثنى"],
+  "القادسية": ["جامعة القادسية"],
+  "ميسان": ["جامعة ميسان"],
+  "بابل": ["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
+  "الديوانية": ["جامعة القادسية"],
+  "دهوك": ["جامعة دهوك"],
+  "السليمانية": ["جامعة السليمانية"],
+  "ديالى": ["جامعة ديالى","كلية اليرموك الجامعة"],
+  "الأنبار": ["جامعة الأنبار","كلية المعارف الجامعة"],
+  "صلاح الدين": ["جامعة تكريت","جامعة سوران"],
+  "نينوى": ["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"]
 };
 
-const listEl=document.getElementById('list');
-const provinceEl=document.getElementById('province');
-const searchEl=document.getElementById('search');
-let ratings={};
+const listEl = document.getElementById('list');
+const provinceEl = document.getElementById('province');
+const searchEl = document.getElementById('search');
+let userUID = null;
 
 // توليد المحافظات
 Object.keys(allUniversities).forEach(p=>{
-    const opt=document.createElement('option');
-    opt.value=p; opt.textContent=p;
+    const opt = document.createElement('option');
+    opt.value = p; opt.textContent = p;
     if(p==="بغداد") opt.selected=true;
     provinceEl.appendChild(opt);
 });
 
+// تسجيل المستخدم تلقائياً
+firebase.auth().onAuthStateChanged(user=>{
+    if(user) userUID = user.uid;
+    renderList(provinceEl.value);
+});
+
+// عرض الجامعات
 function renderList(province){
     listEl.innerHTML='';
-    const universities=allUniversities[province]||[];
+    const universities = allUniversities[province] || [];
     universities.forEach(u=>{
-        const li=document.createElement('li');
-        li.textContent=u;
-        const span=document.createElement('span');
+        const li = document.createElement('li');
+        li.textContent = u;
+
+        const span = document.createElement('span');
         span.className='rating';
-        span.textContent=ratings[u]||'';
+        span.textContent = '0 ⭐';
         li.appendChild(span);
+
+        // أزرار التقييم
+        for(let i=1;i<=5;i++){
+            const btn = document.createElement('button');
+            btn.textContent = '★';
+            btn.style.marginLeft='5px';
+            btn.onclick = ()=> addRating(u,i);
+            li.appendChild(btn);
+        }
+
         listEl.appendChild(li);
+        loadRating(u, span);
     });
 }
 
-function changeProvince(){renderList(provinceEl.value); searchEl.value='';}
-function filterList(){
-    const filter=searchEl.value;
-    const universities=allUniversities[provinceEl.value]||[];
-    listEl.innerHTML='';
-    universities.filter(u=>u.includes(filter)).forEach(u=>{
-        const li=document.createElement('li');
-        li.textContent=u;
-        const span=document.createElement('span');
-        span.className='rating';
-        span.textContent=ratings[u]||'';
-        li.appendChild(span);
-        listEl.appendChild(li);
+// تحميل التقييم من Firebase
+function loadRating(university, span){
+    db.ref('universities/'+university.replace(/\./g,'')).on('value', snap=>{
+        const data = snap.val();
+        if(data && data.avg && data.votes){
+            span.textContent = data.avg.toFixed(1)+' ⭐ ('+data.votes+')';
+        }
     });
 }
-function sortByRating(){
-    const universities=allUniversities[provinceEl.value]||[];
-    universities.sort((a,b)=>(ratings[b]||0)-(ratings[a]||0));
-    renderList(provinceEl.value);
+
+// إضافة تقييم جديد
+function addRating(university, score){
+    if(!userUID) return alert('جاري تسجيل الدخول...');
+    const ref = db.ref('universities/'+university.replace(/\./g,''));
+    ref.transaction(current=>{
+        if(current){
+            if(!current.voters) current.voters = {};
+            if(current.voters[userUID]){
+                // تعديل تقييم سابق
+                const prev = current.voters[userUID];
+                current.avg = (current.avg*current.votes - prev + score)/current.votes;
+            }else{
+                current.avg = (current.avg*current.votes + score)/(current.votes+1);
+                current.votes++;
+            }
+            current.voters[userUID]=score;
+        }else{
+            current = {avg:score,votes:1,voters:{}};
+            current.voters[userUID]=score;
+        }
+        return current;
+    });
 }
-renderList(provinceEl.value);
+
+function changeProvince(){ renderList(provinceEl.value); searchEl.value=''; }
+
+function filterList(){
+    const filter = searchEl.value;
+    const universities = allUniversities[provinceEl.value] || [];
+    listEl.innerHTML='';
+    universities.filter(u=>u.includes(filter)).forEach(u=>{
+        const li = document.createElement('li');
+        li.textContent = u;
+
+        const span = document.createElement('span');
+        span.className='rating';
+        span.textContent='0 ⭐';
+        li.appendChild(span);
+
+        for(let i=1;i<=5;i++){
+            const btn = document.createElement('button');
+            btn.textContent='★';
+            btn.style.marginLeft='5px';
+            btn.onclick = ()=> addRating(u,i);
+            li.appendChild(btn);
+        }
+
+        listEl.appendChild(li);
+        loadRating(u, span);
+    });
+}
 </script>
 </body>
 </html>
