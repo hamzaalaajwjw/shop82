@@ -1,29 +1,102 @@
-body { margin: 0; font-family: Arial, sans-serif; background-color: #0f0f0f; color: #ffffff; }
+/* قاعدة أساسية */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
 
-.header { background: #000000; padding: 20px; text-align: center; border-bottom: 1px solid #222; }
+/* الهيدر */
+.header {
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+  padding: 15px 10px;
+}
 
-.header h1 { margin: 0; font-size: 32px; color: #00ffcc; }
+/* ناف بار */
+.nav {
+  display: flex;
+  justify-content: center;
+  background-color: #111;
+}
+.nav a {
+  color: #fff;
+  text-decoration: none;
+  padding: 12px 15px;
+}
+.nav a:hover {
+  background-color: #222;
+}
 
-.header p { margin: 5px 0 0; color: #aaa; }
+/* الكونتينر */
+.container {
+  padding: 15px;
+}
 
-.nav { display: flex; justify-content: center; gap: 20px; padding: 15px; background: #111; border-bottom: 1px solid #222; }
+/* كروت الإعلانات */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+.card {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+.card p {
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+.card .whatsapp {
+  display: inline-block;
+  padding: 8px 12px;
+  background-color: #25D366;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
 
-.nav a { color: #fff; text-decoration: none; font-weight: bold; }
+/* الفوتر */
+.footer {
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  margin-top: 20px;
+}
 
-.nav a:hover { color: #00ffcc; }
-
-.container { padding: 20px; }
-
-.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-
-.card { background: #151515; border: 1px solid #222; border-radius: 8px; padding: 15px; }
-
-.card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; }
-
-.card h3 { margin: 10px 0 5px; }
-
-.price { color: #00ffcc; font-weight: bold; }
-
-.whatsapp { display: block; margin-top: 10px; padding: 10px; text-align: center; background: #25d366; color: #000; text-decoration: none; border-radius: 6px; font-weight: bold; }
-
-.footer { text-align: center; padding: 15px; background: #000; border-top: 1px solid #222; margin-top: 30px; color: #777; }
+/* --- Media Queries للهواتف --- */
+@media (max-width: 600px) {
+  .nav {
+    flex-direction: column;
+  }
+  .nav a {
+    padding: 10px;
+    text-align: center;
+  }
+  .card h3 {
+    font-size: 1rem;
+  }
+  .card p, .card .whatsapp {
+    font-size: 0.85rem;
+  }
+  .products {
+    grid-template-columns: 1fr;
+  }
+}
