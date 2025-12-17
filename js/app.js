@@ -1,26 +1,37 @@
-// ملف app.js - رفع الإعلانات وعرضها بدون صور
+// ملف app.js - رفع الإعلانات وعرضها مباشرة بدون صور
 
 // تعريف Firebase database const db = firebase.database();
 
 // إضافة إعلان جديد const form = document.getElementById('addForm'); if (form) { form.addEventListener('submit', function(e) { e.preventDefault();
 
+// جمع البيانات من النموذج
 const name = document.getElementById('name').value;
 const category = document.getElementById('category').value;
 const price = document.getElementById('price').value;
 const description = document.getElementById('description').value;
 const whatsapp = document.getElementById('whatsapp').value;
 
-db.ref('products').push({
-  name,
-  category,
-  price,
-  description,
-  whatsapp,
-  status: 'approved'  // ينشر مباشرة بدون انتظار موافقة
-});
+// تحقق من تعبئة جميع الحقول
+if (!name || !category || !price || !description || !whatsapp) {
+  alert('يرجى تعبئة جميع الحقول');
+  return;
+}
 
-document.getElementById('msg').innerText = 'تم إرسال الإعلان وظهر مباشرة على الصفحة';
-form.reset();
+// رفع البيانات مباشرة مع الحالة approved
+db.ref('products').push({
+  name: name,
+  category: category,
+  price: price,
+  description: description,
+  whatsapp: whatsapp,
+  status: 'approved'
+}).then(() => {
+  document.getElementById('msg').innerText = 'تم إرسال الإعلان وظهر مباشرة على الصفحة';
+  form.reset();
+}).catch((error) => {
+  console.error('خطأ عند رفع الإعلان:', error);
+  document.getElementById('msg').innerText = 'حدث خطأ يرجى المحاولة مرة أخرى';
+});
 
 }); }
 
