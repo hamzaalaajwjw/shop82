@@ -3,12 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقييم جامعات بغداد</title>
+<title>تقييم جامعات العراق</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-    <h1>⭐ تقييم جامعات بغداد</h1>
+    <h1>⭐ تقييم جامعات المحافظات</h1>
+
+    <select id="province" onchange="changeProvince()">
+        <option value="بغداد">بغداد</option>
+        <option value="اربيل">اربيل</option>
+        <option value="البصرة">البصرة</option>
+        <option value="الموصل">الموصل</option>
+    </select>
 
     <input type="text" id="search" placeholder="ابحث عن جامعة..." onkeyup="filterList()">
 
