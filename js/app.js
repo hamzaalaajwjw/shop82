@@ -1,34 +1,27 @@
-// ملف app.js - رفع الإعلانات وعرضها مباشرة بدون صور
-
-// تعريف Firebase database
-const db = firebase.database();
-
-// إضافة إعلان جديد
+// تعريف Firebase database (موجود في firebase.js)
 const form = document.getElementById('addForm');
+
 if (form) {
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    // جمع البيانات من النموذج
-    const name = document.getElementById('name').value;
+    const name = document.getElementById('name').value.trim();
     const category = document.getElementById('category').value;
     const price = document.getElementById('price').value;
-    const description = document.getElementById('description').value;
-    const whatsapp = document.getElementById('whatsapp').value;
+    const description = document.getElementById('description').value.trim();
+    const whatsapp = document.getElementById('whatsapp').value.trim();
 
-    // تحقق من تعبئة جميع الحقول
     if (!name || !category || !price || !description || !whatsapp) {
       alert('يرجى تعبئة جميع الحقول');
       return;
     }
 
-    // رفع البيانات مباشرة مع الحالة approved
     db.ref('products').push({
-      name: name,
-      category: category,
-      price: price,
-      description: description,
-      whatsapp: whatsapp,
+      name,
+      category,
+      price,
+      description,
+      whatsapp,
       status: 'approved'
     })
     .then(() => {
