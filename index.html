@@ -4,7 +4,77 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تقييم جامعات العراق</title>
-<link rel="stylesheet" href="style.css">
+<style>
+@font-face {
+    font-family: 'MyFont';
+    src: url('font.ttf') format('truetype');
+}
+body {
+    font-family: 'MyFont', sans-serif;
+    background-color: #111;
+    color: #eee;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+}
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.province-container {
+    margin-bottom: 20px;
+}
+select, input[type="text"], button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    outline: none;
+    background-color: #333;
+    color: #eee;
+}
+input[type="text"]::placeholder {
+    color: #aaa;
+}
+button:hover {
+    background-color: #444;
+    cursor: pointer;
+}
+ul {
+    list-style: none;
+    padding: 0;
+}
+li {
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    background-color: #222;
+    border-radius: 5px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+li:hover {
+    background-color: #444;
+}
+.rating {
+    float: right;
+    color: #ffb400;
+    font-weight: bold;
+}
+@media(max-width:600px){
+    select, input[type="text"], button {
+        font-size: 14px;
+    }
+}
+</style>
 </head>
 <body>
 <div class="container">
@@ -17,6 +87,19 @@
             <option value="اربيل">اربيل</option>
             <option value="البصرة">البصرة</option>
             <option value="الموصل">الموصل</option>
+            <option value="كربلاء">كربلاء</option>
+            <option value="النجف">النجف</option>
+            <option value="واسط">واسط</option>
+            <option value="ذي قار">ذي قار</option>
+            <option value="المثنى">المثنى</option>
+            <option value="صلاح الدين">صلاح الدين</option>
+            <option value="دهوك">دهوك</option>
+            <option value="السليمانية">السليمانية</option>
+            <option value="القادسية">القادسية</option>
+            <option value="نينوى">نينوى</option>
+            <option value="ميسان">ميسان</option>
+            <option value="بابل">بابل</option>
+            <option value="الديوانية">الديوانية</option>
         </select>
     </div>
 
@@ -24,9 +107,155 @@
 
     <button onclick="sortByRating()">فرز حسب التقييم الأعلى</button>
 
-    <div id="list"></div>
+    <ul id="list"></ul>
 </div>
 
-<script src="script.js"></script>
+<script>
+const allUniversities = {
+  "بغداد": [
+    {name:"جامعة بغداد", rating:0},
+    {name:"الجامعة المستنصرية", rating:0},
+    {name:"الجامعة التقنية", rating:0},
+    {name:"الجامعة العراقية", rating:0},
+    {name:"جامعة تكنولوجيا المعلومات والاتصالات", rating:0},
+    {name:"جامعة النهرين", rating:0},
+    {name:"الجامعة التقنية الوسطى", rating:0},
+    {name:"جامعة البيان", rating:0},
+    {name:"جامعة التراث", rating:0},
+    {name:"كلية المنصور الجامعة", rating:0},
+    {name:"كلية الرافدين الجامعة", rating:0},
+    {name:"كلية المأمون الجامعة", rating:0},
+    {name:"كلية بغداد للعلوم الاقتصادية الجامعة", rating:0},
+    {name:"كلية الأسراء الجامعة", rating:0},
+    {name:"الجامعة الأمريكية في العراق", rating:0},
+    {name:"كلية دجلة الجامعة", rating:0},
+    {name:"كلية الأمَل الجامعة", rating:0},
+    {name:"كلية الرشيد الجامعة", rating:0},
+    {name:"كلية الكتب الجامعة", rating:0}
+  ],
+  "البصرة":[
+    {name:"جامعة البصرة", rating:0},
+    {name:"كلية شط العرب الجامعة", rating:0},
+    {name:"كلية الكونوز الجامعة", rating:0}
+  ],
+  "النجف":[
+    {name:"جامعة الكوفة", rating:0},
+    {name:"الجامعة الإسلامية – النجف", rating:0},
+    {name:"جامعة الكفيل", rating:0},
+    {name:"كلية الشيخ الطوسي الجامعة", rating:0}
+  ],
+  "كربلاء":[
+    {name:"جامعة أهل البيت", rating:0},
+    {name:"كلية الصفوة الجامعة", rating:0},
+    {name:"كلية الحسين الجامعة", rating:0}
+  ],
+  "نينوى":[
+    {name:"جامعة الموصل", rating:0},
+    {name:"جامعة الحدباء – كلية الحدباء الجامعة", rating:0}
+  ],
+  "صلاح الدين":[
+    {name:"جامعة تكريت", rating:0},
+    {name:"جامعة سوران", rating:0}
+  ],
+  "اربيل":[
+    {name:"جامعة صلاح الدين – أربيل", rating:0},
+    {name:"جامعة السليمانية", rating:0},
+    {name:"جامعة دهوك", rating:0},
+    {name:"جامعة هولير للطب", rating:0},
+    {name:"جامعة كوية", rating:0},
+    {name:"جامعة زاخو", rating:0},
+    {name:"جامعة رابارين", rating:0},
+    {name:"جامعة حلبجة", rating:0},
+    {name:"جامعة غربيان", rating:0},
+    {name:"جامعة اربيل التقنية", rating:0},
+    {name:"جامعة السليمانية التقنية", rating:0},
+    {name:"جامعة دهوك التقنية", rating:0},
+    {name:"الجامعة الأمريكية في كردستان", rating:0},
+    {name:"الجامعة اللبنانية الفرنسية", rating:0},
+    {name:"جامعة المعرفة", rating:0},
+    {name:"جامعة جيهان – أربيل", rating:0}
+  ],
+  "ذي قار":[
+    {name:"جامعة ذي قار", rating:0}
+  ],
+  "القادسية":[
+    {name:"جامعة القادسية", rating:0}
+  ],
+  "ميسان":[
+    {name:"جامعة ميسان", rating:0}
+  ],
+  "ديالى":[
+    {name:"جامعة ديالى", rating:0},
+    {name:"كلية اليرموك الجامعة", rating:0}
+  ],
+  "الأنبار":[
+    {name:"جامعة الأنبار", rating:0},
+    {name:"كلية المعارف الجامعة", rating:0}
+  ],
+  "بابل":[
+    {name:"جامعة بابل", rating:0},
+    {name:"الجامعة الإسلامية – بابل", rating:0},
+    {name:"كلية العشتار الجامعة", rating:0},
+    {name:"جامعة القاسم الخضراء", rating:0},
+    {name:"كلية المستقبل الجامعة", rating:0}
+  ],
+  "المثنى":[
+    {name:"جامعة المثنى", rating:0}
+  ],
+  "واسط":[
+    {name:"جامعة واسط", rating:0}
+  ],
+  "الديوانية":[
+    {name:"جامعة القادسية", rating:0}
+  ]
+};
+
+const listEl = document.getElementById('list');
+const provinceEl = document.getElementById('province');
+const searchEl = document.getElementById('search');
+
+function renderList(province){
+    listEl.innerHTML = '';
+    let universities = allUniversities[province] || [];
+    universities.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = u.name;
+        const span = document.createElement('span');
+        span.className = 'rating';
+        span.textContent = u.rating ? u.rating : '';
+        li.appendChild(span);
+        listEl.appendChild(li);
+    });
+}
+
+function changeProvince(){
+    renderList(provinceEl.value);
+    searchEl.value = '';
+}
+
+function filterList(){
+    const filter = searchEl.value.toLowerCase();
+    const universities = allUniversities[provinceEl.value] || [];
+    listEl.innerHTML = '';
+    universities.filter(u => u.name.includes(filter)).forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = u.name;
+        const span = document.createElement('span');
+        span.className = 'rating';
+        span.textContent = u.rating ? u.rating : '';
+        li.appendChild(span);
+        listEl.appendChild(li);
+    });
+}
+
+function sortByRating(){
+    const universities = allUniversities[provinceEl.value] || [];
+    universities.sort((a,b)=> b.rating - a.rating);
+    renderList(provinceEl.value);
+}
+
+// تحميل قائمة الافتراضية
+renderList(provinceEl.value);
+</script>
 </body>
 </html>
