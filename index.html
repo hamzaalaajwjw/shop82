@@ -10,12 +10,15 @@
 <div class="container">
     <h1>⭐ تقييم جامعات المحافظات</h1>
 
-    <select id="province" onchange="changeProvince()">
-        <option value="بغداد">بغداد</option>
-        <option value="اربيل">اربيل</option>
-        <option value="البصرة">البصرة</option>
-        <option value="الموصل">الموصل</option>
-    </select>
+    <div class="province-container">
+        <label for="province">اختر المحافظة:</label>
+        <select id="province" onchange="changeProvince()">
+            <option value="بغداد" selected>بغداد</option>
+            <option value="اربيل">اربيل</option>
+            <option value="البصرة">البصرة</option>
+            <option value="الموصل">الموصل</option>
+        </select>
+    </div>
 
     <input type="text" id="search" placeholder="ابحث عن جامعة..." onkeyup="filterList()">
 
