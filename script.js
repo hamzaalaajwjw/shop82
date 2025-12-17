@@ -1,100 +1,95 @@
 const allUniversities = {
-    "بغداد": [
-        {name:"جامعة بغداد", rating:0},
-        {name:"الجامعة المستنصرية", rating:0},
-        {name:"الجامعة التكنولوجية", rating:0},
-        {name:"جامعة النهرين", rating:0},
-        {name:"الجامعة العراقية", rating:0},
-        {name:"جامعة تكنولوجيا المعلومات والاتصالات", rating:0},
-        {name:"جامعة الكرخ للعلوم", rating:0},
-        {name:"الجامعة التقنية الوسطى", rating:0},
-        {name:"جامعة البيان", rating:0},
-        {name:"جامعة التراث", rating:0},
-        {name:"كلية المنصور الجامعة", rating:0},
-        {name:"كلية الرافدين الجامعة", rating:0},
-        {name:"كلية المأمون الجامعة", rating:0},
-        {name:"كلية بغداد للعلوم الاقتصادية الجامعة", rating:0},
-        {name:"ديوالى (Dijlah University College)", rating:0},
-        {name:"جامعة أورك", rating:0},
-        {name:"كلية الإمام جعفر الصادق الجامعة", rating:0},
-        {name:"كلية الأمثل (Al-Amal University College)", rating:0},
-        {name:"كلية الإمام الأعظم الجامعة", rating:0},
-        {name:"كلية النخبة (Al-Nukhba University College)", rating:0}
-    ],
-    "اربيل": [
-        {name:"جامعة أربيل", rating:0},
-        {name:"الجامعة الكردية الدولية", rating:0},
-        {name:"جامعة صلاح الدين", rating:0},
-        {name:"كلية دجلة الجامعة - أربيل", rating:0}
-    ],
-    "البصرة": [
-        {name:"جامعة البصرة", rating:0},
-        {name:"الجامعة التقنية الجنوبية", rating:0},
-        {name:"كلية البصرة الجامعة", rating:0},
-        {name:"كلية أهل البصرة الجامعة", rating:0}
-    ],
-    "الموصل": [
-        {name:"جامعة الموصل", rating:0},
-        {name:"الجامعة التقنية الشمالية", rating:0},
-        {name:"كلية الموصل الجامعة", rating:0},
-        {name:"جامعة الإمام الأعظم - الموصل", rating:0}
-    ]
+  "بغداد": [
+    {name:"جامعة بغداد", rating:0},
+    {name:"الجامعة المستنصرية", rating:0},
+    {name:"الجامعة التقنية", rating:0},
+    {name:"الجامعة العراقية", rating:0},
+    {name:"جامعة تكنولوجيا المعلومات والاتصالات", rating:0},
+    {name:"جامعة النهرين", rating:0},
+    {name:"الجامعة التقنية الوسطى", rating:0},
+    {name:"جامعة البيان", rating:0},
+    {name:"جامعة التراث", rating:0},
+    {name:"كلية المنصور الجامعة", rating:0},
+    {name:"كلية الرافدين الجامعة", rating:0},
+    {name:"كلية المأمون الجامعة", rating:0},
+    {name:"كلية بغداد للعلوم الاقتصادية الجامعة", rating:0},
+    {name:"كلية الأسراء الجامعة", rating:0},
+    {name:"الجامعة الأمريكية في العراق", rating:0},
+    {name:"كلية دجلة الجامعة", rating:0},
+    {name:"كلية الأمَل الجامعة", rating:0},
+    {name:"كلية الرشيد الجامعة", rating:0},
+    {name:"كلية الكتب الجامعة", rating:0}
+  ],
+  "البصرة":[
+    {name:"جامعة البصرة", rating:0},
+    {name:"كلية شط العرب الجامعة", rating:0},
+    {name:"كلية الكونوز الجامعة", rating:0}
+  ],
+  "النجف":[
+    {name:"جامعة الكوفة", rating:0},
+    {name:"الجامعة الإسلامية – النجف", rating:0},
+    {name:"جامعة الكفيل", rating:0},
+    {name:"كلية الشيخ الطوسي الجامعة", rating:0}
+  ],
+  "كربلاء":[
+    {name:"جامعة أهل البيت", rating:0},
+    {name:"كلية الصفوة الجامعة", rating:0},
+    {name:"كلية الحسين الجامعة", rating:0}
+  ],
+  "نينوى":[
+    {name:"جامعة الموصل", rating:0},
+    {name:"جامعة الحدباء – كلية الحدباء الجامعة", rating:0}
+  ],
+  "صلاح الدين":[
+    {name:"جامعة تكريت", rating:0},
+    {name:"جامعة سوران", rating:0}
+  ],
+  "اربيل":[
+    {name:"جامعة صلاح الدين – أربيل", rating:0},
+    {name:"جامعة السليمانية", rating:0},
+    {name:"جامعة دهوك", rating:0},
+    {name:"جامعة هولير للطب", rating:0},
+    {name:"جامعة كوية", rating:0},
+    {name:"جامعة زاخو", rating:0},
+    {name:"جامعة رابارين", rating:0},
+    {name:"جامعة حلبجة", rating:0},
+    {name:"جامعة غربيان", rating:0},
+    {name:"جامعة اربيل التقنية", rating:0},
+    {name:"جامعة السليمانية التقنية", rating:0},
+    {name:"جامعة دهوك التقنية", rating:0},
+    {name:"الجامعة الأمريكية في كردستان", rating:0},
+    {name:"الجامعة اللبنانية الفرنسية", rating:0},
+    {name:"جامعة المعرفة", rating:0},
+    {name:"جامعة جيهان – أربيل", rating:0}
+  ],
+  "ذي قار":[
+    {name:"جامعة ذي قار", rating:0}
+  ],
+  "القادسية":[
+    {name:"جامعة القادسية", rating:0}
+  ],
+  "ميسان":[
+    {name:"جامعة ميسان", rating:0}
+  ],
+  "ديالى":[
+    {name:"جامعة ديالى", rating:0},
+    {name:"كلية اليرموك الجامعة", rating:0}
+  ],
+  "الأنبار":[
+    {name:"جامعة الأنبار", rating:0},
+    {name:"كلية المعارف الجامعة", rating:0}
+  ],
+  "بابل":[
+    {name:"جامعة بابل", rating:0},
+    {name:"الجامعة الإسلامية – بابل", rating:0},
+    {name:"كلية العشتار الجامعة", rating:0},
+    {name:"جامعة القاسم الخضراء", rating:0},
+    {name:"كلية المستقبل الجامعة", rating:0}
+  ],
+  "المثنى":[
+    {name:"جامعة المثنى", rating:0}
+  ],
+  "واسط":[
+    {name:"جامعة واسط", rating:0}
+  ]
 };
-
-let universities = [];
-const listDiv = document.getElementById("list");
-
-function loadRatings(){
-    for(const prov in allUniversities){
-        allUniversities[prov].forEach(u=>{
-            const saved = localStorage.getItem(u.name);
-            if(saved) u.rating = Number(saved);
-        });
-    }
-}
-
-function showList(items){
-    listDiv.innerHTML="";
-    if(items.length===0){ listDiv.innerHTML="<p>ماكو نتائج...</p>"; return; }
-    items.forEach((u,i)=>{
-        const div = document.createElement("div");
-        div.className="university";
-        div.style.animationDelay = `${i*0.05}s`;
-        div.innerHTML = `
-            <strong>${u.name}</strong>
-            <div class="stars">
-                ${[1,2,3,4,5].map(i=> `<span onclick="rate('${u.name}',${i})">${i<=u.rating?'★':'☆'}</span>`).join('')}
-            </div>
-        `;
-        listDiv.appendChild(div);
-    });
-}
-
-function rate(name,value){
-    const uni = universities.find(u=>u.name===name);
-    uni.rating = value;
-    localStorage.setItem(name,value);
-    showList(universities);
-}
-
-function filterList(){
-    const query = document.getElementById("search").value.toLowerCase();
-    const filtered = universities.filter(u=>u.name.toLowerCase().includes(query));
-    showList(filtered);
-}
-
-function sortByRating(){
-    const sorted = [...universities].sort((a,b)=>b.rating-a.rating);
-    showList(sorted);
-}
-
-function changeProvince(){
-    const prov = document.getElementById("province").value;
-    universities = allUniversities[prov];
-    document.getElementById("search").value = "";
-    showList(universities);
-}
-
-// بداية
-loadRatings();
-changeProvince(); // الافتراضية بغداد
