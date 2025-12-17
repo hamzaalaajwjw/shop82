@@ -41,10 +41,9 @@ const allUniversities = {
     ]
 };
 
-let universities = []; // القائمة الحالية حسب المحافظة
+let universities = [];
 const listDiv = document.getElementById("list");
 
-// تحميل التقييمات من LocalStorage
 function loadRatings(){
     for(const prov in allUniversities){
         allUniversities[prov].forEach(u=>{
@@ -54,7 +53,6 @@ function loadRatings(){
     }
 }
 
-// عرض القائمة
 function showList(items){
     listDiv.innerHTML="";
     if(items.length===0){ listDiv.innerHTML="<p>ماكو نتائج...</p>"; return; }
@@ -72,7 +70,6 @@ function showList(items){
     });
 }
 
-// تقييم جامعة
 function rate(name,value){
     const uni = universities.find(u=>u.name===name);
     uni.rating = value;
@@ -80,20 +77,17 @@ function rate(name,value){
     showList(universities);
 }
 
-// بحث حي
 function filterList(){
     const query = document.getElementById("search").value.toLowerCase();
     const filtered = universities.filter(u=>u.name.toLowerCase().includes(query));
     showList(filtered);
 }
 
-// فرز حسب التقييم الأعلى
 function sortByRating(){
     const sorted = [...universities].sort((a,b)=>b.rating-a.rating);
     showList(sorted);
 }
 
-// عند اختيار المحافظة
 function changeProvince(){
     const prov = document.getElementById("province").value;
     universities = allUniversities[prov];
@@ -103,4 +97,4 @@ function changeProvince(){
 
 // بداية
 loadRatings();
-changeProvince();
+changeProvince(); // الافتراضية بغداد
