@@ -3,252 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقييم جامعات العراق</title>
+<title>بيع قطع البيسي</title>
+<style>
+  body {font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f2f5;}
+  header {background:#1a73e8; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+  header h1 {margin:0; font-size:24px;}
+  .container {display:flex; min-height:calc(100vh - 60px);}
+  nav {width:220px; background:#0f2027; color:#fff; min-height:100vh; padding-top:20px; box-shadow:2px 0 5px rgba(0,0,0,0.1);}
+  nav a {display:block; color:#fff; padding:12px 20px; text-decoration:none; font-weight:bold;}
+  nav a:hover {background:#162b3a; transition:0.3s;}
+  main {flex:1; padding:25px;}
+  .product {background:#fff; padding:15px 20px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+  .product h3 {margin-top:0; font-size:20px; color:#1a73e8;}
+  .filter {margin-bottom:25px; display:flex; gap:15px; flex-wrap:wrap;}
+  input, select, button {padding:10px; border-radius:5px; border:1px solid #ccc; font-size:16px;}
+  button {background:#1a73e8; color:#fff; border:none; cursor:pointer; transition:0.3s;}
+  button:hover {background:#155ab6;}
+  .form-container {background:#fff; padding:25px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-width:500px; margin:auto;}
+  .form-container h2 {margin-top:0; color:#1a73e8;}
+</style>
+</head>
+<body>
 
+<header>
+  <h1>بيع قطع البيسي</h1>
+</header>
+
+<div class="container">
+  <nav>
+    <a href="#" onclick="showHome()">الصفحة الرئيسية</a>
+    <a href="#" onclick="showPublish()">نشر منتج</a>
+  </nav>
+  
+  <main id="content">
+    <!-- المحتوى يتغير هنا -->
+  </main>
+</div>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<style>
-@font-face{
-    font-family: 'MyFont';
-    src: url('font.ttf') format('truetype');
-}
-
-body{
-    font-family:'MyFont', Arial, sans-serif;
-    background: linear-gradient(135deg,#0d0d0d,#1a1a1a);
-    color:#eee;
-    margin:0;
-    padding:0;
-}
-
-header{
-    text-align:center;
-    padding:30px 10px;
-    font-size:32px;
-    font-weight:bold;
-    letter-spacing:1px;
-    background: linear-gradient(90deg,#ff7f50,#ffb400);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.container{
-    max-width:900px;
-    margin:20px auto;
-    padding:20px;
-}
-
-select,
-input[type="text"]{
-    width:100%;
-    max-width:400px;
-    padding:10px 12px;
-    font-size:16px;
-    border-radius:8px;
-    border:none;
-    background:#222;
-    color:#eee;
-    margin:10px auto;
-    display:block;
-    box-sizing:border-box;
-    transition:0.3s;
-}
-
-select:hover,
-input:hover{
-    background:#333;
-    cursor:pointer;
-}
-
-ul{
-    list-style:none;
-    padding:0;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-    gap:15px;
-}
-
-li{
-    background:#1a1a1a;
-    padding:12px 15px;
-    border-radius:12px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.6);
-    transition:0.3s;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:16px;
-}
-
-li:hover{
-    transform:translateY(-3px);
-    box-shadow:0 12px 25px rgba(0,0,0,0.7);
-}
-
-.uni-name{
-    flex:2;
-    text-align:center;
-    font-weight:bold;
-    font-size:16px;
-}
-
-.rating-info{
-    flex:1;
-    text-align:left;  /* على اليسار */
-    font-weight:bold;
-    color:#ffb400;
-    font-size:14px;
-}
-
-.rating-btn{
-    flex:1;
-    text-align:right; /* على اليمين */
-    cursor:pointer;
-    font-size:22px;
-    color:#ffb400;
-    transition:0.3s;
-}
-
-.rating-btn:hover{
-    transform:scale(1.2);
-}
-
-/* الديالوك */
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.7);
-    justify-content:center;
-    align-items:center;
-    z-index:999;
-}
-
-.modal-content{
-    background:#1a1a1a;
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    width:260px;
-}
-
-.modal-content h3{
-    margin-bottom:15px;
-}
-
-.rate-stars{
-    font-size:30px;
-}
-
-.rate-stars span{
-    color:#555;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-.rate-stars span.active{
-    color:#ffb400;
-}
-
-/* القائمة الجانبية */
-#sidebar{
-    position:fixed;
-    right:-250px;
-    top:0;
-    height:100%;
-    width:250px;
-    background:#111;
-    padding:20px;
-    box-shadow:-4px 0 10px rgba(0,0,0,0.5);
-    transition:0.3s;
-    z-index:1000;
-    border-radius:0 0 0 8px;
-}
-
-#sidebar button{
-    display:block;
-    margin:10px 0;
-    padding:12px;
-    background:#222;
-    color:#ffb400;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-    transition:0.3s;
-}
-
-#sidebar button:hover{
-    background:#333;
-}
-
-#sidebarToggle{
-    position:fixed;
-    top:20px;
-    right:20px;
-    z-index:1001;
-    padding:10px 15px;
-    background:#222;
-    color:#ffb400;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-@media(max-width:600px){
-    ul{grid-template-columns:1fr;}
-    select,
-    input[type="text"]{font-size:14px;}
-    #sidebar{width:200px;}
-    #sidebarToggle{padding:8px 12px;}
-}
-</style>
-</head>
-
-<body>
-
-<button id="sidebarToggle">☰ القائمة</button>
-
-<div id="sidebar">
-    <button id="closeSidebar">✖ إغلاق</button>
-    <button id="topBtn">أفضل الجامعات تقييم</button>
-</div>
-
-<header>⭐ تقييم جامعات العراق</header>
-
-<div class="container">
-    <select id="province"></select>
-    <input type="text" id="search" placeholder="ابحث عن جامعة...">
-    <ul id="list"></ul>
-</div>
-
-<div id="rateModal" class="modal">
-    <div class="modal-content">
-        <h3>قيّم الجامعة الآن</h3>
-        <div class="rate-stars">
-            <span data-rate="1">★</span>
-            <span data-rate="2">★</span>
-            <span data-rate="3">★</span>
-            <span data-rate="4">★</span>
-            <span data-rate="5">★</span>
-        </div>
-    </div>
-</div>
-
-<script src="script.js"></script>
-
 <script>
-// فتح وإغلاق القائمة الجانبية
-const sidebar = document.getElementById("sidebar");
-document.getElementById("sidebarToggle").onclick = ()=>{ sidebar.style.right = "0"; };
-document.getElementById("closeSidebar").onclick = ()=>{ sidebar.style.right = "-250px"; };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+    authDomain: "a3len-3ad54.firebaseapp.com",
+    databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+    projectId: "a3len-3ad54",
+    storageBucket: "a3len-3ad54.firebasestorage.app",
+    messagingSenderId: "767338034080",
+    appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-// زر أفضل الجامعات
-document.getElementById("topBtn").onclick = ()=>{
-    window.location.href = "top.html";
-};
+  // تسجيل دخول أنونيموس
+  firebase.auth().signInAnonymously().catch((error) => { console.error(error); });
+
+  // --- الصفحة الرئيسية ---
+  function showHome() {
+    document.getElementById('content').innerHTML = `
+      <div class="filter">
+        <input type="text" id="search" placeholder="ابحث عن منتج" onkeyup="loadProducts()">
+        <select id="categoryFilter" onchange="loadProducts()">
+          <option value="">كل الأقسام</option>
+          <option value="CPU">CPU</option>
+          <option value="GPU">GPU</option>
+          <option value="RAM">RAM</option>
+          <option value="Motherboard">Motherboard</option>
+          <option value="Storage">Storage</option>
+        </select>
+      </div>
+      <div id="products"></div>
+    `;
+    loadProducts();
+  }
+
+  function loadProducts() {
+    const search = document.getElementById('search')?.value.toLowerCase() || '';
+    const category = document.getElementById('categoryFilter')?.value || '';
+    db.ref('products').once('value', snapshot => {
+      const data = snapshot.val() || {};
+      let html = '';
+      Object.keys(data).forEach(key => {
+        const p = data[key];
+        if ((category === '' || p.category === category) &&
+            (search === '' || p.name.toLowerCase().includes(search))) {
+          html += `<div class="product">
+                    <h3>${p.name}</h3>
+                    <p>القسم: ${p.category}</p>
+                    <p>السعر: ${p.price} د.ع</p>
+                  </div>`;
+        }
+      });
+      document.getElementById('products').innerHTML = html || '<p>لا توجد منتجات</p>';
+    });
+  }
+
+  // --- صفحة نشر المنتج ---
+  function showPublish() {
+    document.getElementById('content').innerHTML = `
+      <div class="form-container">
+        <h2>نشر منتج جديد</h2>
+        <label>اسم المنتج</label>
+        <input type="text" id="prodName" placeholder="اكتب اسم المنتج">
+        <label>السعر (د.ع)</label>
+        <input type="number" id="prodPrice" placeholder="مثال: 100000">
+        <label>القسم</label>
+        <select id="prodCategory">
+          <option value="CPU">CPU</option>
+          <option value="GPU">GPU</option>
+          <option value="RAM">RAM</option>
+          <option value="Motherboard">Motherboard</option>
+          <option value="Storage">Storage</option>
+        </select>
+        <button onclick="publishProduct()">نشر المنتج</button>
+      </div>
+    `;
+  }
+
+  function publishProduct() {
+    const name = document.getElementById('prodName').value.trim();
+    const price = document.getElementById('prodPrice').value.trim();
+    const category = document.getElementById('prodCategory').value;
+    if(!name || !price) { alert('يرجى إكمال جميع الحقول'); return; }
+
+    const newProdRef = db.ref('products').push();
+    newProdRef.set({ name, price, category })
+      .then(() => { alert('تم نشر المنتج بنجاح'); showHome(); })
+      .catch(err => { console.error(err); alert('حدث خطأ أثناء النشر'); });
+  }
+
+  // عرض الصفحة الرئيسية أولاً
+  showHome();
 </script>
 
 </body>
