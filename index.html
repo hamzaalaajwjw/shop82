@@ -50,13 +50,15 @@ firebase.auth().onAuthStateChanged(u => {
   if(u) userUID = u.uid;
 });
 
-// باقي الكود كما هو من عندك
+// الأقسام
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 
+// Sidebar
 function toggleSidebar(){
   document.querySelector(".sidebar").classList.toggle("active");
 }
 
+// عرض الصفحة الرئيسية / المنتجات
 function showHome(){
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
@@ -111,6 +113,7 @@ function editProduct(k){
   db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
 }
 
+// نشر إعلان جديد / تعديل
 function showPublish(p=null,k=null){
   document.getElementById("content").innerHTML = `
     <div class="form-box">
@@ -129,11 +132,19 @@ function showPublish(p=null,k=null){
     </div>`;
 }
 
+// حفظ الإعلان
 function save(k){
-  const data={name:name.value, price:price.value, category:category.value,
-              seller:seller.value, phone:phone.value,
-              province:province.value, delivery:delivery.value};
-  (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
+  const data = {
+    name: document.getElementById("name").value,
+    price: document.getElementById("price").value,
+    category: document.getElementById("category").value,
+    seller: document.getElementById("seller").value,
+    phone: document.getElementById("phone").value,
+    province: document.getElementById("province").value,
+    delivery: document.getElementById("delivery").value
+  };
+  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+  ref.set(data).then(showHome);
 }
 
 showHome();
