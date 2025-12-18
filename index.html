@@ -7,56 +7,37 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-/* ===== Custom Font ===== */
-@font-face {
-  font-family: 'CustomFont';
-  src: url('font.ttf') format('truetype');
+@font-face{
+  font-family:'CustomFont';
+  src:url('font.ttf') format('truetype');
 }
-body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
+body,input,select,button,textarea{
+  font-family:'CustomFont',sans-serif;
+}
 
-/* ===== Budget Dialog ===== */
-.budget-btn {
-  margin-left: 10px;
-  background:#1f2937;
-  color:#e5e7eb;
-  border:none;
-  padding:5px 10px;
-  cursor:pointer;
-  border-radius:5px;
+/* Budget */
+.budget-btn{
+  background:#1f2937;color:#e5e7eb;border:none;
+  padding:6px 12px;border-radius:6px;cursor:pointer
 }
-.budget-dialog {
-  position:fixed;
-  top:50%;
-  left:50%;
+.budget-dialog{
+  position:fixed;top:50%;left:50%;
   transform:translate(-50%,-50%);
-  background:#0f1115;
-  color:#e5e7eb;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 10px #000;
-  z-index:1000;
-  display:none;
+  background:#0f1115;color:#e5e7eb;
+  padding:20px;border-radius:12px;
+  display:none;z-index:999
 }
-.budget-dialog input {
-  width:100%;
-  padding:5px;
-  margin:10px 0;
-  border-radius:5px;
-  border:1px solid #333;
-  background:#1f1f1f;
-  color:#e5e7eb;
+.budget-dialog input{
+  width:100%;padding:8px;margin:10px 0;
+  background:#1f2937;color:#fff;border:1px solid #333
 }
-.budget-dialog button {
-  padding:5px 10px;
-  border:none;
-  border-radius:5px;
-  background:#38bdf8;
-  color:#000;
-  cursor:pointer;
+.budget-dialog button{
+  padding:6px 14px;border:none;border-radius:6px;cursor:pointer
 }
-.budget-dialog .close-btn { background:#ef4444; margin-left:10px; }
+.close-btn{background:#ef4444;color:#fff}
 </style>
 </head>
+
 <body>
 
 <header class="topbar">
@@ -72,18 +53,15 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     <button onclick="showHome()">🏠 الرئيسية</button>
     <button onclick="showPublish()">➕ نشر إعلان</button>
   </aside>
-
   <main id="content"></main>
 </div>
 
-<!-- Budget Dialog -->
+<!-- Budget -->
 <div class="budget-dialog" id="budgetDialog">
-  <h3>اكتب أعلى سعر في ميزانيتك</h3>
+  <h3>اكتب أعلى سعر بميزانيتك</h3>
   <input type="number" id="maxBudget" placeholder="مثال: 100000">
-  <div style="text-align:right">
-    <button onclick="applyBudget()">متابعة</button>
-    <button class="close-btn" onclick="closeBudget()">إلغاء</button>
-  </div>
+  <button onclick="applyBudget()">متابعة</button>
+  <button class="close-btn" onclick="closeBudget()">إلغاء</button>
 </div>
 
 <!-- Firebase -->
@@ -92,148 +70,148 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// إعداد Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
-  authDomain: "a3len-3ad54.firebaseapp.com",
-  databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
-  projectId: "a3len-3ad54",
-  storageBucket: "a3len-3ad54.firebasestorage.app",
-  messagingSenderId: "767338034080",
-  appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+const firebaseConfig={
+  apiKey:"AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+  authDomain:"a3len-3ad54.firebaseapp.com",
+  databaseURL:"https://a3len-3ad54-default-rtdb.firebaseio.com",
+  projectId:"a3len-3ad54",
+  storageBucket:"a3len-3ad54.firebasestorage.app",
+  messagingSenderId:"767338034080",
+  appId:"1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
 firebase.initializeApp(firebaseConfig);
+firebase.auth().signInAnonymously();
 
-firebase.auth().signInAnonymously().catch(err => console.error(err));
-const db = firebase.database();
-let userUID = null;
-firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
+const db=firebase.database();
+let userUID=null;
+firebase.auth().onAuthStateChanged(u=>{if(u)userUID=u.uid});
 
-// الأقسام
-const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
-let budget = null;
+const categories=["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
+const iraqProvinces=[
+ "بغداد","البصرة","نينوى","الأنبار","كربلاء","النجف",
+ "ذي قار","ديالى","صلاح الدين","بابل","كركوك","واسط",
+ "ميسان","المثنى","القادسية","أربيل","السليمانية",
+ "دهوك","حلبجة"
+];
+let budget=null;
 
-// Sidebar
+/* Sidebar */
 function toggleSidebar(){
-  document.querySelector(".sidebar").classList.toggle("active");
-  document.querySelector(".overlay").classList.toggle("active");
+ document.querySelector(".sidebar").classList.toggle("active");
+ document.querySelector(".overlay").classList.toggle("active");
 }
 function closeSidebar(){
-  document.querySelector(".sidebar").classList.remove("active");
-  document.querySelector(".overlay").classList.remove("active");
+ document.querySelector(".sidebar").classList.remove("active");
+ document.querySelector(".overlay").classList.remove("active");
 }
 
-// الصفحة الرئيسية
+/* Home */
 function showHome(){
-  closeSidebar();
-  document.getElementById("content").innerHTML = `
-    <div class="search-bar">
-      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
-      <select id="cat" onchange="loadProducts()">
-        <option value="">كل الأقسام</option>
-        ${categories.map(c=>`<option>${c}</option>`).join("")}
-      </select>
-      <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
-    </div>
-    <div class="cards" id="products"></div>
-  `;
-  loadProducts();
+ closeSidebar();
+ document.getElementById("content").innerHTML=`
+  <div class="search-bar">
+    <input id="search" placeholder="🔍 بحث..." onkeyup="loadProducts()">
+    <select id="cat" onchange="loadProducts()">
+      <option value="">كل الأقسام</option>
+      ${categories.map(c=>`<option>${c}</option>`).join("")}
+    </select>
+    <button class="budget-btn" onclick="showBudgetDialog()">ميزانيتك 💰</button>
+  </div>
+  <div class="cards" id="products"></div>
+ `;
+ loadProducts();
 }
 
-// Budget Dialog
-function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
-function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
+/* Budget */
+function showBudgetDialog(){budgetDialog.style.display="block"}
+function closeBudget(){budgetDialog.style.display="none"}
 function applyBudget(){
-  const val = parseFloat(document.getElementById("maxBudget").value);
-  budget = !isNaN(val) ? val : null;
-  closeBudget();
-  loadProducts();
+ const v=parseFloat(maxBudget.value);
+ budget=!isNaN(v)?v:null;
+ closeBudget();loadProducts();
 }
 
-// تحميل المنتجات مع ترتيب صاحب الإعلان أولاً وفلترة السعر
+/* Products */
 function loadProducts(){
-  const s = document.getElementById("search").value.toLowerCase();
-  const c = document.getElementById("cat").value;
-  db.ref("products").once("value", snap=>{
-    const d = snap.val() || {};
-    const htmlCards = [];
-
-    Object.keys(d).forEach(k=>{
-      const p = d[k];
-      const price = parseFloat(p.price) || 0;
-      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        if(budget && price > budget) return;
-        htmlCards.push({uid:p.uid,key:k,html:`
-          <div class="card">
-            <h3>${p.name}</h3>
-            <span class="price">${p.price} د.ع</span>
-            <div class="meta">
-              <span>${p.category}</span>
-              <span>${p.province}</span>
-              <span>توصيل: ${p.delivery}</span>
-            </div>
-            <div class="seller">
-              👤 ${p.seller} | ☎ ${p.phone}
-            </div>
-            <div class="actions">
-              ${p.uid===userUID?`
-              <button class="edit" onclick="editProduct('${k}')">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
-            </div>
-          </div>
-        `});
-      }
-    });
-
-    let finalHTML;
-    if(userUID){
-      const myPosts = htmlCards.filter(p=>p.uid===userUID).map(p=>p.html);
-      const otherPosts = htmlCards.filter(p=>p.uid!==userUID).map(p=>p.html);
-      finalHTML = myPosts.concat(otherPosts).join("");
-    } else {
-      finalHTML = htmlCards.map(p=>p.html).join("");
-    }
-    document.getElementById("products").innerHTML = finalHTML || "<p class='empty'>لا توجد إعلانات</p>";
+ const s=search.value.toLowerCase();
+ const c=cat.value;
+ db.ref("products").once("value",snap=>{
+  const d=snap.val()||{};
+  let arr=[];
+  Object.keys(d).forEach(k=>{
+   const p=d[k],price=parseFloat(p.price)||0;
+   if((!c||p.category===c)&&p.name.toLowerCase().includes(s)){
+    if(budget&&price>budget)return;
+    arr.push({uid:p.uid,html:`
+     <div class="card">
+      <h3>${p.name}</h3>
+      <span>${p.price} د.ع</span>
+      <div>${p.category} | ${p.province}</div>
+      <div>📞 ${p.phone}</div>
+      ${p.uid===userUID?`
+      <button onclick="editProduct('${k}')">تعديل</button>
+      <button onclick="deleteProduct('${k}')">حذف</button>`:""}
+     </div>`});
+   }
   });
+  if(userUID){
+   arr=arr.sort(a=>a.uid===userUID?-1:1);
+  }
+  products.innerHTML=arr.map(x=>x.html).join("")||"لا توجد إعلانات";
+ });
 }
 
-// حذف / تعديل / نشر
-function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
-function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
+/* Publish */
 function showPublish(p=null,k=null){
-  closeSidebar();
-  document.getElementById("content").innerHTML = `
-    <div class="form-box">
-      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
-      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
-      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
-      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
-      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
-      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
-      <select id="delivery">
-        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
-        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
-      </select>
-      <button onclick="save('${k||""}')">💾 حفظ</button>
-    </div>`;
-}
-function save(k){
-  const data = {
-    name: document.getElementById("name").value,
-    price: document.getElementById("price").value,
-    category: document.getElementById("category").value,
-    seller: document.getElementById("seller").value,
-    phone: document.getElementById("phone").value,
-    province: document.getElementById("province").value,
-    delivery: document.getElementById("delivery").value,
-    uid: userUID
-  };
-  const ref = k?db.ref("products/"+k):db.ref("products").push();
-  ref.set(data).then(showHome);
+ closeSidebar();
+ content.innerHTML=`
+ <div class="form-box">
+  <h2>${p?"تعديل":"نشر إعلان"}</h2>
+  <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
+  <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
+  <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
+  <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+  <input id="phone" type="tel" maxlength="11"
+   placeholder="رقم الهاتف (11 رقم)"
+   value="${p?p.phone:""}"
+   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)">
+  <select id="province">
+   <option value="">اختر المحافظة</option>
+   ${iraqProvinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
+  </select>
+  <select id="delivery">
+   <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
+   <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
+  </select>
+  <button onclick="save('${k||""}')">💾 حفظ</button>
+ </div>`;
 }
 
-// بدء الصفحة الرئيسية
+/* Save with phone validation */
+function save(k){
+ const phone=document.getElementById("phone").value.trim();
+ if(!/^\d{11}$/.test(phone)){
+  alert("رقم الهاتف يجب أن يكون 11 رقم بالضبط");
+  return;
+ }
+ const data={
+  name:name.value,price:price.value,
+  category:category.value,seller:seller.value,
+  phone:phone,province:province.value,
+  delivery:delivery.value,uid:userUID
+ };
+ const ref=k?db.ref("products/"+k):db.ref("products").push();
+ ref.set(data).then(showHome);
+}
+
+function deleteProduct(k){
+ if(confirm("حذف الإعلان؟"))
+  db.ref("products/"+k).remove().then(loadProducts);
+}
+function editProduct(k){
+ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
+}
+
 showHome();
 </script>
 </body>
