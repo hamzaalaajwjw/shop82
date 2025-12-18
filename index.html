@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>a3len | بيع وشراء قطع البيسي</title>
 <link rel="stylesheet" href="style.css">
+<style>
+/* تطبيق الخط font.ttf */
+@font-face {
+  font-family: 'CustomFont';
+  src: url('font.ttf') format('truetype');
+}
+body, input, select, button {
+  font-family: 'CustomFont', sans-serif;
+}
+</style>
 </head>
 <body>
 
@@ -95,8 +105,9 @@ function loadProducts(){
             👤 ${p.seller} | ☎ ${p.phone}
           </div>
           <div class="actions">
+            ${p.uid === userUID ? `
             <button class="edit" onclick="editProduct('${k}')">تعديل</button>
-            <button class="del" onclick="deleteProduct('${k}')">حذف</button>
+            <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
           </div>
         </div>`;
       }
@@ -107,6 +118,51 @@ function loadProducts(){
 
 function deleteProduct(k){
   if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
+}
+
+function editProduct(k){
+  db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
+}
+
+// نشر إعلان جديد / تعديل
+function showPublish(p=null,k=null){
+  document.getElementById("content").innerHTML = `
+    <div class="form-box">
+      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
+      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
+      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
+      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
+      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
+      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
+      <select id="delivery">
+        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
+        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
+      </select>
+      <button onclick="save('${k||""}')">💾 حفظ</button>
+    </div>`;
+}
+
+// حفظ الإعلان مع uid للبائع
+function save(k){
+  const data = {
+    name: document.getElementById("name").value,
+    price: document.getElementById("price").value,
+    category: document.getElementById("category").value,
+    seller: document.getElementById("seller").value,
+    phone: document.getElementById("phone").value,
+    province: document.getElementById("province").value,
+    delivery: document.getElementById("delivery").value,
+    uid: userUID
+  };
+  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+  ref.set(data).then(showHome);
+}
+
+showHome();
+</script>
+</body>
+</html>  if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
 }
 
 function editProduct(k){
@@ -151,3 +207,4 @@ showHome();
 </script>
 </body>
 </html>
+
