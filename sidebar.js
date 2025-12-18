@@ -3,7 +3,10 @@ function toggleSidebar(){
   overlay.classList.toggle("active");
 }
 
-function go(page){ location.href=page; }
+function go(page){ 
+  toggleSidebar(); 
+  location.href=page; 
+}
 
 function protectedPublish(){
   if(firebase.auth().currentUser){
