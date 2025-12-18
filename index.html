@@ -5,224 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>a3len | بيع وشراء قطع البيسي</title>
 <link rel="stylesheet" href="style.css">
-<style>
-@font-face {
-  font-family: 'CustomFont';
-  src: url('font.ttf') format('truetype');
-}
-body, input, select, button {
-  font-family: 'CustomFont', sans-serif;
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  background:#0f1115;
-  color:#e5e7eb;
-}
-
-/* ===== Header ===== */
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#0b0d12;
-  padding:15px 20px;
-  border-bottom:1px solid #1f2937;
-  position:sticky;
-  top:0;
-  z-index:101;
-}
-.logo{
-  font-size:24px;
-  font-weight:bold;
-}
-.tagline{
-  font-size:14px;
-  color:#aaa;
-}
-.menu-toggle{
-  font-size:24px;
-  cursor:pointer;
-}
-
-/* ===== Layout ===== */
-.layout{
-  display:flex;
-  min-height:calc(100vh - 60px);
-}
-
-/* ===== Sidebar ===== */
-.sidebar{
-  width:220px;
-  background:#111318;
-  padding:20px;
-  transition:transform 0.3s ease;
-  transform:translateX(-100%);
-  position:fixed;
-  height:100%;
-  top:0;
-  left:0;
-  z-index:102;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.sidebar.active{
-  transform:translateX(0);
-}
-.sidebar button{
-  padding:10px;
-  background:#1f2937;
-  border:none;
-  color:#e5e7eb;
-  font-size:16px;
-  cursor:pointer;
-  border-radius:6px;
-  transition:background 0.2s;
-}
-.sidebar button:hover{
-  background:#374151;
-}
-
-/* Overlay */
-.overlay{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background: rgba(0,0,0,0.4);
-  display:none;
-  z-index:101;
-}
-.overlay.active{
-  display:block;
-}
-
-/* ===== Main ===== */
-main{
-  flex:1;
-  padding:20px;
-  margin-left:0;
-}
-@media(min-width:768px){
-  .sidebar{
-    transform:translateX(0);
-    position:relative;
-  }
-  main{
-    margin-left:220px;
-  }
-  .overlay{
-    display:none !important;
-  }
-}
-
-/* ===== Search & Filter ===== */
-.search-bar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:20px;
-}
-.search-bar input, .search-bar select{
-  flex:1;
-  padding:10px;
-  border-radius:6px;
-  border:none;
-  background:#1f2937;
-  color:#e5e7eb;
-}
-
-/* ===== Cards ===== */
-.cards{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:15px;
-}
-@media(min-width:600px){
-  .cards{
-    grid-template-columns:1fr 1fr;
-  }
-}
-@media(min-width:900px){
-  .cards{
-    grid-template-columns:1fr 1fr 1fr;
-  }
-}
-
-.card{
-  background:#1c1f27;
-  padding:15px;
-  border-radius:8px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.3);
-}
-.card h3{
-  margin:0;
-  font-size:18px;
-}
-.card .price{
-  font-weight:bold;
-  color:#38bdf8;
-}
-.card .meta, .card .seller{
-  font-size:13px;
-  color:#aaa;
-  display:flex;
-  justify-content:space-between;
-}
-.card .actions{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-}
-.card .actions button{
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:13px;
-}
-.card .actions .edit{
-  background:#10b981;
-  color:#fff;
-}
-.card .actions .del{
-  background:#ef4444;
-  color:#fff;
-}
-
-/* ===== Form ===== */
-.form-box{
-  background:#1c1f27;
-  padding:20px;
-  border-radius:8px;
-  max-width:500px;
-  margin:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.form-box input, .form-box select, .form-box button{
-  padding:10px;
-  border-radius:6px;
-  border:none;
-  background:#111318;
-  color:#e5e7eb;
-}
-.form-box button{
-  background:#38bdf8;
-  color:#000;
-  cursor:pointer;
-}
-.empty{
-  text-align:center;
-  margin-top:30px;
-  color:#aaa;
-}
-</style>
 </head>
 <body>
 
@@ -232,13 +14,13 @@ main{
   <div class="tagline">سوق بيع وشراء قطع البيسي</div>
 </header>
 
+<div class="overlay" onclick="closeSidebar()"></div>
+
 <div class="layout">
   <aside class="sidebar">
-    <button onclick="showHome();toggleSidebar()">🏠 الرئيسية</button>
-    <button onclick="showPublish();toggleSidebar()">➕ نشر إعلان</button>
+    <button onclick="showHome()">🏠 الرئيسية</button>
+    <button onclick="showPublish()">➕ نشر إعلان</button>
   </aside>
-
-  <div class="overlay" onclick="toggleSidebar()"></div>
 
   <main id="content"></main>
 </div>
@@ -263,7 +45,6 @@ firebase.initializeApp(firebaseConfig);
 
 // تسجيل دخول أنونيموس تلقائي
 firebase.auth().signInAnonymously().catch(err => console.error(err));
-
 const db = firebase.database();
 let userUID = null;
 firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
@@ -273,14 +54,17 @@ const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Ca
 
 // Sidebar
 function toggleSidebar(){
-  const sb = document.querySelector(".sidebar");
-  const ov = document.querySelector(".overlay");
-  sb.classList.toggle("active");
-  ov.classList.toggle("active");
+  document.querySelector(".sidebar").classList.toggle("active");
+  document.querySelector(".overlay").classList.toggle("active");
+}
+function closeSidebar(){
+  document.querySelector(".sidebar").classList.remove("active");
+  document.querySelector(".overlay").classList.remove("active");
 }
 
 // عرض الصفحة الرئيسية / المنتجات
 function showHome(){
+  closeSidebar();
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
       <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
@@ -294,49 +78,65 @@ function showHome(){
   loadProducts();
 }
 
+// تحميل المنشورات مع ترتيب منشورات صاحب الـUID أولاً عنده فقط
 function loadProducts(){
   const s = document.getElementById("search").value.toLowerCase();
   const c = document.getElementById("cat").value;
+
   db.ref("products").once("value", snap=>{
-    let html = "";
     const d = snap.val() || {};
+    const htmlCards = [];
+
     Object.keys(d).forEach(k=>{
       const p = d[k];
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        html += `
-        <div class="card">
-          <h3>${p.name}</h3>
-          <span class="price">${p.price} د.ع</span>
-          <div class="meta">
-            <span>${p.category}</span>
-            <span>${p.province}</span>
-            <span>توصيل: ${p.delivery}</span>
+        htmlCards.push({uid:p.uid,key:k,html:`
+          <div class="card">
+            <h3>${p.name}</h3>
+            <span class="price">${p.price} د.ع</span>
+            <div class="meta">
+              <span>${p.category}</span>
+              <span>${p.province}</span>
+              <span>توصيل: ${p.delivery}</span>
+            </div>
+            <div class="seller">
+              👤 ${p.seller} | ☎ ${p.phone}
+            </div>
+            <div class="actions">
+              ${p.uid === userUID ? `
+              <button class="edit" onclick="editProduct('${k}')">تعديل</button>
+              <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
+            </div>
           </div>
-          <div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
-          </div>
-          <div class="actions">
-            ${p.uid === userUID ? `
-            <button class="edit" onclick="editProduct('${k}')">تعديل</button>
-            <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
-          </div>
-        </div>`;
+        `});
       }
     });
-    document.getElementById("products").innerHTML = html || "<p class='empty'>لا توجد إعلانات</p>";
+
+    // إذا صاحب الإعلان، ترتيب منشوراته أولاً
+    let finalHTML;
+    if(userUID){
+      const myPosts = htmlCards.filter(p=>p.uid===userUID).map(p=>p.html);
+      const otherPosts = htmlCards.filter(p=>p.uid!==userUID).map(p=>p.html);
+      finalHTML = myPosts.concat(otherPosts).join("");
+    } else {
+      finalHTML = htmlCards.map(p=>p.html).join("");
+    }
+
+    document.getElementById("products").innerHTML = finalHTML || "<p class='empty'>لا توجد إعلانات</p>";
   });
 }
 
+// حذف وإضافة تعديل
 function deleteProduct(k){
   if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
 }
-
 function editProduct(k){
   db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
 }
 
 // نشر إعلان جديد / تعديل
 function showPublish(p=null,k=null){
+  closeSidebar();
   document.getElementById("content").innerHTML = `
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
