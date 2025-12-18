@@ -11,14 +11,8 @@
 @font-face {
   font-family: 'CustomFont';
   src: url('font.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
 }
-
-/* تطبيق الخط على كامل الموقع */
-body, input, select, button, textarea {
-  font-family: 'CustomFont', sans-serif;
-}
+body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 
 /* ===== Budget Dialog ===== */
 .budget-btn {
@@ -60,10 +54,7 @@ body, input, select, button, textarea {
   color:#000;
   cursor:pointer;
 }
-.budget-dialog .close-btn {
-  background:#ef4444;
-  margin-left:10px;
-}
+.budget-dialog .close-btn { background:#ef4444; margin-left:10px; }
 </style>
 </head>
 <body>
@@ -113,7 +104,6 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-// تسجيل دخول أنونيموس تلقائي
 firebase.auth().signInAnonymously().catch(err => console.error(err));
 const db = firebase.database();
 let userUID = null;
@@ -133,7 +123,7 @@ function closeSidebar(){
   document.querySelector(".overlay").classList.remove("active");
 }
 
-// عرض الصفحة الرئيسية / المنتجات
+// الصفحة الرئيسية
 function showHome(){
   closeSidebar();
   document.getElementById("content").innerHTML = `
@@ -150,13 +140,9 @@ function showHome(){
   loadProducts();
 }
 
-// عرض حوار الميزانية
-function showBudgetDialog(){
-  document.getElementById("budgetDialog").style.display = "block";
-}
-function closeBudget(){
-  document.getElementById("budgetDialog").style.display = "none";
-}
+// Budget Dialog
+function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
+function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
 function applyBudget(){
   const val = parseFloat(document.getElementById("maxBudget").value);
   budget = !isNaN(val) ? val : null;
@@ -164,11 +150,10 @@ function applyBudget(){
   loadProducts();
 }
 
-// تحميل المنشورات مع ترتيب منشورات صاحب الـUID أولاً عنده فقط وفلاتر السعر
+// تحميل المنتجات مع ترتيب صاحب الإعلان أولاً وفلترة السعر
 function loadProducts(){
   const s = document.getElementById("search").value.toLowerCase();
   const c = document.getElementById("cat").value;
-
   db.ref("products").once("value", snap=>{
     const d = snap.val() || {};
     const htmlCards = [];
@@ -177,7 +162,7 @@ function loadProducts(){
       const p = d[k];
       const price = parseFloat(p.price) || 0;
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        if(budget && price > budget) return; // فلترة بالميزانية
+        if(budget && price > budget) return;
         htmlCards.push({uid:p.uid,key:k,html:`
           <div class="card">
             <h3>${p.name}</h3>
@@ -191,7 +176,7 @@ function loadProducts(){
               👤 ${p.seller} | ☎ ${p.phone}
             </div>
             <div class="actions">
-              ${p.uid === userUID ? `
+              ${p.uid===userUID?`
               <button class="edit" onclick="editProduct('${k}')">تعديل</button>
               <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
             </div>
@@ -208,20 +193,13 @@ function loadProducts(){
     } else {
       finalHTML = htmlCards.map(p=>p.html).join("");
     }
-
     document.getElementById("products").innerHTML = finalHTML || "<p class='empty'>لا توجد إعلانات</p>";
   });
 }
 
-// حذف وإضافة تعديل
-function deleteProduct(k){
-  if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
-}
-function editProduct(k){
-  db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
-}
-
-// نشر إعلان جديد / تعديل
+// حذف / تعديل / نشر
+function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
+function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
 function showPublish(p=null,k=null){
   closeSidebar();
   document.getElementById("content").innerHTML = `
@@ -240,8 +218,6 @@ function showPublish(p=null,k=null){
       <button onclick="save('${k||""}')">💾 حفظ</button>
     </div>`;
 }
-
-// حفظ الإعلان مع uid للبائع
 function save(k){
   const data = {
     name: document.getElementById("name").value,
@@ -253,10 +229,11 @@ function save(k){
     delivery: document.getElementById("delivery").value,
     uid: userUID
   };
-  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+  const ref = k?db.ref("products/"+k):db.ref("products").push();
   ref.set(data).then(showHome);
 }
 
+// بدء الصفحة الرئيسية
 showHome();
 </script>
 </body>
