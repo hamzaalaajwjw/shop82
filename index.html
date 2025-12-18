@@ -1,74 +1,148 @@
-<!-- القائمة الجانبية -->
-<div class="sidebar">
-    <div class="sidebar-header">القائمة</div>
-    <ul>
-        <li><a href="#">الصفحة الرئيسية</a></li>
-        <li><a href="#">الجامعات</a></li>
-        <li><a href="#">التصنيفات</a></li>
-        <li><a href="#">أحدث التقييمات</a></li>
-        <li><a href="#">الإعدادات</a></li>
-        <li><a href="#">تسجيل خروج</a></li>
-    </ul>
-</div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقييم جامعات العراق - كامل</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
+@font-face{
+    font-family: 'MyFont';
+    src: url('font.ttf') format('truetype');
+}
+
+body{
+    font-family:'MyFont', Arial, sans-serif;
+    background:#111;
+    color:#eee;
+    margin:0;
+    padding:0;
+}
+
+.container{
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
+    background:#1a1a1a;
+    border-radius:10px;
+}
+
+header{
+    text-align:center;
+    font-size:24px;
+    margin-bottom:20px;
+}
+
+/* عناصر البحث */
+select,
+input[type=text]{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    font-size:16px;
+    border-radius:5px;
+    border:none;
+    background:#333;
+    color:#eee;
+}
+
+input::placeholder{color:#aaa;}
+
+ul{list-style:none;padding:0;}
+
+li{
+    padding:12px 15px;
+    margin-bottom:10px;
+    background:#222;
+    border-radius:5px;
+    transition:0.3s;
+    position:relative;
+}
+
+li:hover{background:#444;}
+
+.rating{
+    float:right;
+    color:#ffb400;
+    font-weight:bold;
+    margin-left:10px;
+}
+
+.single-star{
+    position:absolute;
+    left:15px;
+    top:12px;
+    font-size:22px;
+    color:#ffb400;
+    cursor:pointer;
+}
+
+/* ديالوغ التقييم */
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+
+.modal-content{
+    background:#1a1a1a;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    width:260px;
+}
+
+.modal-content h3{
+    margin-bottom:15px;
+}
+
+.rate-stars{
+    font-size:30px;
+}
+
+.rate-stars span{
+    color:#555;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.rate-stars span.active{
+    color:#ffb400;
+}
+
 /* ===== القائمة الجانبية ===== */
+#sidebarToggle{
+    position:fixed;
+    top:15px;
+    right:15px;
+    background:#ffb400;
+    color:#111;
+    font-size:24px;
+    padding:10px 15px;
+    border-radius:5px;
+    cursor:pointer;
+    z-index:1100;
+    transition:0.3s;
+}
+
+#sidebarToggle:hover{
+    background:#e6a200;
+}
+
 .sidebar{
     position:fixed;
     top:0;
-    right:0;
+    right:-250px; /* مخفية بالافتراضي */
     height:100%;
     width:250px;
     background:#1a1a1a;
     border-left:1px solid #333;
-    padding-top:20px;
-    box-shadow:-2px 0 10px rgba(0,0,0,0.5);
-    font-family:'MyFont', Arial, sans-serif;
-    transition:0.3s;
-    z-index:1000;
-}
-
-.sidebar-header{
-    text-align:center;
-    font-size:20px;
-    margin-bottom:20px;
-    font-weight:bold;
-    color:#ffb400;
-}
-
-.sidebar ul{
-    list-style:none;
-    padding:0;
-}
-
-.sidebar ul li{
-    margin-bottom:10px;
-}
-
-.sidebar ul li a{
-    display:block;
-    padding:12px 20px;
-    color:#eee;
-    text-decoration:none;
-    border-radius:5px;
-    transition:0.3s;
-}
-
-.sidebar ul li a:hover{
-    background:#333;
-    color:#ffb400;
-}
-
-/* تفاعل القائمة عند تصغير الشاشة */
-@media(max-width:800px){
-    .sidebar{
-        width:200px;
-    }
-    .sidebar-header{
-        font-size:18px;
-    }
-    .sidebar ul li a{
-        padding:10px 15px;
-    }
-}
-</style>
+    paddi
