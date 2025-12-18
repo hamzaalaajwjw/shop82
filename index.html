@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقييم جامعات العراق - كامل</title>
+<title>تقييم جامعات العراق</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -89,13 +89,22 @@ li:hover{
 
 .uni-name{
     flex:2;
+    text-align:center;
     font-weight:bold;
     font-size:16px;
 }
 
+.rating-info{
+    flex:1;
+    text-align:left;  /* على اليسار */
+    font-weight:bold;
+    color:#ffb400;
+    font-size:14px;
+}
+
 .rating-btn{
     flex:1;
-    text-align:center;
+    text-align:right; /* على اليمين */
     cursor:pointer;
     font-size:22px;
     color:#ffb400;
@@ -104,14 +113,6 @@ li:hover{
 
 .rating-btn:hover{
     transform:scale(1.2);
-}
-
-.rating-count{
-    flex:1;
-    text-align:right;
-    font-weight:bold;
-    color:#ffb400;
-    font-size:14px;
 }
 
 /* الديالوك */
@@ -249,5 +250,6 @@ document.getElementById("topBtn").onclick = ()=>{
     window.location.href = "top.html";
 };
 </script>
+
 </body>
 </html>
