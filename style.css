@@ -1,145 +1,256 @@
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,Segoe UI,Arial;
-  background:#0f1115;
-  color:#e5e7eb;
+@font-face {
+  font-family: 'A3lenFont';
+  src: url('font.ttf');
 }
 
-/* ===== Header ===== */
-.topbar{
-  background:#0b0d12;
-  padding:20px;
-  border-bottom:1px solid #1f2937;
-}
-.logo{
-  font-size:32px;
-  font-weight:900;
-  color:#38bdf8;
-}
-.tagline{
-  font-size:14px;
-  color:#9ca3af;
+:root {
+  --bg: #0b0f14;
+  --bg-2: #020617;
+  --card: #121823;
+  --accent: #c9a24d;
+  --accent-soft: rgba(201,162,77,0.15);
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #1e293b;
+  --shadow: 0 20px 50px rgba(0,0,0,0.65);
 }
 
-/* ===== Layout ===== */
-.layout{display:flex;height:calc(100vh - 90px)}
-.sidebar{
-  width:240px;
-  background:#0b0d12;
-  padding:20px;
-  border-left:1px solid #1f2937;
-}
-.sidebar button{
-  width:100%;
-  padding:14px;
-  margin-bottom:10px;
-  background:#111827;
-  color:#e5e7eb;
-  border:none;
-  border-radius:8px;
-  font-weight:600;
-  cursor:pointer;
-}
-.sidebar button:hover{background:#1f2937}
-
-/* ===== Content ===== */
-main{flex:1;padding:30px;overflow:auto}
-
-/* ===== Search ===== */
-.search-bar{
-  display:flex;
-  gap:15px;
-  margin-bottom:25px;
-}
-.search-bar input,.search-bar select{
-  background:#111827;
-  border:1px solid #1f2937;
-  color:#fff;
-  padding:12px;
-  border-radius:10px;
-  flex:1;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'A3lenFont', sans-serif;
 }
 
-/* ===== Cards ===== */
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:20px;
-}
-.card{
-  background:#111827;
-  border:1px solid #1f2937;
-  border-radius:14px;
-  padding:20px;
-  transition:.3s;
-}
-.card:hover{
-  transform:translateY(-6px);
-  border-color:#38bdf8;
-}
-.card h3{margin:0 0 10px;color:#38bdf8}
-.price{
-  font-size:20px;
-  font-weight:700;
-}
-.meta{
-  display:flex;
-  gap:10px;
-  font-size:13px;
-  color:#9ca3af;
-  margin:10px 0;
-}
-.seller{
-  font-size:14px;
-  margin-bottom:15px;
-}
-.actions{
-  display:flex;
-  gap:10px;
-}
-.actions button{
-  flex:1;
-  padding:8px;
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
-}
-.edit{background:#facc15;color:#000}
-.del{background:#ef4444;color:#fff}
-
-/* ===== Form ===== */
-.form-box{
-  max-width:520px;
-  background:#111827;
-  padding:30px;
-  border-radius:16px;
-  border:1px solid #1f2937;
-}
-.form-box h2{color:#38bdf8;margin-bottom:20px}
-.form-box input,.form-box select{
-  width:100%;
-  margin-bottom:12px;
-  padding:12px;
-  background:#0f172a;
-  border:1px solid #1f2937;
-  color:#fff;
-  border-radius:10px;
-}
-.form-box button{
-  width:100%;
-  padding:14px;
-  background:#38bdf8;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  font-weight:900;
-  cursor:pointer;
+body {
+  background: linear-gradient(180deg, #020617, #000000);
+  color: var(--text);
+  min-height: 100vh;
 }
 
-.empty{
-  color:#6b7280;
-  font-size:18px;
-  text-align:center;
+/* ================= HEADER ================= */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 30px;
+  background: linear-gradient(180deg,#0f172a,#020617);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.topbar input {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.topbar input::placeholder {
+  color: var(--muted);
+}
+
+.publishBtn {
+  background: linear-gradient(135deg,var(--accent),#f5d88c);
+  color: #000;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 8px 25px var(--accent-soft);
+}
+
+/* ================= FILTERS ================= */
+
+.filters {
+  display: flex;
+  gap: 15px;
+  padding: 20px 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filters select {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: var(--text);
+}
+
+/* ================= PRODUCTS ================= */
+
+.grid {
+  padding: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+  gap: 26px;
+}
+
+.card {
+  background: linear-gradient(160deg,#111827,#020617);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  transition: 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+}
+
+.card h3 {
+  font-size: 19px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.price {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.meta {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ================= MODAL ================= */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modalBox {
+  width: 430px;
+  background: linear-gradient(180deg,#020617,#000);
+  padding: 30px;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.modalBox h2 {
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.modalBox input,
+.modalBox select {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 13px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.modalBox button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.modalBox button:first-of-type {
+  background: linear-gradient(135deg,var(--accent),#f5d88c);
+  color: #000;
+}
+
+.modalBox .close {
+  background: transparent;
+  color: var(--muted);
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .logo {
+    width: 100%;
+    text-align: center;
+    font-size: 26px;
+  }
+
+  .topbar input {
+    width: 100%;
+    font-size: 15px;
+  }
+
+  .publishBtn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+  }
+
+  .filters {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .filters select {
+    width: 100%;
+  }
+
+  .grid {
+    padding: 16px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+  }
+
+  .price {
+    font-size: 21px;
+  }
+
+  .meta {
+    font-size: 13px;
+  }
+
+  .modalBox {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 26px;
+    overflow-y: auto;
+  }
 }
