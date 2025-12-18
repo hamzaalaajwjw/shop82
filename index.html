@@ -1,76 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>a3len | سوق قطع البيسي</title>
-
+<title>a3len | الرئيسية</title>
 <link rel="stylesheet" href="style.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="logo">a3len</div>
-  <input type="text" id="searchInput" placeholder="ابحث عن اسم القطعة..." onkeyup="loadProducts()">
-  <button class="publishBtn" onclick="openPublish()">نشر إعلان</button>
-</header>
+<!-- زر القائمة -->
+<div class="lux-menu-btn" onclick="toggleSidebar()">☰</div>
 
-<section class="filters">
-  <select id="categoryFilter" onchange="loadProducts()">
-    <option value="">كل القطع</option>
-    <option>CPU</option>
-    <option>GPU</option>
-    <option>RAM</option>
-    <option>Motherboard</option>
-    <option>Storage</option>
-    <option>Power Supply</option>
-    <option>Case</option>
-    <option>Cooling</option>
-    <option>Accessories</option>
-  </select>
+<!-- القائمة الجانبية -->
+<div class="lux-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<aside class="lux-sidebar" id="sidebar">
+  <div class="lux-title">a3len</div>
+  <button onclick="go('index.html')">الصفحة الرئيسية</button>
+  <button onclick="go('auth.html')">تسجيل / إنشاء حساب</button>
+  <button onclick="protectedPublish()">نشر إعلان</button>
+  <div class="lux-user" id="userInfo"></div>
+</aside>
 
-  <select id="deliveryFilter" onchange="loadProducts()">
-    <option value="">التوصيل</option>
-    <option value="نعم">يتوفر</option>
-    <option value="لا">غير متوفر</option>
-  </select>
-</section>
-
-<main id="products" class="grid"></main>
-
-<!-- نافذة النشر -->
-<div class="modal" id="publishModal">
-  <div class="modalBox">
-    <h2>نشر إعلان</h2>
-
-    <input id="p_name" placeholder="اسم القطعة">
-    <input id="p_price" placeholder="السعر (د.ع)">
-    <input id="p_seller" placeholder="اسم البائع">
-    <input id="p_phone" placeholder="رقم الهاتف">
-    <input id="p_city" placeholder="المحافظة">
-
-    <select id="p_category">
-      <option>CPU</option><option>GPU</option><option>RAM</option>
-      <option>Motherboard</option><option>Storage</option>
-      <option>Power Supply</option><option>Case</option>
-      <option>Cooling</option><option>Accessories</option>
-    </select>
-
-    <select id="p_delivery">
-      <option>نعم</option>
-      <option>لا</option>
-    </select>
-
-    <button onclick="publish()">نشر</button>
-    <button class="close" onclick="closePublish()">إغلاق</button>
-  </div>
-</div>
+<main class="grid" id="products"></main>
 
 <script src="app.js"></script>
+<script src="sidebar.js"></script>
 </body>
 </html>
