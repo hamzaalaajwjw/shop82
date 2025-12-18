@@ -37,7 +37,6 @@ header{
     margin-bottom:20px;
 }
 
-/* عناصر البحث */
 select,
 input[type=text]{
     width:100%;
@@ -81,7 +80,6 @@ li:hover{background:#444;}
     cursor:pointer;
 }
 
-/* ديالوغ التقييم */
 .modal{
     display:none;
     position:fixed;
@@ -118,31 +116,36 @@ li:hover{background:#444;}
     color:#ffb400;
 }
 
-/* ===== القائمة الجانبية ===== */
-#sidebarToggle{
-    position:fixed;
-    top:15px;
-    right:15px;
-    background:#ffb400;
-    color:#111;
-    font-size:24px;
-    padding:10px 15px;
-    border-radius:5px;
-    cursor:pointer;
-    z-index:1100;
-    transition:0.3s;
+@media(max-width:600px){
+    select,
+    input[type=text]{font-size:14px;}
 }
+</style>
+</head>
 
-#sidebarToggle:hover{
-    background:#e6a200;
-}
+<body>
 
-.sidebar{
-    position:fixed;
-    top:0;
-    right:-250px; /* مخفية بالافتراضي */
-    height:100%;
-    width:250px;
-    background:#1a1a1a;
-    border-left:1px solid #333;
-    paddi
+<header>⭐ تقييم جامعات العراق</header>
+
+<div class="container">
+    <select id="province"></select>
+    <input type="text" id="search" placeholder="ابحث عن جامعة...">
+    <ul id="list"></ul>
+</div>
+
+<div id="rateModal" class="modal">
+    <div class="modal-content">
+        <h3>قيّم الجامعة الآن</h3>
+        <div class="rate-stars">
+            <span data-rate="1">★</span>
+            <span data-rate="2">★</span>
+            <span data-rate="3">★</span>
+            <span data-rate="4">★</span>
+            <span data-rate="5">★</span>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
