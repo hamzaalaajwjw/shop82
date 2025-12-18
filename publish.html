@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>a3len | نشر إعلان</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>نشر إعلان</h2>
+  <input id="name" placeholder="اسم القطعة">
+  <input id="price" placeholder="السعر">
+  <input id="seller" placeholder="اسم البائع">
+  <input id="phone" placeholder="رقم الهاتف">
+  <input id="city" placeholder="المحافظة">
+
+  <select id="category">
+    <option>CPU</option><option>GPU</option><option>RAM</option>
+    <option>Motherboard</option><option>Storage</option>
+    <option>Power Supply</option><option>Case</option>
+    <option>Cooling</option><option>Accessories</option>
+  </select>
+
+  <select id="delivery">
+    <option>نعم</option>
+    <option>لا</option>
+  </select>
+
+  <button onclick="publishAd()">نشر</button>
+</div>
+
+<script src="app.js"></script>
+<script>
+firebase.auth().onAuthStateChanged(u=>{
+  if(!u) location.href="auth.html";
+});
+</script>
+</body>
+</html>
