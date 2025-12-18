@@ -9,52 +9,52 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-firebase.auth().signInAnonymously();
+const auth = firebase.auth();
 const db = firebase.database();
 
-function loadProducts(){
-  const search = searchInput.value.toLowerCase();
-  const cat = categoryFilter.value;
-  const del = deliveryFilter.value;
+/* تسجيل */
+function register(){
+  auth.createUserWithEmailAndPassword(email.value,password.value)
+    .then(res=>{
+      db.ref("users/"+res.user.uid).set({username:username.value});
+      location.href="index.html";
+    });
+}
 
-  db.ref("products").once("value", snap=>{
-    products.innerHTML = "";
-    snap.forEach(c=>{
-      const p = c.val();
-      if(
-        (!cat || p.category===cat) &&
-        (!del || p.delivery===del) &&
-        (p.name.toLowerCase().includes(search))
-      ){
-        products.innerHTML += `
-          <div class="card">
-            <h3>${p.name}</h3>
-            <div class="price">${p.price} د.ع</div>
-            <div class="meta">${p.category} • ${p.city}</div>
-            <div class="meta">بائع: ${p.seller}</div>
-            <div class="meta">📞 ${p.phone}</div>
-            <div class="meta">توصيل: ${p.delivery}</div>
-          </div>`;
-      }
+/* دخول */
+function login(){
+  auth.signInWithEmailAndPassword(email.value,password.value)
+    .then(()=> location.href="index.html");
+}
+
+/* نشر */
+function publishAd(){
+  db.ref("products").push({
+    name:name.value,
+    price:price.value,
+    seller:seller.value,
+    phone:phone.value,
+    city:city.value,
+    category:category.value,
+    delivery:delivery.value,
+    uid:auth.currentUser.uid
+  }).then(()=>location.href="index.html");
+}
+
+/* عرض */
+if(document.getElementById("products")){
+  db.ref("products").on("value",s=>{
+    products.innerHTML="";
+    s.forEach(c=>{
+      const p=c.val();
+      products.innerHTML+=`
+      <div class="card">
+        <h3>${p.name}</h3>
+        <div class="price">${p.price} د.ع</div>
+        <div class="meta">${p.category} • ${p.city}</div>
+        <div class="meta">📞 ${p.phone}</div>
+        <div class="meta">توصيل: ${p.delivery}</div>
+      </div>`;
     });
   });
 }
-
-function openPublish(){ publishModal.style.display="flex"; }
-function closePublish(){ publishModal.style.display="none"; }
-
-function publish(){
-  db.ref("products").push({
-    name:p_name.value,
-    price:p_price.value,
-    seller:p_seller.value,
-    phone:p_phone.value,
-    city:p_city.value,
-    category:p_category.value,
-    delivery:p_delivery.value
-  });
-  closePublish();
-  loadProducts();
-}
-
-loadProducts();
