@@ -1,6 +1,6 @@
 /* ===== Base ===== */
 *{box-sizing:border-box}
-body, input, select, button {
+body, input, select, button, textarea {
   font-family:'CustomFont',sans-serif;
   margin:0;
   padding:0;
@@ -148,4 +148,4 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   .sidebar{position:relative;right:0}
   main{margin-left:220px}
   .overlay{display:none !important}
-}
+       }
