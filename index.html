@@ -29,7 +29,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// Firebase setup
+// إعداد Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
   authDomain: "a3len-3ad54.firebaseapp.com",
@@ -40,16 +40,23 @@ const firebaseConfig = {
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
 firebase.initializeApp(firebaseConfig);
-firebase.auth().signInAnonymously();
+
+// تسجيل دخول أنونيموس تلقائي
+firebase.auth().signInAnonymously().catch(err => console.error(err));
 
 const db = firebase.database();
+let userUID = null;
+firebase.auth().onAuthStateChanged(u => {
+  if(u) userUID = u.uid;
+});
+
+// باقي الكود كما هو من عندك
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 
 function toggleSidebar(){
   document.querySelector(".sidebar").classList.toggle("active");
 }
 
-// Home / Products
 function showHome(){
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
