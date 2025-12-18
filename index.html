@@ -72,28 +72,23 @@ ul{
 
 li{
     background:#1a1a1a;
-    padding:12px 15px 12px 50px;
+    padding:12px 15px;
     margin-bottom:10px;
     border-radius:12px;
     box-shadow:0 8px 20px rgba(0,0,0,0.6);
     transition:0.3s;
     position:relative;
     font-size:16px;
-}
-
-li:hover{
-    transform:translateY(-5px);
-    box-shadow:0 12px 25px rgba(0,0,0,0.7);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
 .single-star{
-    position:absolute;
-    top:15px;
-    left:15px;
     font-size:22px;
     color:#ffb400;
     cursor:pointer;
-    transition:0.3s;
+    margin-left:10px;
 }
 
 .single-star:hover{
@@ -101,15 +96,15 @@ li:hover{
 }
 
 .rating{
-    position:absolute;
-    right:15px;
-    top:50%;
-    transform:translateY(-50%);
     color:#ffb400;
     font-weight:bold;
     font-size:16px;
+    display:flex;
+    gap:5px;
+    align-items:center;
 }
 
+/* الديالوك */
 .modal{
     display:none;
     position:fixed;
@@ -232,6 +227,7 @@ li:hover{
 </div>
 
 <script src="script.js"></script>
+
 <script>
 // فتح وإغلاق القائمة الجانبية
 const sidebar = document.getElementById("sidebar");
