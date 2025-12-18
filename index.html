@@ -66,42 +66,52 @@ ul{
     list-style:none;
     padding:0;
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
     gap:15px;
 }
 
 li{
     background:#1a1a1a;
     padding:12px 15px;
-    margin-bottom:10px;
     border-radius:12px;
     box-shadow:0 8px 20px rgba(0,0,0,0.6);
     transition:0.3s;
-    position:relative;
-    font-size:16px;
     display:flex;
     justify-content:space-between;
     align-items:center;
+    font-size:16px;
 }
 
-.single-star{
+li:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 25px rgba(0,0,0,0.7);
+}
+
+.uni-name{
+    flex:2;
+    font-weight:bold;
+    font-size:16px;
+}
+
+.rating-btn{
+    flex:1;
+    text-align:center;
+    cursor:pointer;
     font-size:22px;
     color:#ffb400;
-    cursor:pointer;
-    margin-left:10px;
+    transition:0.3s;
 }
 
-.single-star:hover{
+.rating-btn:hover{
     transform:scale(1.2);
 }
 
-.rating{
-    color:#ffb400;
+.rating-count{
+    flex:1;
+    text-align:right;
     font-weight:bold;
-    font-size:16px;
-    display:flex;
-    gap:5px;
-    align-items:center;
+    color:#ffb400;
+    font-size:14px;
 }
 
 /* الديالوك */
@@ -239,6 +249,5 @@ document.getElementById("topBtn").onclick = ()=>{
     window.location.href = "top.html";
 };
 </script>
-
 </body>
 </html>
