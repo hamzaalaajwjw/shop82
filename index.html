@@ -17,69 +17,105 @@
 
 body{
     font-family:'MyFont', Arial, sans-serif;
-    background:#111;
+    background: linear-gradient(135deg,#0d0d0d,#1a1a1a);
     color:#eee;
     margin:0;
     padding:0;
 }
 
-.container{
-    max-width:900px;
-    margin:30px auto;
-    padding:20px;
-    background:#1a1a1a;
-    border-radius:10px;
-}
-
 header{
     text-align:center;
-    font-size:24px;
-    margin-bottom:20px;
-}
-
-select,
-input[type=text]{
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-    font-size:16px;
-    border-radius:5px;
-    border:none;
-    background:#333;
-    color:#eee;
-}
-
-input::placeholder{color:#aaa;}
-
-ul{list-style:none;padding:0;}
-
-li{
-    padding:12px 15px;
-    margin-bottom:10px;
-    background:#222;
-    border-radius:5px;
-    transition:0.3s;
-    position:relative;
-}
-
-li:hover{background:#444;}
-
-.rating{
-    float:right;
-    color:#ffb400;
+    padding:30px 0;
+    font-size:32px;
     font-weight:bold;
-    margin-left:10px;
+    letter-spacing:1px;
+    background: linear-gradient(90deg,#ff7f50,#ffb400);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.single-star{
-    position:absolute;
-    left:15px;
-    top:12px;
-    font-size:22px;
-    color:#ffb400;
+.container{
+    max-width:900px;
+    margin:20px auto;
+    padding:20px;
+}
+
+/* الحقول والمربعات */
+select,
+input[type="text"]{
+    width:100%;
+    max-width:400px;
+    padding:10px 12px;
+    font-size:16px;
+    border-radius:8px;
+    border:none;
+    background:#222;
+    color:#eee;
+    margin:5px auto;
+    display:block;
+    box-sizing:border-box;
+    transition:0.3s;
+}
+
+select:hover,
+input:hover{
+    background:#333;
     cursor:pointer;
 }
 
+/* القوائم */
+ul{
+    list-style:none;
+    padding:0;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:15px;
+}
+
+/* عناصر القائمة */
+li{
+    background:#1a1a1a;
+    padding:12px 15px 12px 50px; /* مساحة للنجمة يسار */
+    margin-bottom:10px;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.6);
+    transition:0.3s;
+    position:relative;
+    font-size:16px;
+}
+
+li:hover{
+    transform:translateY(-5px);
+    box-shadow:0 12px 25px rgba(0,0,0,0.7);
+}
+
+/* النجمة يسار الكارت */
+.single-star{
+    position:absolute;
+    top:15px;
+    left:15px;
+    font-size:22px;
+    color:#ffb400;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.single-star:hover{
+    transform:scale(1.2);
+}
+
+/* نص التقييم */
+.rating{
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#ffb400;
+    font-weight:bold;
+    font-size:16px;
+}
+
+/* الديالوك */
 .modal{
     display:none;
     position:fixed;
@@ -93,7 +129,7 @@ li:hover{background:#444;}
 .modal-content{
     background:#1a1a1a;
     padding:20px;
-    border-radius:10px;
+    border-radius:12px;
     text-align:center;
     width:260px;
 }
@@ -116,14 +152,51 @@ li:hover{background:#444;}
     color:#ffb400;
 }
 
+/* القائمة الجانبية */
+#sidebar{
+    position: fixed;
+    right:0;
+    top:50%;
+    transform: translateY(-50%);
+    background: #111;
+    padding: 10px;
+    border-radius: 8px 0 0 8px;
+    box-shadow: -4px 0 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+#sidebar button{
+    display:block;
+    margin:10px 0;
+    padding:12px 15px;
+    background:#222;
+    color:#ffb400;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+#sidebar button:hover{
+    background:#333;
+    transform:translateX(-5px);
+}
+
 @media(max-width:600px){
+    ul{grid-template-columns:1fr;}
     select,
-    input[type=text]{font-size:14px;}
+    input[type="text"]{font-size:14px;}
 }
 </style>
 </head>
 
 <body>
+
+<!-- القائمة الجانبية -->
+<div id="sidebar">
+    <button id="topBtn">أفضل الجامعات تقييم</button>
+</div>
 
 <header>⭐ تقييم جامعات العراق</header>
 
@@ -147,5 +220,13 @@ li:hover{background:#444;}
 </div>
 
 <script src="script.js"></script>
+
+<script>
+// زر فتح أفضل الجامعات
+document.getElementById("topBtn").onclick = ()=>{
+    window.location.href = "top.html";
+};
+</script>
+
 </body>
 </html>
