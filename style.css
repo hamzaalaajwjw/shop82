@@ -184,6 +184,24 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
 .budget-dialog button:not(.close-btn){background:#38bdf8;color:#000}
 .budget-dialog .close-btn{background:#ef4444;margin-left:10px;color:#fff}
 
+/* ===== Pagination ===== */
+#pagination{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-top:20px}
+#pagination button{
+  padding:6px 10px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  background:#1f2937;
+  color:#e5e7eb;
+  transition: background 0.2s;
+}
+#pagination button:hover{background:#38bdf8;color:#000}
+#pagination button.active{background:#38bdf8;color:#000}
+@media(max-width:500px){
+  #pagination button{padding:5px 8px;font-size:13px}
+}
+
 /* ===== Responsive ===== */
 @media(max-width:768px){
   .layout{flex-direction:column}
@@ -196,4 +214,4 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   .sidebar{position:relative;right:0}
   main{margin-left:220px}
   .overlay{display:none !important}
-}
+                                      }
