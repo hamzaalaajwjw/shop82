@@ -18,7 +18,7 @@ firebase.auth().onAuthStateChanged(u=>{
     if(u) userUID = u.uid;
 });
 
-// كل الجامعات لكل المحافظات (18 محافظة)
+// الجامعات
 const allUniversities = {
   "بغداد":["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
   "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
@@ -46,11 +46,14 @@ const provinceEl = document.getElementById("province");
 const listEl = document.getElementById("list");
 const searchEl = document.getElementById("search");
 
-// توليد المحافظات
+let currentUniversity = null;
+
+// المحافظات
 Object.keys(allUniversities).forEach(p=>{
     const opt = document.createElement("option");
-    opt.value=p; opt.textContent=p;
-    if(p==="بغداد") opt.selected=true;
+    opt.value = p;
+    opt.textContent = p;
+    if(p === "بغداد") opt.selected = true;
     provinceEl.appendChild(opt);
 });
 
@@ -60,52 +63,95 @@ function render(){
     const prov = provinceEl.value;
     const filter = searchEl.value || "";
 
-    allUniversities[prov].filter(u=>u.includes(filter)).forEach(name=>{
-        const li=document.createElement("li");
-        li.textContent=name;
+    allUniversities[prov]
+    .filter(u => u.includes(filter))
+    .forEach(name=>{
+        const li = document.createElement("li");
 
-        const rating=document.createElement("span");
-        rating.className="rating";
-        rating.textContent="0 ⭐";
+        const star = document.createElement("span");
+        star.className = "single-star";
+        star.textContent = "★";
+        star.onclick = ()=>openRate(name);
+        li.appendChild(star);
+
+        const rating = document.createElement("span");
+        rating.className = "rating";
+        rating.textContent = "0 ⭐";
         li.appendChild(rating);
 
-        for(let i=1;i<=5;i++){
-            const b=document.createElement("button");
-            b.textContent="★";
-            b.className="star-btn";
-            b.onclick=()=>rate(name,i);
-            li.appendChild(b);
-        }
+        li.appendChild(document.createTextNode(name));
 
         listEl.appendChild(li);
-        loadRating(name,rating);
+        loadRating(name, rating);
     });
 }
 
-// تحميل التقييم من Firebase
-function loadRating(name,el){
-    db.ref("ratings/"+name.replace(/\./g,'')).on("value",s=>{
-        const d=s.val();
-        if(d) el.textContent=d.avg.toFixed(1)+" ⭐ ("+d.count+")";
+// فتح الديالوك
+function openRate(name){
+    currentUniversity = name;
+    document.getElementById("rateModal").style.display = "flex";
+}
+
+// تحميل التقييم
+function loadRating(name, el){
+    db.ref("ratings/"+name.replace(/\./g,'')).on("value", s=>{
+        const d = s.val();
+        if(d) el.textContent = d.avg.toFixed(1)+" ⭐ ("+d.count+")";
     });
 }
 
-// إضافة تقييم
-function rate(name,score){
-    if(!userUID) return;
-    const ref = db.ref("ratings/"+name.replace(/\./g,''));
+// حفظ التقييم
+function saveRating(score){
+    if(!userUID || !currentUniversity) return;
+
+    const ref = db.ref("ratings/"+currentUniversity.replace(/\./g,''));
     ref.transaction(c=>{
-        if(!c) return {sum:score,count:1,users:{[userUID]:score},avg:score};
+        if(!c){
+            return {
+                sum: score,
+                count: 1,
+                users: { [userUID]: score },
+                avg: score
+            };
+        }
+
         if(c.users && c.users[userUID]){
             c.sum = c.sum - c.users[userUID] + score;
-        } else { c.sum += score; c.count++; }
-        c.users[userUID]=score;
-        c.avg=c.sum/c.count;
+        } else {
+            c.sum += score;
+            c.count++;
+        }
+
+        c.users[userUID] = score;
+        c.avg = c.sum / c.count;
         return c;
     });
+
+    closeModal();
 }
 
-// أحداث الصفحة
+// نجوم الديالوك
+document.querySelectorAll(".rate-stars span").forEach(star=>{
+    star.onclick = ()=>{
+        const rate = Number(star.dataset.rate);
+        document.querySelectorAll(".rate-stars span").forEach(s=>{
+            s.classList.toggle("active", Number(s.dataset.rate) <= rate);
+        });
+        saveRating(rate);
+    };
+});
+
+// إغلاق الديالوك
+function closeModal(){
+    document.getElementById("rateModal").style.display = "none";
+    document.querySelectorAll(".rate-stars span").forEach(s=>s.classList.remove("active"));
+}
+
+document.getElementById("rateModal").onclick = e=>{
+    if(e.target.id === "rateModal") closeModal();
+};
+
+// أحداث
 provinceEl.onchange = render;
 searchEl.onkeyup = render;
 
