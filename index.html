@@ -9,6 +9,7 @@
 <body>
 
 <header class="topbar">
+  <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
   <div class="logo">a3len</div>
   <div class="tagline">سوق بيع وشراء قطع البيسي</div>
 </header>
@@ -28,6 +29,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
+// Firebase setup
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
   authDomain: "a3len-3ad54.firebaseapp.com",
@@ -43,6 +45,11 @@ firebase.auth().signInAnonymously();
 const db = firebase.database();
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 
+function toggleSidebar(){
+  document.querySelector(".sidebar").classList.toggle("active");
+}
+
+// Home / Products
 function showHome(){
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
@@ -116,16 +123,13 @@ function showPublish(p=null,k=null){
 }
 
 function save(k){
-  const data={
-    name:name.value, price:price.value, category:category.value,
-    seller:seller.value, phone:phone.value,
-    province:province.value, delivery:delivery.value
-  };
+  const data={name:name.value, price:price.value, category:category.value,
+              seller:seller.value, phone:phone.value,
+              province:province.value, delivery:delivery.value};
   (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
 }
 
 showHome();
 </script>
-
 </body>
 </html>
