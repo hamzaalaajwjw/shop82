@@ -7,7 +7,6 @@ const firebaseConfig = {
   messagingSenderId: "767338034080",
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
@@ -18,17 +17,20 @@ function register(){
     .then(res=>{
       db.ref("users/"+res.user.uid).set({username:username.value});
       location.href="index.html";
-    });
+    })
+    .catch(e=>alert(e.message));
 }
 
 /* دخول */
 function login(){
   auth.signInWithEmailAndPassword(email.value,password.value)
-    .then(()=> location.href="index.html");
+    .then(()=> location.href="index.html")
+    .catch(e=>alert(e.message));
 }
 
 /* نشر */
 function publishAd(){
+  if(!name.value || !price.value || !seller.value) return alert("يرجى تعبئة الحقول الأساسية");
   db.ref("products").push({
     name:name.value,
     price:price.value,
@@ -38,7 +40,8 @@ function publishAd(){
     category:category.value,
     delivery:delivery.value,
     uid:auth.currentUser.uid
-  }).then(()=>location.href="index.html");
+  }).then(()=>location.href="index.html")
+    .catch(e=>alert(e.message));
 }
 
 /* عرض */
