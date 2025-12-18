@@ -11,102 +11,104 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-firebase.auth().signInAnonymously();
+
+// تسجيل دخول أنونيموس
+firebase.auth().signInAnonymously().catch(err=>console.error(err));
 
 let userUID = null;
-firebase.auth().onAuthStateChanged(u=>{ if(u) userUID = u.uid; });
-
-// الجامعات (كل المحافظات)
-const allUniversities = {
-  "بغداد":["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
-  "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
-  "البصرة":["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
-  "الموصل":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
-  "كربلاء":["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
-  "النجف":["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
-  "واسط":["جامعة واسط"],
-  "ذي قار":["جامعة ذي قار"],
-  "المثنى":["جامعة المثنى"],
-  "القادسية":["جامعة القادسية"],
-  "ميسان":["جامعة ميسان"],
-  "بابل":["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
-  "الديوانية":["جامعة القادسية"],
-  "دهوك":["جامعة دهوك"],
-  "السليمانية":["جامعة السليمانية"],
-  "ديالى":["جامعة ديالى","كلية اليرموك الجامعة"],
-  "الأنبار":["جامعة الأنبار","كلية المعارف الجامعة"],
-  "صلاح الدين":["جامعة تكريت","جامعة سوران"],
-  "نينوى":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"]
-};
-
-// عناصر الصفحة
-const provinceEl = document.getElementById("province");
-const listEl = document.getElementById("list");
-const searchEl = document.getElementById("search");
-let currentUniversity = null;
-
-// المحافظات
-Object.keys(allUniversities).forEach(p=>{
-    const opt = document.createElement("option");
-    opt.value = p;
-    opt.textContent = p;
-    if(p === "بغداد") opt.selected = true;
-    provinceEl.appendChild(opt);
+firebase.auth().onAuthStateChanged(u=>{
+  if(u) userUID = u.uid;
 });
 
-// عرض الجامعات
-function render(){
-    listEl.innerHTML="";
-    const prov = provinceEl.value;
-    const filter = searchEl.value || "";
+// باقي الكود كما هو (عرض المنتجات، النشر، التقييمات...)
+const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 
-    allUniversities[prov]
-    .filter(u => u.includes(filter))
-    .forEach(name=>{
-        const li = document.createElement("li");
+// Sidebar
+function toggleSidebar(){
+  document.querySelector(".sidebar").classList.toggle("active");
+}
 
-        // عدد التقييمات والمقيمين
-        const infoEl = document.createElement("span");
-        infoEl.className = "rating-info";
-        infoEl.textContent = "0 تقييم (0 مقيم)";
-        li.appendChild(infoEl);
+// Home / Products
+function showHome(){
+  document.getElementById("content").innerHTML = `
+    <div class="search-bar">
+      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
+      <select id="cat" onchange="loadProducts()">
+        <option value="">كل الأقسام</option>
+        ${categories.map(c=>`<option>${c}</option>`).join("")}
+      </select>
+    </div>
+    <div class="cards" id="products"></div>
+  `;
+  loadProducts();
+}
 
-        // اسم الجامعة
-        const nameEl = document.createElement("span");
-        nameEl.className = "uni-name";
-        nameEl.textContent = name;
-        li.appendChild(nameEl);
-
-        // زر التقييم
-        const btn = document.createElement("span");
-        btn.className = "rating-btn";
-        btn.textContent = "★";
-        btn.onclick = ()=>openRate(name);
-        li.appendChild(btn);
-
-        listEl.appendChild(li);
-
-        // تحميل التقييم من Firebase
-        loadRating(name, infoEl);
+function loadProducts(){
+  const s = document.getElementById("search").value.toLowerCase();
+  const c = document.getElementById("cat").value;
+  db.ref("products").once("value", snap=>{
+    let html = "";
+    const d = snap.val() || {};
+    Object.keys(d).forEach(k=>{
+      const p = d[k];
+      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
+        html += `
+        <div class="card">
+          <h3>${p.name}</h3>
+          <span class="price">${p.price} د.ع</span>
+          <div class="meta">
+            <span>${p.category}</span>
+            <span>${p.province}</span>
+            <span>توصيل: ${p.delivery}</span>
+          </div>
+          <div class="seller">
+            👤 ${p.seller} | ☎ ${p.phone}
+          </div>
+          <div class="actions">
+            <button class="edit" onclick="editProduct('${k}')">تعديل</button>
+            <button class="del" onclick="deleteProduct('${k}')">حذف</button>
+          </div>
+        </div>`;
+      }
     });
+    document.getElementById("products").innerHTML = html || "<p class='empty'>لا توجد إعلانات</p>";
+  });
 }
 
-// فتح الديالوك
-function openRate(name){
-    currentUniversity = name;
-    document.getElementById("rateModal").style.display = "flex";
+function deleteProduct(k){
+  if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
 }
 
-// تحميل التقييم
-function loadRating(name, infoEl){
-    db.ref("ratings/"+name.replace(/\./g,'')).on("value", s=>{
-        const d = s.val();
-        if(d){
-            const usersCount = d.users ? Object.keys(d.users).length : 0;
-            infoEl.textContent = `${d.count} تقييم (${usersCount} مقيم) ⭐ ${d.avg.toFixed(1)}`;
-        }
-    });
+function editProduct(k){
+  db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
 }
+
+function showPublish(p=null,k=null){
+  document.getElementById("content").innerHTML = `
+    <div class="form-box">
+      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
+      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
+      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
+      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
+      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
+      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
+      <select id="delivery">
+        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
+        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
+      </select>
+      <button onclick="save('${k||""}')">💾 حفظ</button>
+    </div>`;
+}
+
+function save(k){
+  const data={name:name.value, price:price.value, category:category.value,
+              seller:seller.value, phone:phone.value,
+              province:province.value, delivery:delivery.value};
+  (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
+}
+
+showHome();}
 
 // حفظ التقييم
 function saveRating(score){
@@ -152,3 +154,4 @@ provinceEl.onchange = render;
 searchEl.onkeyup = render;
 
 render();
+
