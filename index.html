@@ -113,6 +113,10 @@ firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 let budget = null;
 
+/* ===== Pagination Variables ===== */
+let currentPage = 1;
+const postsPerPage = 6;
+
 // Sidebar
 function toggleSidebar(){
   document.querySelector(".sidebar").classList.toggle("active");
@@ -136,6 +140,7 @@ function showHome(){
       <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
     </div>
     <div class="cards" id="products"></div>
+    <div id="pagination" style="text-align:center;margin:20px"></div>
   `;
   loadProducts();
 }
@@ -154,9 +159,10 @@ function applyBudget(){
 function loadProducts(){
   const s = document.getElementById("search").value.toLowerCase();
   const c = document.getElementById("cat").value;
+
   db.ref("products").once("value", snap=>{
     const d = snap.val() || {};
-    const htmlCards = [];
+    let htmlCards = [];
 
     Object.keys(d).forEach(k=>{
       const p = d[k];
@@ -185,16 +191,48 @@ function loadProducts(){
       }
     });
 
-    let finalHTML;
+    // ترتيب منشورات المستخدم أولاً
     if(userUID){
-      const myPosts = htmlCards.filter(p=>p.uid===userUID).map(p=>p.html);
-      const otherPosts = htmlCards.filter(p=>p.uid!==userUID).map(p=>p.html);
-      finalHTML = myPosts.concat(otherPosts).join("");
-    } else {
-      finalHTML = htmlCards.map(p=>p.html).join("");
+      htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
     }
-    document.getElementById("products").innerHTML = finalHTML || "<p class='empty'>لا توجد إعلانات</p>";
+
+    // Pagination
+    const totalPages = Math.ceil(htmlCards.length / postsPerPage);
+    if(currentPage > totalPages) currentPage = 1;
+    const start = (currentPage-1)*postsPerPage;
+    const pageItems = htmlCards.slice(start, start+postsPerPage);
+
+    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
+    document.getElementById("products").innerHTML = finalHTML;
+
+    renderPagination(totalPages);
   });
+}
+
+// Render Pagination Buttons
+function renderPagination(total){
+  let html = "";
+  for(let i=1;i<=total;i++){
+    html += `
+      <button onclick="goPage(${i})"
+        style="
+          margin:3px;
+          padding:6px 10px;
+          border-radius:5px;
+          border:none;
+          cursor:pointer;
+          background:${i===currentPage?'#38bdf8':'#1f2937'};
+          color:${i===currentPage?'#000':'#fff'};
+        ">
+        ${i}
+      </button>`;
+  }
+  document.getElementById("pagination").innerHTML = html;
+}
+
+function goPage(p){
+  currentPage = p;
+  loadProducts();
 }
 
 // حذف / تعديل / نشر
