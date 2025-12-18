@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>أفضل الجامعات</title>
 
-<link rel="stylesheet" href="style.css"> <!-- نستخدم نفس CSS الرئيسي -->
+<link rel="stylesheet" href="style.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<header>⭐ أفضل الجامعات</header>
+<header>⭐ أفضل 5 جامعات تقييم</header>
 
 <div class="container">
     <ul id="topList"></ul>
@@ -32,49 +32,31 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-firebase.auth().signInAnonymously();
 
-const allUniversities = {
-  "بغداد":["جامعة بغداد","الجامعة المستنصرية","الجامعة التقنية","الجامعة العراقية","جامعة تكنولوجيا المعلومات والاتصالات","جامعة النهرين","الجامعة التقنية الوسطى","جامعة البيان","جامعة التراث","كلية المنصور الجامعة","كلية الرافدين الجامعة","كلية المأمون الجامعة","كلية بغداد للعلوم الاقتصادية الجامعة","كلية الأسراء الجامعة","الجامعة الأمريكية في العراق","كلية دجلة الجامعة","كلية الأمَل الجامعة","كلية الرشيد الجامعة","كلية الكتب الجامعة"],
-  "اربيل":["جامعة صلاح الدين – أربيل","جامعة السليمانية","جامعة دهوك","جامعة هولير للطب","جامعة كوية","جامعة زاخو","جامعة رابارين","جامعة حلبجة","جامعة غربيان","جامعة اربيل التقنية","جامعة السليمانية التقنية","جامعة دهوك التقنية","الجامعة الأمريكية في كردستان","الجامعة اللبنانية الفرنسية","جامعة المعرفة","جامعة جيهان – أربيل"],
-  "البصرة":["جامعة البصرة","كلية شط العرب الجامعة","كلية الكونوز الجامعة"],
-  "الموصل":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"],
-  "كربلاء":["جامعة أهل البيت","كلية الصفوة الجامعة","كلية الحسين الجامعة"],
-  "النجف":["جامعة الكوفة","الجامعة الإسلامية – النجف","جامعة الكفيل","كلية الشيخ الطوسي الجامعة"],
-  "واسط":["جامعة واسط"],
-  "ذي قار":["جامعة ذي قار"],
-  "المثنى":["جامعة المثنى"],
-  "القادسية":["جامعة القادسية"],
-  "ميسان":["جامعة ميسان"],
-  "بابل":["جامعة بابل","الجامعة الإسلامية – بابل","كلية العشتار الجامعة","جامعة القاسم الخضراء","كلية المستقبل الجامعة"],
-  "الديوانية":["جامعة القادسية"],
-  "دهوك":["جامعة دهوك"],
-  "السليمانية":["جامعة السليمانية"],
-  "ديالى":["جامعة ديالى","كلية اليرموك الجامعة"],
-  "الأنبار":["جامعة الأنبار","كلية المعارف الجامعة"],
-  "صلاح الدين":["جامعة تكريت","جامعة سوران"],
-  "نينوى":["جامعة الموصل","جامعة الحدباء – كلية الحدباء الجامعة"]
-};
+const topListEl = document.getElementById("topList");
 
-const listEl = document.getElementById("topList");
+// جلب جميع التقييمات ثم ترتيبها بحسب avg
+db.ref("ratings").once("value", snapshot=>{
+    const data = snapshot.val();
+    if(!data) return;
 
-// جلب أعلى 5 جامعات عشوائية لكل المحافظات
-function renderTop(){
-    listEl.innerHTML = "";
-    Object.keys(allUniversities).forEach(prov=>{
-        const uniArr = allUniversities[prov];
-        // اختيار 1-2 جامعة عشوائياً من كل محافظة
-        const shuffled = uniArr.sort(()=>0.5-Math.random());
-        const top5 = shuffled.slice(0, Math.min(5, shuffled.length));
-        top5.forEach(u=>{
-            const li = document.createElement("li");
-            li.textContent = `${u} - ${prov}`;
-            listEl.appendChild(li);
-        });
+    // تحويل البيانات لمصفوفة
+    const arr = Object.keys(data).map(key=>({
+        name:key,
+        avg: data[key].avg,
+        count: data[key].count
+    }));
+
+    // ترتيب من الأكبر للأصغر
+    arr.sort((a,b)=>b.avg - a.avg);
+
+    // اختيار أفضل 5
+    arr.slice(0,5).forEach(u=>{
+        const li = document.createElement("li");
+        li.innerHTML = `${u.name} - ${u.avg.toFixed(1)} ⭐ (${u.count} تقييم)`;
+        topListEl.appendChild(li);
     });
-}
-
-renderTop();
+});
 </script>
 
 </body>
