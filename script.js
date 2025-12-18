@@ -1,4 +1,4 @@
-// ===== Firebase Config =====
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
   authDomain: "a3len-3ad54.firebaseapp.com",
@@ -8,36 +8,28 @@ const firebaseConfig = {
   messagingSenderId: "767338034080",
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-// تسجيل دخول أنونيموس تلقائي
-firebase.auth().signInAnonymously().catch(err => console.error(err));
+firebase.auth().signInAnonymously().catch(err=>console.error(err));
 let userUID = null;
-firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
+firebase.auth().onAuthStateChanged(u=>{if(u) userUID = u.uid;});
 
-// الأقسام
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 let budget = null;
 
-// ===== Sidebar =====
-function toggleSidebar() {
-  document.querySelector(".sidebar").classList.toggle("active");
-}
-function closeSidebar() {
-  document.querySelector(".sidebar").classList.remove("active");
-}
+// Sidebar
+function toggleSidebar(){document.querySelector(".sidebar").classList.toggle("active")}
+function closeSidebar(){document.querySelector(".sidebar").classList.remove("active")}
 
-// ===== Home / Products =====
-function showHome() {
+// Home
+function showHome(){
   closeSidebar();
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
       <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
       <select id="cat" onchange="loadProducts()">
         <option value="">كل الأقسام</option>
-        ${categories.map(c => `<option>${c}</option>`).join("")}
+        ${categories.map(c=>`<option>${c}</option>`).join("")}
       </select>
       <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
     </div>
@@ -46,85 +38,63 @@ function showHome() {
   loadProducts();
 }
 
-// ===== Budget Dialog =====
-function showBudgetDialog() {
-  const dlg = document.getElementById("budgetDialog");
-  dlg.classList.add("show");
-}
-function closeBudget() {
-  const dlg = document.getElementById("budgetDialog");
-  dlg.classList.remove("show");
-}
-function applyBudget() {
-  const val = parseFloat(document.getElementById("maxBudget").value);
-  budget = !isNaN(val) ? val : null;
+// Budget Dialog
+function showBudgetDialog(){document.getElementById("budgetDialog").classList.add("show")}
+function closeBudget(){document.getElementById("budgetDialog").classList.remove("show")}
+function applyBudget(){
+  const val=parseFloat(document.getElementById("maxBudget").value);
+  budget=!isNaN(val)?val:null;
   closeBudget();
   loadProducts();
 }
 
-// ===== Load Products =====
-function loadProducts() {
-  const s = document.getElementById("search").value.toLowerCase();
-  const c = document.getElementById("cat").value;
-
-  db.ref("products").once("value", snap => {
-    const d = snap.val() || {};
-    const htmlCards = [];
-
-    Object.keys(d).forEach(k => {
-      const p = d[k];
-      const price = parseFloat(p.price) || 0;
-      if((!c || p.category === c) && p.name.toLowerCase().includes(s)) {
-        if(budget && price > budget) return; // فلترة بالميزانية
-        htmlCards.push({
-          uid: p.uid,
-          key: k,
-          html: `
-            <div class="card">
-              <h3>${p.name}</h3>
-              <span class="price">${p.price} د.ع</span>
-              <div class="meta">
-                <span>${p.category}</span>
-                <span>${p.province}</span>
-                <span>توصيل: ${p.delivery}</span>
-              </div>
-              <div class="seller">
-                👤 ${p.seller} | ☎ ${p.phone}
-              </div>
-              <div class="actions">
-                ${p.uid === userUID ? `
-                  <button class="edit" onclick="editProduct('${k}')">تعديل</button>
-                  <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
-              </div>
-            </div>`
-        });
+// Load Products
+function loadProducts(){
+  const s=document.getElementById("search").value.toLowerCase();
+  const c=document.getElementById("cat").value;
+  db.ref("products").once("value",snap=>{
+    const d=snap.val()||{};
+    const htmlCards=[];
+    Object.keys(d).forEach(k=>{
+      const p=d[k];
+      const price=parseFloat(p.price)||0;
+      if((!c||p.category===c)&&p.name.toLowerCase().includes(s)){
+        if(budget&&price>budget) return;
+        htmlCards.push({uid:p.uid,key:k,html:`
+          <div class="card">
+            <h3>${p.name}</h3>
+            <span class="price">${p.price} د.ع</span>
+            <div class="meta">
+              <span>${p.category}</span>
+              <span>${p.province}</span>
+              <span>توصيل: ${p.delivery}</span>
+            </div>
+            <div class="seller">
+              👤 ${p.seller} | ☎ ${p.phone}
+            </div>
+            <div class="actions">
+              ${p.uid===userUID?`<button class="edit" onclick="editProduct('${k}')">تعديل</button>
+              <button class="del" onclick="deleteProduct('${k}')">حذف</button>`:""}
+            </div>
+          </div>`});
       }
     });
-
-    // ترتيب منشورات صاحب الإعلان أولاً
     let finalHTML;
     if(userUID){
-      const myPosts = htmlCards.filter(p => p.uid === userUID).map(p => p.html);
-      const otherPosts = htmlCards.filter(p => p.uid !== userUID).map(p => p.html);
-      finalHTML = myPosts.concat(otherPosts).join("");
-    } else {
-      finalHTML = htmlCards.map(p => p.html).join("");
-    }
-
-    document.getElementById("products").innerHTML = finalHTML || "<p class='empty'>لا توجد إعلانات</p>";
+      const myPosts=htmlCards.filter(p=>p.uid===userUID).map(p=>p.html);
+      const otherPosts=htmlCards.filter(p=>p.uid!==userUID).map(p=>p.html);
+      finalHTML=myPosts.concat(otherPosts).join("");
+    } else finalHTML=htmlCards.map(p=>p.html).join("");
+    document.getElementById("products").innerHTML=finalHTML||"<p class='empty'>لا توجد إعلانات</p>";
   });
 }
 
-// ===== CRUD Products =====
-function deleteProduct(k){
-  if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
-}
-function editProduct(k){
-  db.ref("products/"+k).once("value", s => showPublish(s.val(), k));
-}
-function showPublish(p=null, k=null){
+// CRUD
+function deleteProduct(k){if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts)}
+function editProduct(k){db.ref("products/"+k).once("value",s=>showPublish(s.val(),k))}
+function showPublish(p=null,k=null){
   closeSidebar();
-  document.getElementById("content").innerHTML = `
+  document.getElementById("content").innerHTML=`
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
       <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
@@ -140,47 +110,19 @@ function showPublish(p=null, k=null){
       <button onclick="save('${k||""}')">💾 حفظ</button>
     </div>`;
 }
-
 function save(k){
-  const data = {
-    name: document.getElementById("name").value,
-    price: document.getElementById("price").value,
-    category: document.getElementById("category").value,
-    seller: document.getElementById("seller").value,
-    phone: document.getElementById("phone").value,
-    province: document.getElementById("province").value,
-    delivery: document.getElementById("delivery").value,
-    uid: userUID
+  const data={
+    name:document.getElementById("name").value,
+    price:document.getElementById("price").value,
+    category:document.getElementById("category").value,
+    seller:document.getElementById("seller").value,
+    phone:document.getElementById("phone").value,
+    province:document.getElementById("province").value,
+    delivery:document.getElementById("delivery").value,
+    uid:userUID
   };
-  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
-  ref.set(data).then(showHome);
+  (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
 }
 
-// ===== Rating System (Optional) =====
-let currentUniversity = null;
-function saveRating(score){
-  if(!userUID || !currentUniversity) return;
-  const ref = db.ref("ratings/"+currentUniversity.replace(/\./g,''));
-  ref.transaction(c=>{
-    if(!c) return {sum:score,count:1,users:{[userUID]:score},avg:score};
-    if(c.users && c.users[userUID]){
-      c.sum = c.sum - c.users[userUID] + score;
-    } else {
-      c.sum += score;
-      c.count++;
-    }
-    c.users[userUID] = score;
-    c.avg = c.sum / c.count;
-    return c;
-  });
-  closeModal();
-}
-
-// ===== Dialog Close =====
-function closeModal(){
-  const modal = document.getElementById("rateModal");
-  if(modal) modal.style.display = "none";
-  document.querySelectorAll(".rate-stars span").forEach(s=>s.classList.remove("active"));
-}
-
-document.addEventListener("DOMContentLoaded", showHome);
+// Init
+document.addEventListener("DOMContentLoaded",showHome);
