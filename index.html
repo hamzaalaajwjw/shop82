@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>بيع وشراء قطع البيسي</title>
+<title>a3len | بيع وشراء قطع البيسي</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>بيع وشراء قطع البيسي</h1>
+<header class="topbar">
+  <div class="logo">a3len</div>
+  <div class="tagline">سوق بيع وشراء قطع البيسي</div>
 </header>
 
-<div class="container">
-  <nav>
-    <a href="#" onclick="showHome()">الصفحة الرئيسية</a>
-    <a href="#" onclick="showPublish()">نشر منتج</a>
-  </nav>
-  
+<div class="layout">
+  <aside class="sidebar">
+    <button onclick="showHome()">🏠 الرئيسية</button>
+    <button onclick="showPublish()">➕ نشر إعلان</button>
+  </aside>
+
   <main id="content"></main>
 </div>
 
@@ -37,93 +38,90 @@ const firebaseConfig = {
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-firebase.auth().signInAnonymously().catch(console.error);
+firebase.auth().signInAnonymously();
 
+const db = firebase.database();
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 
-// --- الصفحة الرئيسية ---
-function showHome() {
-  document.getElementById('content').innerHTML = `
-    <div class="filter">
-      <input type="text" id="search" placeholder="ابحث عن اسم القطعة" onkeyup="loadProducts()">
-      <select id="categoryFilter" onchange="loadProducts()">
+function showHome(){
+  document.getElementById("content").innerHTML = `
+    <div class="search-bar">
+      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
+      <select id="cat" onchange="loadProducts()">
         <option value="">كل الأقسام</option>
-        ${categories.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        ${categories.map(c=>`<option>${c}</option>`).join("")}
       </select>
     </div>
-    <div class="products-grid" id="products"></div>
+    <div class="cards" id="products"></div>
   `;
   loadProducts();
 }
 
-function loadProducts() {
-  const search = document.getElementById('search')?.value.toLowerCase() || '';
-  const category = document.getElementById('categoryFilter')?.value || '';
-  db.ref('products').once('value', snapshot=>{
-    const data = snapshot.val() || {};
-    let html = '';
-    Object.keys(data).forEach(key=>{
-      const p = data[key];
-      if((category==='' || p.category===category) && p.name.toLowerCase().includes(search)){
-        html += `<div class="product-card" id="${key}">
-                  <h3>${p.name}</h3>
-                  <div class="details">
-                    <p><b>البائع:</b> ${p.seller}</p>
-                    <p><b>رقم الهاتف:</b> ${p.phone}</p>
-                    <p><b>المحافظة:</b> ${p.province}</p>
-                    <p><b>نوع القطعة:</b> ${p.category}</p>
-                    <p><b>السعر:</b> ${p.price} د.ع</p>
-                    <p><b>توصيل متوفر:</b> ${p.delivery}</p>
-                  </div>
-                  <div class="actions">
-                    <button class="edit-btn" onclick="editProduct('${key}')">تعديل</button>
-                    <button class="delete-btn" onclick="deleteProduct('${key}')">حذف</button>
-                  </div>
-                 </div>`;
+function loadProducts(){
+  const s = document.getElementById("search").value.toLowerCase();
+  const c = document.getElementById("cat").value;
+  db.ref("products").once("value", snap=>{
+    let html = "";
+    const d = snap.val() || {};
+    Object.keys(d).forEach(k=>{
+      const p = d[k];
+      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
+        html += `
+        <div class="card">
+          <h3>${p.name}</h3>
+          <span class="price">${p.price} د.ع</span>
+          <div class="meta">
+            <span>${p.category}</span>
+            <span>${p.province}</span>
+            <span>توصيل: ${p.delivery}</span>
+          </div>
+          <div class="seller">
+            👤 ${p.seller} | ☎ ${p.phone}
+          </div>
+          <div class="actions">
+            <button class="edit" onclick="editProduct('${k}')">تعديل</button>
+            <button class="del" onclick="deleteProduct('${k}')">حذف</button>
+          </div>
+        </div>`;
       }
     });
-    document.getElementById('products').innerHTML = html || '<p>لا توجد منتجات</p>';
+    document.getElementById("products").innerHTML = html || "<p class='empty'>لا توجد إعلانات</p>";
   });
 }
 
-function deleteProduct(key){ if(confirm("هل تريد حذف هذا المنتج؟")) db.ref('products/'+key).remove().then(loadProducts); }
-
-function editProduct(key){ db.ref('products/'+key).once('value', snap=>{ showPublish(snap.val(), key); }); }
-
-// --- صفحة نشر المنتج ---
-function showPublish(product=null,key=null){
-  document.getElementById('content').innerHTML = `
-    <div class="form-container">
-      <h2>${product?'تعديل المنتج':'نشر منتج جديد'}</h2>
-      <label>اسم القطعة</label><input type="text" id="prodName" value="${product?product.name:''}">
-      <label>السعر (د.ع)</label><input type="number" id="prodPrice" value="${product?product.price:''}">
-      <label>القسم</label>
-      <select id="prodCategory">${categories.map(c=>`<option value="${c}" ${product&&product.category===c?'selected':''}>${c}</option>`).join('')}</select>
-      <label>اسم البائع</label><input type="text" id="prodSeller" value="${product?product.seller:''}">
-      <label>رقم الهاتف</label><input type="text" id="prodPhone" value="${product?product.phone:''}">
-      <label>المحافظة</label><input type="text" id="prodProvince" value="${product?product.province:''}">
-      <label>توصيل متوفر</label>
-      <select id="prodDelivery">
-        <option value="نعم" ${product&&product.delivery==='نعم'?'selected':''}>نعم</option>
-        <option value="لا" ${product&&product.delivery==='لا'?'selected':''}>لا</option>
-      </select>
-      <button onclick="publishProduct('${key?key:''}')">${product?'تحديث المنتج':'نشر المنتج'}</button>
-    </div>
-  `;
+function deleteProduct(k){
+  if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts);
 }
 
-function publishProduct(key=''){
-  const name=document.getElementById('prodName').value.trim();
-  const price=document.getElementById('prodPrice').value.trim();
-  const category=document.getElementById('prodCategory').value;
-  const seller=document.getElementById('prodSeller').value.trim();
-  const phone=document.getElementById('prodPhone').value.trim();
-  const province=document.getElementById('prodProvince').value.trim();
-  const delivery=document.getElementById('prodDelivery').value;
-  if(!name||!price||!seller||!phone||!province){ alert('اكمل جميع الحقول'); return; }
-  const prodRef = key?db.ref('products/'+key):db.ref('products').push();
-  prodRef.set({name,price,category,seller,phone,province,delivery}).then(()=>{ alert('تم حفظ المنتج بنجاح'); showHome(); }).catch(err=>{ console.error(err); alert('حدث خطأ'); });
+function editProduct(k){
+  db.ref("products/"+k).once("value",s=>showPublish(s.val(),k));
+}
+
+function showPublish(p=null,k=null){
+  document.getElementById("content").innerHTML = `
+    <div class="form-box">
+      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
+      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
+      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
+      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
+      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
+      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
+      <select id="delivery">
+        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
+        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
+      </select>
+      <button onclick="save('${k||""}')">💾 حفظ</button>
+    </div>`;
+}
+
+function save(k){
+  const data={
+    name:name.value, price:price.value, category:category.value,
+    seller:seller.value, phone:phone.value,
+    province:province.value, delivery:delivery.value
+  };
+  (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
 }
 
 showHome();
