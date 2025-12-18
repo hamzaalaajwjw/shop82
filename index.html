@@ -75,7 +75,7 @@ ul{
 /* عناصر القائمة */
 li{
     background:#1a1a1a;
-    padding:12px 15px 12px 50px; /* مساحة للنجمة يسار */
+    padding:12px 15px 12px 50px;
     margin-bottom:10px;
     border-radius:12px;
     box-shadow:0 8px 20px rgba(0,0,0,0.6);
@@ -152,37 +152,6 @@ li:hover{
     color:#ffb400;
 }
 
-/* القائمة الجانبية */
-#sidebar{
-    position: fixed;
-    right:0;
-    top:50%;
-    transform: translateY(-50%);
-    background: #111;
-    padding: 10px;
-    border-radius: 8px 0 0 8px;
-    box-shadow: -4px 0 10px rgba(0,0,0,0.5);
-    z-index: 1000;
-}
-
-#sidebar button{
-    display:block;
-    margin:10px 0;
-    padding:12px 15px;
-    background:#222;
-    color:#ffb400;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-    transition:0.3s;
-}
-
-#sidebar button:hover{
-    background:#333;
-    transform:translateX(-5px);
-}
-
 @media(max-width:600px){
     ul{grid-template-columns:1fr;}
     select,
@@ -193,9 +162,15 @@ li:hover{
 
 <body>
 
+<!-- زر فتح القائمة الجانبية -->
+<button id="sidebarToggle" style="position:fixed;top:20px;right:20px;z-index:1001;padding:10px 15px;background:#222;color:#ffb400;border:none;border-radius:8px;cursor:pointer;">
+☰ القائمة
+</button>
+
 <!-- القائمة الجانبية -->
-<div id="sidebar">
-    <button id="topBtn">أفضل الجامعات تقييم</button>
+<div id="sidebar" style="position:fixed;right:-250px;top:0;height:100%;width:250px;background:#111;padding:20px;box-shadow:-4px 0 10px rgba(0,0,0,0.5);transition:0.3s;z-index:1000;border-radius:0 0 0 8px;">
+    <button id="closeSidebar" style="margin-bottom:20px;padding:10px 12px;background:#222;color:#ffb400;border:none;border-radius:8px;cursor:pointer;">✖ إغلاق</button>
+    <button id="topBtn" style="display:block;margin:10px 0;padding:12px;background:#222;color:#ffb400;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">أفضل الجامعات تقييم</button>
 </div>
 
 <header>⭐ تقييم جامعات العراق</header>
@@ -222,6 +197,11 @@ li:hover{
 <script src="script.js"></script>
 
 <script>
+// فتح وإغلاق القائمة الجانبية
+const sidebar = document.getElementById("sidebar");
+document.getElementById("sidebarToggle").onclick = ()=>{ sidebar.style.right = "0"; };
+document.getElementById("closeSidebar").onclick = ()=>{ sidebar.style.right = "-250px"; };
+
 // زر فتح أفضل الجامعات
 document.getElementById("topBtn").onclick = ()=>{
     window.location.href = "top.html";
