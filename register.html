@@ -162,6 +162,13 @@
         <div id="successMessage" class="success-message"></div>
         
         <form id="registerForm">
+            <!-- ===== إضافة حقل الاسم الكامل ===== -->
+            <div class="form-group">
+                <label for="fullName">الاسم الكامل (سيظهر في البروفايل)</label>
+                <input type="text" id="fullName" placeholder="مثال: محمد أحمد" autocomplete="name">
+                <div class="password-requirements">سيظهر هذا الاسم في صفحتك الشخصية</div>
+            </div>
+            
             <div class="form-group">
                 <label for="username">اسم المستخدم (بالإنجليزية فقط)</label>
                 <input type="text" id="username" required autocomplete="username">
@@ -221,6 +228,7 @@
         });
         
         function registerUser() {
+            const fullName = document.getElementById('fullName').value.trim();
             const username = document.getElementById('username').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
@@ -234,7 +242,7 @@
             
             // التحقق من البيانات
             if (!username || !email || !password || !confirmPassword) {
-                errorDiv.textContent = 'جميع الحقول مطلوبة';
+                errorDiv.textContent = 'جميع الحقول مطلوبة (باستثناء الاسم الكامل)';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -270,11 +278,28 @@
                     .then((userCredential) => {
                         const user = userCredential.user;
                         
-                        // حفظ بيانات المستخدم
+                        // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
                         db.ref("users/" + user.uid).set({
+                            fullName: fullName || username, // استخدم الاسم الكامل أو اسم المستخدم
                             username: username,
                             email: email,
-                            createdAt: firebase.database.ServerValue.TIMESTAMP
+                            followersCount: 0,
+                            followingCount: 0,
+                            totalProducts: 0,
+                            rating: 0,
+                            totalReviews: 0,
+                            joinDate: new Date().toLocaleDateString('ar-SA'),
+                            createdAt: firebase.database.ServerValue.TIMESTAMP,
+                            lastActive: firebase.database.ServerValue.TIMESTAMP
+                        });
+                        
+                        // ===== إنشاء مجلدات فرعية للمتابعة والتقييمات =====
+                        // مجلد المتابعين
+                        db.ref("userStats/" + user.uid).set({
+                            followers: 0,
+                            following: 0,
+                            products: 0,
+                            rating: 0
                         });
                         
                         successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! سيتم تحويلك...';
