@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | a3len</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { font-family: 'CustomFont', sans-serif; background:#0f1115; color:#e5e7eb; display:flex; justify-content:center; align-items:center; height:100vh; }
+.form-box { background:#1c1f27; padding:20px; border-radius:8px; width:90%; max-width:400px; display:flex; flex-direction:column; gap:10px; }
+.form-box h2 { color:#38bdf8; margin-bottom:15px; }
+.form-box input { padding:10px; border-radius:6px; border:none; background:#111318; color:#e5e7eb; }
+.form-box button { background:#38bdf8; color:#000; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+.form-box .back { background:#ef4444; color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>تسجيل الدخول</h2>
+  <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+  <input type="password" id="loginPassword" placeholder="كلمة المرور">
+  <button onclick="loginUser()">دخول</button>
+  <button class="back" onclick="goBack()">رجوع</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Firebase Config
+const firebaseConfig = { /* انسخ إعداداتك هنا */ };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// تسجيل الدخول
+function loginUser(){
+  const email = document.getElementById("loginEmail").value;
+  const pass = document.getElementById("loginPassword").value;
+  firebase.auth().signInWithEmailAndPassword(email,pass)
+    .then(userCredential => { alert("تم تسجيل الدخول"); window.location="index.html"; })
+    .catch(err => alert(err.message));
+}
+
+function goBack(){ window.location="index.html"; }
+</script>
+
+</body>
+</html>
