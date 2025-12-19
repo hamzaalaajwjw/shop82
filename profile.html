@@ -277,6 +277,12 @@
             background: #111318;
             padding: 15px;
             border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-3px);
         }
         
         .product-card h3 {
@@ -534,6 +540,7 @@
         let profileUserId = null;
         let isFollowing = false;
         let currentRating = 0;
+        let selectedRating = 0;
         
         // Get user ID from URL
         function getUserIdFromURL() {
@@ -556,9 +563,12 @@
                     currentUserId = user.uid;
                     loadProfileData();
                     checkIfFollowing();
+                    checkIfAlreadyRated();
                 } else {
                     // User is not logged in, still show profile but disable some features
                     loadProfileData();
+                    document.getElementById('followBtn').style.display = 'none';
+                    document.querySelector('.btn-primary').style.display = 'none';
                 }
             });
         });
@@ -569,49 +579,36 @@
             db.ref('users/' + profileUserId).once('value', (snapshot) => {
                 const userData = snapshot.val();
                 if (userData) {
-                    document.getElementById('userFullName').textContent = userData.fullName || userData.username;
+                    // عرض الاسم الكامل أو اسم المستخدم
+                    const displayName = userData.fullName || userData.username;
+                    document.getElementById('userFullName').textContent = displayName;
                     document.getElementById('userName').textContent = '@' + userData.username;
                     
-                    // Generate avatar from first letter
-                    const firstLetter = userData.username.charAt(0).toUpperCase();
+                    // توليد صورة رمزية من الحرف الأول
+                    const firstLetter = (userData.fullName || userData.username).charAt(0).toUpperCase();
                     document.getElementById('userAvatar').textContent = firstLetter;
+                    
+                    // عرض الإحصائيات الحقيقية من قاعدة البيانات
+                    document.getElementById('productsCount').textContent = userData.totalProducts || 0;
+                    document.getElementById('followersCount').textContent = userData.followersCount || 0;
+                    document.getElementById('followingCount').textContent = userData.followingCount || 0;
+                    document.getElementById('followersDisplay').textContent = userData.followersCount || 0;
+                    document.getElementById('followingDisplay').textContent = userData.followingCount || 0;
+                    
+                    // تحميل التقييم الحقيقي
+                    loadUserRating();
+                } else {
+                    // إذا لم يوجد المستخدم في قاعدة البيانات
+                    document.getElementById('userFullName').textContent = 'مستخدم غير موجود';
+                    document.getElementById('userName').textContent = '@unknown';
                 }
             });
-            
-            // Load user stats
-            loadUserStats();
             
             // Load user products
             loadUserProducts();
             
             // Load user reviews
             loadUserReviews();
-            
-            // Load user rating
-            loadUserRating();
-        }
-        
-        // Load User Stats
-        function loadUserStats() {
-            // Count user products
-            db.ref('products').orderByChild('uid').equalTo(profileUserId).once('value', (snapshot) => {
-                const productsCount = snapshot.numChildren();
-                document.getElementById('productsCount').textContent = productsCount;
-            });
-            
-            // Load followers count
-            db.ref('followers/' + profileUserId).once('value', (snapshot) => {
-                const followersCount = snapshot.numChildren();
-                document.getElementById('followersCount').textContent = followersCount;
-                document.getElementById('followersDisplay').textContent = followersCount;
-            });
-            
-            // Load following count
-            db.ref('following/' + profileUserId).once('value', (snapshot) => {
-                const followingCount = snapshot.numChildren();
-                document.getElementById('followingCount').textContent = followingCount;
-                document.getElementById('followingDisplay').textContent = followingCount;
-            });
         }
         
         // Load User Products
@@ -629,7 +626,7 @@
                 Object.keys(products).forEach((key) => {
                     const product = products[key];
                     const productCard = `
-                        <div class="product-card">
+                        <div class="product-card" onclick="window.location.href='index.html'">
                             <h3>${product.name}</h3>
                             <div class="product-price">${product.price} د.ع</div>
                             <div class="product-category">${product.category}</div>
@@ -642,7 +639,7 @@
         
         // Load User Reviews
         function loadUserReviews() {
-            db.ref('reviews/' + profileUserId).orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
+            db.ref('reviews/' + profileUserId).orderByChild('timestamp').limitToLast(5).once('value', (snapshot) => {
                 const reviews = snapshot.val();
                 const reviewsList = document.getElementById('reviewsList');
                 reviewsList.innerHTML = '';
@@ -657,4 +654,316 @@
                     const reviewCard = `
                         <div class="review-card">
                             <div class="review-header">
-                                <div class="reviewer">${review.reviewerName}</div
+                                <div class="reviewer">${review.reviewerName || 'مستخدم'}</div>
+                                <div class="review-date">${formatDate(review.timestamp)}</div>
+                            </div>
+                            <div class="review-stars">${generateStarsHTML(review.rating)}</div>
+                            <div class="review-text">${review.comment || 'لا يوجد تعليق'}</div>
+                        </div>
+                    `;
+                    reviewsList.innerHTML += reviewCard;
+                });
+            });
+        }
+        
+        // Load User Rating
+        function loadUserRating() {
+            db.ref('ratings/' + profileUserId).once('value', (snapshot) => {
+                const ratings = snapshot.val();
+                if (!ratings) {
+                    document.getElementById('ratingValue').textContent = '0.0';
+                    document.getElementById('ratingStars').innerHTML = generateStarsHTML(0);
+                    return;
+                }
+                
+                let total = 0;
+                let count = 0;
+                
+                Object.keys(ratings).forEach((key) => {
+                    total += ratings[key].rating;
+                    count++;
+                });
+                
+                const averageRating = (total / count).toFixed(1);
+                currentRating = averageRating;
+                
+                document.getElementById('ratingValue').textContent = averageRating;
+                document.getElementById('ratingStars').innerHTML = generateStarsHTML(averageRating);
+                
+                // تحديث التقييم في بيانات المستخدم
+                db.ref('users/' + profileUserId).update({
+                    rating: averageRating,
+                    totalReviews: count
+                });
+            });
+        }
+        
+        // Check if Current User is Following
+        function checkIfFollowing() {
+            if (!currentUserId) return;
+            
+            db.ref('followers/' + profileUserId + '/' + currentUserId).once('value', (snapshot) => {
+                isFollowing = snapshot.exists();
+                updateFollowButton();
+            });
+        }
+        
+        // Check if User Already Rated
+        function checkIfAlreadyRated() {
+            if (!currentUserId) return;
+            
+            db.ref('ratings/' + profileUserId + '/' + currentUserId).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    document.querySelector('.btn-primary').textContent = 'تعديل التقييم';
+                }
+            });
+        }
+        
+        // ===== نظام المتابعة الحقيقي =====
+        function toggleFollow() {
+            if (!currentUserId) {
+                alert('يجب تسجيل الدخول لمتابعة المستخدمين');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            if (currentUserId === profileUserId) {
+                alert('لا يمكنك متابعة نفسك');
+                return;
+            }
+            
+            const followRef = db.ref('followers/' + profileUserId + '/' + currentUserId);
+            const followingRef = db.ref('following/' + currentUserId + '/' + profileUserId);
+            
+            // تحديث العدادات في قاعدة بيانات المستخدم
+            const userRef = db.ref('users/' + profileUserId);
+            const currentUserRef = db.ref('users/' + currentUserId);
+            
+            if (isFollowing) {
+                // إلغاء المتابعة
+                followRef.remove();
+                followingRef.remove();
+                
+                // تقليل العدادات
+                userRef.child('followersCount').transaction((current) => {
+                    return (current || 0) - 1;
+                });
+                
+                currentUserRef.child('followingCount').transaction((current) => {
+                    return (current || 0) - 1;
+                });
+                
+                isFollowing = false;
+            } else {
+                // متابعة
+                const followData = {
+                    followerId: currentUserId,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                followRef.set(followData);
+                followingRef.set({
+                    followingId: profileUserId,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // زيادة العدادات
+                userRef.child('followersCount').transaction((current) => {
+                    return (current || 0) + 1;
+                });
+                
+                currentUserRef.child('followingCount').transaction((current) => {
+                    return (current || 0) + 1;
+                });
+                
+                isFollowing = true;
+            }
+            
+            updateFollowButton();
+            // تحديث الإحصائيات بعد ثانية
+            setTimeout(() => {
+                loadProfileData();
+            }, 1000);
+        }
+        
+        // Update Follow Button
+        function updateFollowButton() {
+            const followBtn = document.getElementById('followBtn');
+            if (currentUserId === profileUserId) {
+                followBtn.style.display = 'none';
+            } else if (isFollowing) {
+                followBtn.textContent = 'إلغاء المتابعة';
+                followBtn.className = 'btn btn-danger';
+            } else {
+                followBtn.textContent = 'متابعة';
+                followBtn.className = 'btn btn-secondary';
+            }
+        }
+        
+        // Rating Modal Functions
+        function openRateModal() {
+            if (!currentUserId) {
+                alert('يجب تسجيل الدخول لتقييم المستخدمين');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            if (currentUserId === profileUserId) {
+                alert('لا يمكنك تقييم نفسك');
+                return;
+            }
+            
+            document.getElementById('ratingModal').style.display = 'flex';
+            
+            // إعادة تعيين النجوم
+            const stars = document.querySelectorAll('#starRating .star');
+            stars.forEach(star => {
+                star.classList.remove('selected');
+            });
+            selectedRating = 0;
+            
+            // Star rating interaction
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-rating'));
+                    
+                    // Update stars display
+                    stars.forEach((s, index) => {
+                        if (index < selectedRating) {
+                            s.classList.add('selected');
+                        } else {
+                            s.classList.remove('selected');
+                        }
+                    });
+                });
+            });
+            
+            // تحقق إذا كان المستخدم قد قيم من قبل
+            db.ref('ratings/' + profileUserId + '/' + currentUserId).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const previousRating = snapshot.val();
+                    selectedRating = previousRating.rating;
+                    document.getElementById('reviewText').value = previousRating.comment || '';
+                    
+                    // تعيين النجوم السابقة
+                    stars.forEach((s, index) => {
+                        if (index < selectedRating) {
+                            s.classList.add('selected');
+                        }
+                    });
+                }
+            });
+        }
+        
+        function closeRateModal() {
+            document.getElementById('ratingModal').style.display = 'none';
+            document.getElementById('reviewText').value = '';
+        }
+        
+        function submitRating() {
+            if (selectedRating === 0) {
+                alert('يرجى اختيار عدد النجوم');
+                return;
+            }
+            
+            if (!currentUserId) return;
+            
+            const comment = document.getElementById('reviewText').value.trim();
+            
+            // حفظ التقييم
+            db.ref('ratings/' + profileUserId + '/' + currentUserId).set({
+                rating: selectedRating,
+                comment: comment,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // حفظ المراجعة
+            // الحصول على اسم المستخدم الحالي
+            db.ref('users/' + currentUserId).once('value', (snapshot) => {
+                const userData = snapshot.val();
+                const reviewerName = userData ? (userData.fullName || userData.username) : 'مستخدم';
+                
+                db.ref('reviews/' + profileUserId).push().set({
+                    rating: selectedRating,
+                    comment: comment,
+                    reviewerId: currentUserId,
+                    reviewerName: reviewerName,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                alert('شكراً لك! تم إرسال تقييمك بنجاح');
+                closeRateModal();
+                loadUserRating();
+                loadUserReviews();
+            });
+        }
+        
+        // Show Followers
+        function showFollowers() {
+            if (!profileUserId) return;
+            
+            db.ref('followers/' + profileUserId).once('value', (snapshot) => {
+                const followers = snapshot.val();
+                if (!followers || Object.keys(followers).length === 0) {
+                    alert('لا يوجد متابعين بعد');
+                    return;
+                }
+                
+                let followersList = 'قائمة المتابعين:\n\n';
+                Object.keys(followers).forEach(followerId => {
+                    // يمكن إضافة أسماء المتابعين هنا
+                    followersList += `• مستخدم ${followerId.substring(0, 8)}...\n`;
+                });
+                
+                alert(followersList);
+            });
+        }
+        
+        // Show Following
+        function showFollowing() {
+            if (!profileUserId) return;
+            
+            db.ref('following/' + profileUserId).once('value', (snapshot) => {
+                const following = snapshot.val();
+                if (!following || Object.keys(following).length === 0) {
+                    alert('لا يتابع أي مستخدمين بعد');
+                    return;
+                }
+                
+                let followingList = 'قائمة المتابَعين:\n\n';
+                Object.keys(following).forEach(followingId => {
+                    followingList += `• مستخدم ${followingId.substring(0, 8)}...\n`;
+                });
+                
+                alert(followingList);
+            });
+        }
+        
+        // Helper Functions
+        function generateStarsHTML(rating) {
+            let starsHTML = '';
+            const numericRating = parseFloat(rating) || 0;
+            const fullStars = Math.floor(numericRating);
+            const hasHalfStar = numericRating % 1 >= 0.5;
+            
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    starsHTML += '★';
+                } else if (i === fullStars && hasHalfStar) {
+                    starsHTML += '⭐';
+                } else {
+                    starsHTML += '☆';
+                }
+            }
+            
+            return starsHTML;
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-SA');
+        }
+    </script>
+</body>
+</html>
