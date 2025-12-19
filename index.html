@@ -140,6 +140,35 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .profile-link:hover {
   color: #0ea5e9;
 }
+
+/* ===== إضافة أنماط لنظام تذكر الدخول ===== */
+.remember-btn {
+  background: #374151;
+  color: white;
+  border: 1px solid #4b5563;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 5px 0;
+  transition: background 0.3s;
+}
+.remember-btn:hover {
+  background: #4b5563;
+}
+
+.remember-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #d1d5db;
+  margin-top: 10px;
+}
+.remember-checkbox input {
+  width: auto;
+  margin: 0;
+}
 </style>
 </head>
 <body>
@@ -198,10 +227,35 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-firebase.auth().signInAnonymously().catch(err => console.error(err));
+// ===== إضافة نظام تذكر تسجيل الدخول =====
+let rememberMe = localStorage.getItem('rememberMe') === 'true';
+
+// تعديل عملية تسجيل الدخول المجهول
+if (rememberMe) {
+    // إذا كان هناك UID مخزن، استخدمه
+    const savedUID = localStorage.getItem('userUID');
+    if (savedUID) {
+        userUID = savedUID;
+        // محاولة تسجيل الدخول تلقائياً
+        firebase.auth().signInAnonymously().catch(err => console.error(err));
+    } else {
+        firebase.auth().signInAnonymously().catch(err => console.error(err));
+    }
+} else {
+    firebase.auth().signInAnonymously().catch(err => console.error(err));
+}
+
 const db = firebase.database();
 let userUID = null;
-firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
+firebase.auth().onAuthStateChanged(u => {
+    if (u) {
+        userUID = u.uid;
+        // حفظ UID إذا كان تذكر الدخول مفعل
+        if (rememberMe) {
+            localStorage.setItem('userUID', u.uid);
+        }
+    }
+});
 
 // الأقسام والمحافظات
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
@@ -215,6 +269,38 @@ const postsPerPage = 6;
 // ===== إضافة متغيرات المصادقة =====
 let currentUser = null;
 let userDisplayName = null;
+let userFullName = null;
+
+// ===== إضافة دالة تذكرني =====
+function toggleRememberMe() {
+    rememberMe = !rememberMe;
+    localStorage.setItem('rememberMe', rememberMe);
+    
+    if (rememberMe && userUID) {
+        localStorage.setItem('userUID', userUID);
+    } else {
+        localStorage.removeItem('userUID');
+    }
+    
+    updateRememberMeUI();
+    updateAuthUI();
+}
+
+function updateRememberMeUI() {
+    const rememberSection = document.getElementById('rememberSection');
+    if (rememberSection) {
+        rememberSection.innerHTML = `
+            <div class="remember-checkbox">
+                <input type="checkbox" id="rememberMeCheckbox" ${rememberMe ? 'checked' : ''} 
+                       onchange="toggleRememberMe()">
+                <label for="rememberMeCheckbox">تذكر تسجيل الدخول</label>
+            </div>
+            <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
+                (سيتم تذكرك حتى عند إغلاق المتصفح)
+            </small>
+        `;
+    }
+}
 
 // Sidebar
 function toggleSidebar(){
@@ -501,24 +587,41 @@ function updateAuthUI() {
         <div class="user-info">
           <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
           <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+          
+          <!-- قسم تذكر الدخول -->
+          <div id="rememberSection"></div>
+          
           <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
         </div>
       `;
+      
+      updateRememberMeUI();
     });
   } else {
     // المستخدم غير مسجل
     authSection.innerHTML = `
+      <div id="rememberSection"></div>
       <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
       <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
     `;
+    
+    updateRememberMeUI();
   }
 }
 
+// ===== تحديث دالة logoutUser لحذف البيانات المخزنة =====
 function logoutUser() {
+  // حذف بيانات التذكر من localStorage
+  localStorage.removeItem('userUID');
+  localStorage.removeItem('rememberMe');
+  rememberMe = false;
+  
   firebase.auth().signOut()
     .then(() => {
       currentUser = null;
       userDisplayName = null;
+      userFullName = null;
+      userUID = null;
       updateAuthUI();
       showHome();
     })
@@ -554,11 +657,17 @@ firebase.auth().onAuthStateChanged((user) => {
     currentUser = user;
     userUID = user.uid;
     
+    // حفظ UID إذا كان تذكر الدخول مفعل
+    if (rememberMe) {
+      localStorage.setItem('userUID', user.uid);
+    }
+    
     // الحصول على اسم المستخدم من قاعدة البيانات
     db.ref("users/" + user.uid).once("value", snapshot => {
       const userData = snapshot.val();
       if (userData) {
         userDisplayName = userData.username;
+        userFullName = userData.fullName || userData.username;
         updateAuthUI();
         
         // تحديث وقت آخر نشاط
@@ -571,6 +680,14 @@ firebase.auth().onAuthStateChanged((user) => {
     // المستخدم غير مسجل
     currentUser = null;
     userDisplayName = null;
+    userFullName = null;
+    
+    // إذا كان تذكر الدخول غير مفعل، حذف UID المخزن
+    if (!rememberMe) {
+      localStorage.removeItem('userUID');
+      userUID = null;
+    }
+    
     updateAuthUI();
   }
 });
