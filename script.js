@@ -21,6 +21,10 @@ let budget = null;
 let currentPage = 1;
 const postsPerPage = 6;
 
+// ===== إضافة متغيرات نظام المصادقة =====
+let currentUser = null;
+let userDisplayName = null;
+
 // Sidebar
 function toggleSidebar(){document.querySelector(".sidebar").classList.toggle("active")}
 function closeSidebar(){document.querySelector(".sidebar").classList.remove("active")}
@@ -132,15 +136,25 @@ function goPage(p){
 // CRUD
 function deleteProduct(k){if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts)}
 function editProduct(k){db.ref("products/"+k).once("value",s=>showPublish(s.val(),k))}
+
+// ===== تعديل دالة showPublish لدعم المصادقة =====
 function showPublish(p=null,k=null){
   closeSidebar();
+  
+  // استخدام اسم المستخدم إذا كان مسجلاً
+  const sellerName = userDisplayName || (p ? p.seller : "");
+  const sellerField = userDisplayName ? 
+    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
+     <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
+    `<input id="seller" placeholder="اسم البائع" value="${sellerName}">`;
+  
   document.getElementById("content").innerHTML=`
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
       <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
       <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
       <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      ${sellerField}
       <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
       <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
       <select id="delivery">
@@ -150,12 +164,13 @@ function showPublish(p=null,k=null){
       <button onclick="save('${k||""}')">💾 حفظ</button>
     </div>`;
 }
+
 function save(k){
   const data={
     name:document.getElementById("name").value,
     price:document.getElementById("price").value,
     category:document.getElementById("category").value,
-    seller:document.getElementById("seller").value,
+    seller: userDisplayName || document.getElementById("seller").value, // استخدام اسم المستخدم المسجل
     phone:document.getElementById("phone").value,
     province:document.getElementById("province").value,
     delivery:document.getElementById("delivery").value,
@@ -164,5 +179,66 @@ function save(k){
   (k?db.ref("products/"+k):db.ref("products").push()).set(data).then(showHome);
 }
 
+// ===== إضافة دوال نظام المصادقة =====
+function updateAuthUI() {
+  const authSection = document.getElementById("authSection");
+  if (!authSection) return;
+  
+  if (currentUser && userDisplayName) {
+    // المستخدم مسجل الدخول
+    authSection.innerHTML = `
+      <div class="user-info">
+        <p>👤 ${userDisplayName}</p>
+        <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+      </div>
+    `;
+  } else {
+    // المستخدم غير مسجل
+    authSection.innerHTML = `
+      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
+      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
+    `;
+  }
+}
+
+function logoutUser() {
+  firebase.auth().signOut()
+    .then(() => {
+      currentUser = null;
+      userDisplayName = null;
+      updateAuthUI();
+      showHome();
+    })
+    .catch((error) => {
+      console.error("Logout error:", error);
+      alert("حدث خطأ أثناء تسجيل الخروج");
+    });
+}
+
+// متابعة حالة المصادقة
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    userUID = user.uid;
+    
+    // الحصول على اسم المستخدم من قاعدة البيانات
+    db.ref("users/" + user.uid).once("value", snapshot => {
+      const userData = snapshot.val();
+      if (userData) {
+        userDisplayName = userData.username;
+        updateAuthUI();
+      }
+    });
+  } else {
+    // المستخدم غير مسجل
+    currentUser = null;
+    userDisplayName = null;
+    updateAuthUI();
+  }
+});
+
 // Init
-document.addEventListener("DOMContentLoaded",showHome);
+document.addEventListener("DOMContentLoaded",function(){
+  showHome();
+  updateAuthUI();
+});
