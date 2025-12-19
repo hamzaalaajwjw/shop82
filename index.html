@@ -79,6 +79,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   display: flex; 
   flex-direction: column; 
   gap: 10px; 
+  padding: 10px;
 }
 .user-info { 
   padding: 15px; 
@@ -102,6 +103,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   border-radius: 4px; 
   cursor: pointer; 
   font-size: 14px; 
+  margin-top: 10px;
 }
 .logout-btn:hover { 
   background: #dc2626; 
@@ -141,33 +143,44 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   color: #0ea5e9;
 }
 
-/* ===== إضافة أنماط لنظام تذكر الدخول ===== */
-.remember-btn {
-  background: #374151;
-  color: white;
-  border: 1px solid #4b5563;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 12px;
-  margin: 5px 0;
-  transition: background 0.3s;
+/* ===== أنماط خيار تذكر الدخول ===== */
+.remember-section {
+  background: #111827;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
 }
-.remember-btn:hover {
-  background: #4b5563;
-}
-
 .remember-checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: #d1d5db;
-  margin-top: 10px;
 }
 .remember-checkbox input {
   width: auto;
   margin: 0;
+}
+.remember-tooltip {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 5px;
+  display: block;
+}
+
+/* ===== إصلاحات التصميم ===== */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 998;
+  display: none;
+}
+.overlay.active {
+  display: block;
 }
 </style>
 </head>
@@ -227,35 +240,12 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-// ===== إضافة نظام تذكر تسجيل الدخول =====
-let rememberMe = localStorage.getItem('rememberMe') === 'true';
-
-// تعديل عملية تسجيل الدخول المجهول
-if (rememberMe) {
-    // إذا كان هناك UID مخزن، استخدمه
-    const savedUID = localStorage.getItem('userUID');
-    if (savedUID) {
-        userUID = savedUID;
-        // محاولة تسجيل الدخول تلقائياً
-        firebase.auth().signInAnonymously().catch(err => console.error(err));
-    } else {
-        firebase.auth().signInAnonymously().catch(err => console.error(err));
-    }
-} else {
-    firebase.auth().signInAnonymously().catch(err => console.error(err));
-}
-
 const db = firebase.database();
 let userUID = null;
-firebase.auth().onAuthStateChanged(u => {
-    if (u) {
-        userUID = u.uid;
-        // حفظ UID إذا كان تذكر الدخول مفعل
-        if (rememberMe) {
-            localStorage.setItem('userUID', u.uid);
-        }
-    }
-});
+let currentUser = null;
+let userDisplayName = null;
+let userFullName = null;
+let rememberMe = localStorage.getItem('rememberMe') === 'true';
 
 // الأقسام والمحافظات
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
@@ -266,50 +256,128 @@ let budget = null;
 let currentPage = 1;
 const postsPerPage = 6;
 
-// ===== إضافة متغيرات المصادقة =====
-let currentUser = null;
-let userDisplayName = null;
-let userFullName = null;
+// ===== إصلاح عملية التسجيل التلقائي =====
+function initializeAuth() {
+  if (rememberMe) {
+    const savedUID = localStorage.getItem('userUID');
+    if (savedUID) {
+      // التحقق من وجود المستخدم في قاعدة البيانات
+      db.ref("users/" + savedUID).once("value", snapshot => {
+        if (snapshot.exists()) {
+          userUID = savedUID;
+          // محاولة تسجيل الدخول باستخدام جلسة مستمرة
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              currentUser = user;
+              if (user.uid !== savedUID) {
+                // تسجيل الخروج إذا كان المستخدم مختلفاً
+                firebase.auth().signOut();
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+  
+  // تسجيل الدخول المجهول مع مراقبة الحالة
+  firebase.auth().signInAnonymously().catch(err => {
+    console.error("Anonymous login error:", err);
+  });
+}
 
-// ===== إضافة دالة تذكرني =====
+// متابعة حالة المصادقة
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    
+    // التحقق إذا كان المستخدم مسجلاً بالبريد (ليس مجهولاً)
+    if (user.email) {
+      userUID = user.uid;
+      
+      // حفظ UID إذا كان تذكر الدخول مفعل
+      if (rememberMe) {
+        localStorage.setItem('userUID', user.uid);
+      }
+      
+      // الحصول على بيانات المستخدم من قاعدة البيانات
+      db.ref("users/" + user.uid).once("value", snapshot => {
+        const userData = snapshot.val();
+        if (userData) {
+          userDisplayName = userData.username;
+          userFullName = userData.fullName || userData.username;
+          updateAuthUI();
+          
+          // تحديث وقت آخر نشاط
+          db.ref("users/" + user.uid).update({
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        } else {
+          updateAuthUI();
+        }
+      });
+    } else {
+      // المستخدم مجهول
+      userUID = null;
+      userDisplayName = null;
+      updateAuthUI();
+    }
+  } else {
+    // لا يوجد مستخدم مسجل
+    currentUser = null;
+    userDisplayName = null;
+    userFullName = null;
+    userUID = null;
+    updateAuthUI();
+  }
+});
+
+// ===== دوال تذكر الدخول =====
 function toggleRememberMe() {
     rememberMe = !rememberMe;
     localStorage.setItem('rememberMe', rememberMe);
     
-    if (rememberMe && userUID) {
-        localStorage.setItem('userUID', userUID);
+    if (rememberMe && currentUser && currentUser.uid) {
+        localStorage.setItem('userUID', currentUser.uid);
     } else {
         localStorage.removeItem('userUID');
     }
     
-    updateRememberMeUI();
     updateAuthUI();
 }
 
 function updateRememberMeUI() {
-    const rememberSection = document.getElementById('rememberSection');
-    if (rememberSection) {
-        rememberSection.innerHTML = `
-            <div class="remember-checkbox">
-                <input type="checkbox" id="rememberMeCheckbox" ${rememberMe ? 'checked' : ''} 
-                       onchange="toggleRememberMe()">
-                <label for="rememberMeCheckbox">تذكر تسجيل الدخول</label>
-            </div>
-            <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
-                (سيتم تذكرك حتى عند إغلاق المتصفح)
-            </small>
-        `;
-    }
+    const authSection = document.getElementById('authSection');
+    if (!authSection) return;
+    
+    const rememberDiv = document.createElement('div');
+    rememberDiv.className = 'remember-section';
+    rememberDiv.innerHTML = `
+        <div class="remember-checkbox">
+            <input type="checkbox" id="rememberMeCheckbox" ${rememberMe ? 'checked' : ''} 
+                   onchange="toggleRememberMe()">
+            <label for="rememberMeCheckbox">تذكر تسجيل الدخول</label>
+        </div>
+        <small class="remember-tooltip">
+            ${rememberMe ? '✅ سيتم تذكرك عند إعادة فتح الموقع' : '❌ لن يتم تذكر جلسة الدخول'}
+        </small>
+    `;
+    
+    return rememberDiv;
 }
 
 // Sidebar
 function toggleSidebar(){
-  document.querySelector(".sidebar").classList.toggle("active");
-  document.querySelector(".overlay").classList.toggle("active");
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
+  sidebar.classList.toggle("active");
+  overlay.classList.toggle("active");
 }
 function closeSidebar(){
-  document.querySelector(".sidebar").classList.remove("active");
-  document.querySelector(".overlay").classList.remove("active");
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
+  sidebar.classList.remove("active");
+  overlay.classList.remove("active");
 }
 
 // الصفحة الرئيسية
@@ -331,8 +399,12 @@ function showHome(){
 }
 
 // Budget Dialog
-function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
-function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
+function showBudgetDialog(){ 
+  document.getElementById("budgetDialog").style.display="block"; 
+}
+function closeBudget(){ 
+  document.getElementById("budgetDialog").style.display="none"; 
+}
 function applyBudget(){
   const val = parseFloat(document.getElementById("maxBudget").value);
   budget = !isNaN(val) ? val : null;
@@ -342,8 +414,17 @@ function applyBudget(){
 
 // تحميل المنتجات
 function loadProducts(){
-  const s = document.getElementById("search").value.toLowerCase();
-  const c = document.getElementById("cat").value;
+  const searchInput = document.getElementById("search");
+  const categorySelect = document.getElementById("cat");
+  
+  // إذا لم توجد عناصر البحث، لا تحاول التحميل
+  if (!searchInput || !categorySelect) {
+    setTimeout(loadProducts, 100);
+    return;
+  }
+  
+  const s = searchInput.value.toLowerCase();
+  const c = categorySelect.value;
 
   db.ref("products").once("value", snap=>{
     const d = snap.val() || {};
@@ -355,7 +436,7 @@ function loadProducts(){
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
         if(budget && price > budget) return;
         
-        // ===== إضافة زر الملف الشخصي للبائع مع جلب الاسم الحقيقي =====
+        // إضافة زر الملف الشخصي للبائع
         const sellerSection = userDisplayName ? 
           `<div class="seller">
             👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
@@ -377,8 +458,8 @@ function loadProducts(){
             ${sellerSection}
             <div class="actions">
               ${p.uid===userUID?`
-              <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
+              <button class="edit" onclick="event.stopPropagation(); editProduct('${k}');">تعديل</button>
+              <button class="del" onclick="event.stopPropagation(); deleteProduct('${k}');">حذف</button>` : ""}
             </div>
           </div>
         `});
@@ -419,7 +500,10 @@ function renderPagination(total){
         ${i}
       </button>`;
   }
-  document.getElementById("pagination").innerHTML = html;
+  const paginationDiv = document.getElementById("pagination");
+  if (paginationDiv) {
+    paginationDiv.innerHTML = html;
+  }
 }
 
 function goPage(p){
@@ -458,9 +542,11 @@ function deleteProduct(k){
   } 
 }
 
-function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
+function editProduct(k){ 
+  db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); 
+}
 
-// ===== تعديل دالة showPublish لدعم المصادقة =====
+// دالة نشر/تعديل إعلان
 function showPublish(p=null,k=null){
   closeSidebar();
   
@@ -515,7 +601,7 @@ function save(k){
   const ref = k ? db.ref("products/"+k) : db.ref("products").push();
   
   ref.set(data).then(() => {
-    // ===== تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط) =====
+    // تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط)
     if (!k && userUID) {
       db.ref('users/' + userUID).once('value', (snapshot) => {
         const userData = snapshot.val();
@@ -547,7 +633,7 @@ function showDetails(k){
     const p = snap.val();
     if(!p) return;
     
-    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل مع معلومات إضافية =====
+    // إضافة زر الملف الشخصي في نافذة التفاصيل
     const sellerWithLink = userDisplayName ? 
       `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
        <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
@@ -576,40 +662,52 @@ function updateAuthUI() {
   const authSection = document.getElementById("authSection");
   if (!authSection) return;
   
-  if (currentUser && userDisplayName) {
-    // جلب بيانات المستخدم الكاملة لعرض الاسم الكامل
-    db.ref("users/" + currentUser.uid).once("value", snapshot => {
-      const userData = snapshot.val();
-      const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
-      
-      // المستخدم مسجل الدخول
-      authSection.innerHTML = `
-        <div class="user-info">
-          <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
-          <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
-          
-          <!-- قسم تذكر الدخول -->
-          <div id="rememberSection"></div>
-          
-          <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
-        </div>
-      `;
-      
-      updateRememberMeUI();
-    });
-  } else {
-    // المستخدم غير مسجل
-    authSection.innerHTML = `
-      <div id="rememberSection"></div>
-      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
-      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
-    `;
+  if (currentUser && currentUser.email && userDisplayName) {
+    // المستخدم مسجل الدخول (ليس مجهولاً)
+    const displayName = userFullName || userDisplayName;
     
-    updateRememberMeUI();
+    authSection.innerHTML = `
+      <div class="user-info">
+        <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
+        <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+        
+        <!-- قسم تذكر الدخول -->
+        <div class="remember-section">
+          <div class="remember-checkbox">
+            <input type="checkbox" id="rememberMeCheckbox" ${rememberMe ? 'checked' : ''} 
+                   onchange="toggleRememberMe()">
+            <label for="rememberMeCheckbox">تذكر تسجيل الدخول</label>
+          </div>
+          <small class="remember-tooltip">
+            ${rememberMe ? '✅ سيتم تذكرك عند إعادة فتح الموقع' : '❌ لن يتم تذكر جلسة الدخول'}
+          </small>
+        </div>
+        
+        <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+      </div>
+    `;
+  } else {
+    // المستخدم غير مسجل أو مجهول
+    authSection.innerHTML = `
+      <div class="user-info">
+        <div class="remember-section">
+          <div class="remember-checkbox">
+            <input type="checkbox" id="rememberMeCheckbox" ${rememberMe ? 'checked' : ''} 
+                   onchange="toggleRememberMe()">
+            <label for="rememberMeCheckbox">تذكر تسجيل الدخول</label>
+          </div>
+          <small class="remember-tooltip">
+            ${rememberMe ? '✅ تم تفعيل التذكر' : '❌ التذكر غير مفعل'}
+          </small>
+        </div>
+        <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
+        <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
+      </div>
+    `;
   }
 }
 
-// ===== تحديث دالة logoutUser لحذف البيانات المخزنة =====
+// تحديث دالة logoutUser
 function logoutUser() {
   // حذف بيانات التذكر من localStorage
   localStorage.removeItem('userUID');
@@ -624,6 +722,9 @@ function logoutUser() {
       userUID = null;
       updateAuthUI();
       showHome();
+      
+      // تسجيل الدخول كمجهول بعد الخروج
+      firebase.auth().signInAnonymously();
     })
     .catch((error) => {
       console.error("Logout error:", error);
@@ -631,14 +732,11 @@ function logoutUser() {
     });
 }
 
-// ===== إضافة دوال نظام الملف الشخصي =====
+// دوال نظام الملف الشخصي
 function viewProfile(userId, sellerName) {
-  // حفظ اسم البائع للاستخدام لاحقاً
   if (sellerName) {
     localStorage.setItem('profileSellerName', sellerName);
   }
-  
-  // الانتقال لصفحة الملف الشخصي
   window.location.href = `profile.html?id=${userId}`;
 }
 
@@ -651,50 +749,32 @@ function viewMyProfile() {
   }
 }
 
-// متابعة حالة المصادقة
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    currentUser = user;
-    userUID = user.uid;
-    
-    // حفظ UID إذا كان تذكر الدخول مفعل
-    if (rememberMe) {
-      localStorage.setItem('userUID', user.uid);
-    }
-    
-    // الحصول على اسم المستخدم من قاعدة البيانات
-    db.ref("users/" + user.uid).once("value", snapshot => {
-      const userData = snapshot.val();
-      if (userData) {
-        userDisplayName = userData.username;
-        userFullName = userData.fullName || userData.username;
-        updateAuthUI();
-        
-        // تحديث وقت آخر نشاط
-        db.ref("users/" + user.uid).update({
-          lastActive: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    });
-  } else {
-    // المستخدم غير مسجل
-    currentUser = null;
-    userDisplayName = null;
-    userFullName = null;
-    
-    // إذا كان تذكر الدخول غير مفعل، حذف UID المخزن
-    if (!rememberMe) {
-      localStorage.removeItem('userUID');
-      userUID = null;
-    }
-    
-    updateAuthUI();
-  }
+// بدء التطبيق
+document.addEventListener("DOMContentLoaded", function() {
+  // تهيئة المصادقة
+  initializeAuth();
+  
+  // عرض الصفحة الرئيسية
+  showHome();
+  
+  // تحديث واجهة المستخدم
+  setTimeout(updateAuthUI, 500);
 });
 
-// بدء الصفحة الرئيسية
-showHome();
-updateAuthUI();
+// التعامل مع أخطاء التحميل
+window.addEventListener('error', function(e) {
+  console.error('Global error:', e);
+  if (document.getElementById("content")) {
+    document.getElementById("content").innerHTML = `
+      <div style="padding: 20px; text-align: center;">
+        <h3>حدث خطأ في تحميل المحتوى</h3>
+        <button onclick="showHome()" style="padding: 10px 20px; background: #38bdf8; border: none; border-radius: 5px; cursor: pointer;">
+          إعادة تحميل الصفحة
+        </button>
+      </div>
+    `;
+  }
+});
 </script>
 </body>
 </html>
