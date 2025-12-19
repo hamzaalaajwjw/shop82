@@ -140,6 +140,61 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .profile-link:hover {
   color: #0ea5e9;
 }
+
+/* ===== إضافة أنماط جديدة للتحسينات ===== */
+.verified-badge {
+  background: #10b981;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 5px;
+}
+
+.product-status {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.status-available { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.status-sold { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.status-reserved { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+
+.admin-badge {
+  background: #8b5cf6;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 5px;
+}
+
+.security-warning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+.session-timeout {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(245, 158, 11, 0.9);
+  color: #000;
+  padding: 10px 15px;
+  border-radius: 6px;
+  z-index: 2000;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
 </style>
 </head>
 <body>
@@ -167,7 +222,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 <!-- Budget Dialog -->
 <div class="budget-dialog" id="budgetDialog">
   <h3>اكتب أعلى سعر في ميزانيتك</h3>
-  <input type="number" id="maxBudget" placeholder="مثال: 100000">
+  <input type="number" id="maxBudget" placeholder="مثال: 100000" min="0" max="10000000">
   <div style="text-align:right">
     <button onclick="applyBudget()">متابعة</button>
     <button class="close-btn" onclick="closeBudget()">إلغاء</button>
@@ -180,28 +235,67 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   <button onclick="closeDetails()">رجوع للصفحة الرئيسية</button>
 </div>
 
+<!-- Session Timeout Warning -->
+<div class="session-timeout" id="sessionTimeout">
+  <span id="timeoutMessage">ستنتهي جلسة العمل خلال <span id="timeoutTimer">60</span> ثانية</span>
+  <button onclick="extendSession()" style="
+    background: #000;
+    color: #f59e0b;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 12px;
+  ">توسيع الوقت</button>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
 <script>
 // إعداد Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
-  authDomain: "a3len-3ad54.firebaseapp.com",
+  authDomain: "a3len-3ad54.firebasestorage.app",
   databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
   projectId: "a3len-3ad54",
   storageBucket: "a3len-3ad54.firebasestorage.app",
   messagingSenderId: "767338034080",
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
-firebase.initializeApp(firebaseConfig);
 
-firebase.auth().signInAnonymously().catch(err => console.error(err));
+// التحقق من تكرار تهيئة Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
 const db = firebase.database();
+const analytics = firebase.analytics();
+
+// مصادقة مجهولة مع تحسينات
+auth.signInAnonymously().catch(err => {
+    console.error("Anonymous auth error:", err);
+    showSecurityWarning("تعذر الاتصال بالنظام. تأكد من اتصال الإنترنت.");
+});
+
 let userUID = null;
-firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
+auth.onAuthStateChanged(u => {
+    if (u) {
+        userUID = u.uid;
+        // تسجيل نشاط الدخول
+        if (u.email) {
+            // تحديث وقت آخر نشاط للمستخدم المسجل
+            db.ref("users/" + u.uid).update({
+                lastActive: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+    }
+});
 
 // الأقسام والمحافظات
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
@@ -215,6 +309,100 @@ const postsPerPage = 6;
 // ===== إضافة متغيرات المصادقة =====
 let currentUser = null;
 let userDisplayName = null;
+let userFullName = null;
+let isAdmin = false;
+
+// ===== متغيرات إدارة الجلسة =====
+let sessionTimeout = null;
+let sessionWarning = null;
+const SESSION_DURATION = 60 * 60 * 1000; // 60 دقيقة
+const SESSION_WARNING = 5 * 60 * 1000; // تحذير قبل 5 دقائق
+
+// ===== دالة تحذير الأمان =====
+function showSecurityWarning(message) {
+    const content = document.getElementById('content');
+    if (content) {
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'security-warning';
+        warningDiv.innerHTML = `⚠️ ${message}`;
+        content.insertBefore(warningDiv, content.firstChild);
+        
+        // إخفاء التحذير بعد 5 ثواني
+        setTimeout(() => {
+            warningDiv.style.opacity = '0';
+            setTimeout(() => warningDiv.remove(), 500);
+        }, 5000);
+    }
+}
+
+// ===== إدارة الجلسة =====
+function initSessionManagement() {
+    // إعادة تعيين المهلة عند أي نشاط
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        document.addEventListener(event, resetSessionTimer);
+    });
+    
+    // بدء عدادات الجلسة
+    resetSessionTimer();
+}
+
+function resetSessionTimer() {
+    // مسح المهلات السابقة
+    if (sessionTimeout) clearTimeout(sessionTimeout);
+    if (sessionWarning) clearTimeout(sessionWarning);
+    
+    // إخفاء تحذير المهلة
+    document.getElementById('sessionTimeout').style.display = 'none';
+    
+    // تعيين تحذير قبل 5 دقائق
+    sessionWarning = setTimeout(() => {
+        showSessionWarning();
+    }, SESSION_DURATION - SESSION_WARNING);
+    
+    // تعيين المهلة النهائية
+    sessionTimeout = setTimeout(() => {
+        handleSessionTimeout();
+    }, SESSION_DURATION);
+}
+
+function showSessionWarning() {
+    const timeoutDiv = document.getElementById('sessionTimeout');
+    const timerSpan = document.getElementById('timeoutTimer');
+    
+    let secondsLeft = SESSION_WARNING / 1000;
+    timerSpan.textContent = secondsLeft;
+    timeoutDiv.style.display = 'block';
+    
+    // تحديث العداد كل ثانية
+    const countdown = setInterval(() => {
+        secondsLeft--;
+        timerSpan.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            clearInterval(countdown);
+        }
+    }, 1000);
+}
+
+function extendSession() {
+    resetSessionTimer();
+    showSecurityWarning("تم توسيع وقت الجلسة بنجاح.");
+}
+
+function handleSessionTimeout() {
+    if (currentUser && !currentUser.isAnonymous) {
+        // للمستخدمين المسجلين، تسجيل الخروج
+        auth.signOut().then(() => {
+            showSecurityWarning("انتهت جلسة العمل. تم تسجيل الخروج لأسباب أمنية.");
+            showHome();
+            updateAuthUI();
+        });
+    }
+    // للمستخدمين المجهولين، إعادة تحميل الصفحة
+    else {
+        window.location.reload();
+    }
+}
 
 // Sidebar
 function toggleSidebar(){
@@ -231,7 +419,7 @@ function showHome(){
   closeSidebar();
   document.getElementById("content").innerHTML = `
     <div class="search-bar">
-      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
+      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()" maxlength="50">
       <select id="cat" onchange="loadProducts()">
         <option value="">كل الأقسام</option>
         ${categories.map(c=>`<option>${c}</option>`).join("")}
@@ -249,7 +437,19 @@ function showBudgetDialog(){ document.getElementById("budgetDialog").style.displ
 function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
 function applyBudget(){
   const val = parseFloat(document.getElementById("maxBudget").value);
-  budget = !isNaN(val) ? val : null;
+  
+  // التحقق من المدخلات
+  if (isNaN(val) || val < 0) {
+    showSecurityWarning("يرجى إدخال قيمة ميزانية صحيحة");
+    return;
+  }
+  
+  if (val > 10000000) {
+    showSecurityWarning("القيمة المدخلة كبيرة جداً");
+    return;
+  }
+  
+  budget = val;
   closeBudget();
   loadProducts();
 }
@@ -265,32 +465,48 @@ function loadProducts(){
 
     Object.keys(d).forEach(k=>{
       const p = d[k];
+      
+      // التحقق من صحة بيانات المنتج
+      if (!p || !p.name || !p.price) {
+        return; // تخطي المنتجات غير الصالحة
+      }
+      
       const price = parseFloat(p.price) || 0;
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
         if(budget && price > budget) return;
         
+        // التحقق من حالة المنتج
+        const status = p.status || 'available';
+        let statusBadge = '';
+        if (status !== 'available') {
+          statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
+        }
+        
         // ===== إضافة زر الملف الشخصي للبائع مع جلب الاسم الحقيقي =====
         const sellerSection = userDisplayName ? 
           `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> 
+            ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+            | ☎ ${maskPhoneNumber(p.phone)}
             <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
           `<div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
+            👤 ${p.seller} | ☎ ${maskPhoneNumber(p.phone)}
           </div>`;
         
         htmlCards.push({uid:p.uid,key:k,html:`
           <div class="card" onclick="showDetails('${k}')">
-            <h3>${p.name}</h3>
-            <span class="price">${p.price} د.ع</span>
+            <h3>${escapeHTML(p.name)}</h3>
+            <span class="price">${formatPrice(p.price)} د.ع</span>
+            ${statusBadge}
             <div class="meta">
-              <span>${p.category}</span>
-              <span>${p.province}</span>
-              <span>توصيل: ${p.delivery}</span>
+              <span>${p.category || 'غير محدد'}</span>
+              <span>${p.province || 'غير محدد'}</span>
+              <span>توصيل: ${p.delivery || 'لا'}</span>
             </div>
             ${sellerSection}
             <div class="actions">
-              ${p.uid===userUID?`
+              ${(p.uid===userUID || isAdmin)?`
               <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
               <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
             </div>
@@ -312,6 +528,9 @@ function loadProducts(){
     document.getElementById("products").innerHTML = finalHTML;
 
     renderPagination(totalPages);
+  }).catch(error => {
+    console.error("Error loading products:", error);
+    document.getElementById("products").innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
   });
 }
 
@@ -343,88 +562,182 @@ function goPage(p){
 
 // حذف / تعديل / نشر
 function deleteProduct(k){ 
-  if(confirm("حذف الإعلان؟")) {
-    // الحصول على بيانات المنتج أولاً
-    db.ref("products/" + k).once('value', (snapshot) => {
-      const product = snapshot.val();
-      if (product) {
-        // تقليل عداد منتجات المستخدم
-        if (product.uid) {
-          db.ref('users/' + product.uid).once('value', (userSnapshot) => {
-            const userData = userSnapshot.val();
-            if (userData) {
-              const currentCount = userData.totalProducts || 0;
-              if (currentCount > 0) {
-                db.ref('users/' + product.uid).update({
-                  totalProducts: currentCount - 1
-                });
-              }
-            }
-          });
+  if(!confirm("هل أنت متأكد من حذف الإعلان؟ لا يمكن التراجع عن هذا الإجراء.")) {
+    return;
+  }
+  
+  // التحقق من الصلاحيات
+  db.ref("products/" + k).once('value', (snapshot) => {
+    const product = snapshot.val();
+    if (!product) {
+      showSecurityWarning("الإعلان غير موجود");
+      return;
+    }
+    
+    if (product.uid !== userUID && !isAdmin) {
+      showSecurityWarning("ليس لديك صلاحية لحذف هذا الإعلان");
+      return;
+    }
+    
+    if (product.uid) {
+      db.ref('users/' + product.uid).once('value', (userSnapshot) => {
+        const userData = userSnapshot.val();
+        if (userData) {
+          const currentCount = userData.totalProducts || 0;
+          if (currentCount > 0) {
+            db.ref('users/' + product.uid).update({
+              totalProducts: currentCount - 1
+            });
+          }
         }
-        
-        // حذف المنتج
-        db.ref("products/"+k).remove().then(() => {
-          loadProducts();
+      });
+    }
+    
+    // حذف المنتج
+    db.ref("products/"+k).remove().then(() => {
+      showSecurityWarning("تم حذف الإعلان بنجاح");
+      loadProducts();
+      
+      // تسجيل نشاط الحذف
+      if (userUID) {
+        db.ref("userActivity/" + userUID).push().set({
+          type: 'product_deleted',
+          productId: k,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
         });
       }
+    }).catch(error => {
+      console.error("Delete error:", error);
+      showSecurityWarning("حدث خطأ أثناء حذف الإعلان");
     });
-  } 
+  });
 }
 
-function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
+function editProduct(k){ 
+  db.ref("products/"+k).once("value", s => {
+    const product = s.val();
+    if (!product) {
+      showSecurityWarning("الإعلان غير موجود");
+      return;
+    }
+    
+    // التحقق من الصلاحيات
+    if (product.uid !== userUID && !isAdmin) {
+      showSecurityWarning("ليس لديك صلاحية لتعديل هذا الإعلان");
+      return;
+    }
+    
+    showPublish(product, k);
+  });
+}
 
 // ===== تعديل دالة showPublish لدعم المصادقة =====
 function showPublish(p=null,k=null){
   closeSidebar();
+  
+  // التحقق من المصادقة للنشر
+  if (!userUID && !currentUser) {
+    const publishAnyway = confirm("يجب تسجيل الدخول لنشر إعلانات. هل تريد المتابعة كمستخدم مجهول؟ (الإعلان سيحذف عند الخروج)");
+    if (!publishAnyway) {
+      showHome();
+      return;
+    }
+  }
   
   // استخدام اسم المستخدم إذا كان مسجلاً
   const sellerName = userDisplayName || (p ? p.seller : "");
   const sellerField = userDisplayName ? 
     `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
      <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
-    `<input id="seller" placeholder="اسم البائع" value="${sellerName}">`;
+    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
   
   document.getElementById("content").innerHTML = `
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
-      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
-      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
+      <input id="name" placeholder="اسم القطعة" value="${p?escapeHTML(p.name):""}" maxlength="50" required>
+      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}" min="0" max="10000000" required>
       <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
       ${sellerField}
-      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
+      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}" pattern="[0][0-9]{10}" required>
+      <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
       <select id="province">
+        <option value="">اختر المحافظة</option>
         ${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
       </select>
       <select id="delivery">
-        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
-        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
+        <option value="نعم" ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
+        <option value="لا" ${p&&p.delivery==="لا"?"selected":""}>لا</option>
       </select>
-      <button onclick="save('${k||""}')">💾 حفظ</button>
+      <select id="status" ${isAdmin || (p && p.uid === userUID) ? '' : 'disabled'}>
+        <option value="available" ${p&&p.status==="available"?"selected":""}>متاح</option>
+        <option value="sold" ${p&&p.status==="sold"?"selected":""}>مباع</option>
+        <option value="reserved" ${p&&p.status==="reserved"?"selected":""}>محجوز</option>
+      </select>
+      <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
+      <button onclick="save('${k||""}')">💾 ${p?"تحديث":"نشر"}</button>
+      ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
     </div>`;
 }
 
 function save(k){
+  const name = document.getElementById("name").value.trim();
+  const price = document.getElementById("price").value.trim();
   const phone = document.getElementById("phone").value.trim();
+  const province = document.getElementById("province").value;
+  
+  // التحقق من البيانات
+  if (!name || !price || !phone || !province) {
+    showSecurityWarning("جميع الحقول مطلوبة");
+    return;
+  }
+  
+  if (name.length < 3 || name.length > 50) {
+    showSecurityWarning("اسم القطعة يجب أن يكون بين 3 و 50 حرف");
+    return;
+  }
+  
+  const priceNum = parseFloat(price);
+  if (isNaN(priceNum) || priceNum < 0 || priceNum > 10000000) {
+    showSecurityWarning("السعر يجب أن يكون بين 0 و 10,000,000 دينار");
+    return;
+  }
+  
   if(!/^[0][0-9]{10}$/.test(phone)){
     alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر.");
     return;
   }
+  
+  if (!province) {
+    showSecurityWarning("يرجى اختيار المحافظة");
+    return;
+  }
 
   // استخدام اسم المستخدم المسجل إذا كان متوفراً
-  const seller = userDisplayName || document.getElementById("seller").value;
+  const seller = userDisplayName || document.getElementById("seller").value.trim();
+  
+  if (!seller || seller.length < 2) {
+    showSecurityWarning("اسم البائع مطلوب (2 أحرف على الأقل)");
+    return;
+  }
 
   const data = {
-    name: document.getElementById("name").value,
-    price: document.getElementById("price").value,
+    name: name,
+    price: priceNum,
     category: document.getElementById("category").value,
     seller: seller,
     phone: phone,
-    province: document.getElementById("province").value,
+    province: province,
     delivery: document.getElementById("delivery").value,
+    status: document.getElementById("status").value || "available",
     uid: userUID,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
+    lastUpdated: firebase.database.ServerValue.TIMESTAMP
   };
+  
+  // إضافة وقت الإنشاء للإعلانات الجديدة فقط
+  if (!k) {
+    data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+    data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+  }
   
   const ref = k ? db.ref("products/"+k) : db.ref("products").push();
   
@@ -448,10 +761,22 @@ function save(k){
         }
       });
     }
+    
+    // تسجيل النشاط
+    if (userUID) {
+      const activityType = k ? 'product_updated' : 'product_created';
+      db.ref("userActivity/" + userUID).push().set({
+        type: activityType,
+        productId: k || ref.key,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+    
+    showSecurityWarning(k ? "✅ تم تحديث الإعلان بنجاح" : "✅ تم نشر الإعلان بنجاح");
     showHome();
   }).catch(error => {
     console.error("Error saving product:", error);
-    alert("حدث خطأ أثناء حفظ الإعلان");
+    showSecurityWarning("حدث خطأ أثناء حفظ الإعلان");
   });
 }
 
@@ -459,25 +784,36 @@ function save(k){
 function showDetails(k){
   db.ref("products/"+k).once("value",snap=>{
     const p = snap.val();
-    if(!p) return;
+    if(!p) {
+      showSecurityWarning("الإعلان غير موجود أو تم حذفه");
+      return;
+    }
     
     // ===== إضافة زر الملف الشخصي في نافذة التفاصيل مع معلومات إضافية =====
     const sellerWithLink = userDisplayName ? 
-      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
+      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span>
+       ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>
        <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
-      `<p><strong>البائع:</strong> ${p.seller}</p>`;
+      `<p><strong>البائع:</strong> ${p.seller} ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>`;
+    
+    const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
     
     document.getElementById("detailsContent").innerHTML = `
-      <h2>${p.name}</h2>
-      <p><strong>السعر:</strong> ${p.price} د.ع</p>
-      <p><strong>القسم:</strong> ${p.category}</p>
+      <h2>${escapeHTML(p.name)}</h2>
+      <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
+      <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+      ${statusText}
       ${sellerWithLink}
-      <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
-      <p><strong>المحافظة:</strong> ${p.province}</p>
-      <p><strong>التوصيل:</strong> ${p.delivery}</p>
+      <p><strong>رقم الهاتف:</strong> ${maskPhoneNumber(p.phone)}</p>
+      <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+      <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
       ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
+      ${isAdmin ? `<p style="color:#8b5cf6; font-size:12px; margin-top:10px;">المعرف: ${k}</p>` : ""}
     `;
     document.getElementById("detailsDialog").style.display="block";
+  }).catch(error => {
+    console.error("Error loading details:", error);
+    showSecurityWarning("حدث خطأ في تحميل التفاصيل");
   });
 }
 
@@ -496,12 +832,32 @@ function updateAuthUI() {
       const userData = snapshot.val();
       const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
       
+      // التحقق من صلاحيات المدير
+      isAdmin = userData && userData.isAdmin === true;
+      
       // المستخدم مسجل الدخول
       authSection.innerHTML = `
         <div class="user-info">
-          <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
+          <p class="profile-link" onclick="viewMyProfile()">
+            👤 ${displayName}
+            ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
+            ${userData && userData.isVerified ? '<span class="verified-badge">✓</span>' : ''}
+          </p>
           <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+          <small style="color:#9ca3af; font-size:11px; display:block; margin:5px 0;">${userData ? userData.totalProducts || 0 : 0} إعلان</small>
           <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+          ${isAdmin ? `
+          <button onclick="showAdminPanel()" style="
+            width: 100%;
+            padding: 8px;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+          ">لوحة التحكم</button>` : ''}
         </div>
       `;
     });
@@ -510,22 +866,214 @@ function updateAuthUI() {
     authSection.innerHTML = `
       <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
       <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
+      <div style="color:#9ca3af; font-size:12px; text-align:center; padding:10px;">
+        التسجيل يتيح لك:
+        <div style="font-size:11px; margin-top:5px;">
+          ✓ متابعة إعلاناتك<br>
+          ✓ تقييم البائعين<br>
+          ✓ الملف الشخصي
+        </div>
+      </div>
     `;
   }
 }
 
 function logoutUser() {
-  firebase.auth().signOut()
-    .then(() => {
-      currentUser = null;
-      userDisplayName = null;
-      updateAuthUI();
-      showHome();
-    })
-    .catch((error) => {
-      console.error("Logout error:", error);
-      alert("حدث خطأ أثناء تسجيل الخروج");
+  if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+    auth.signOut()
+      .then(() => {
+        currentUser = null;
+        userDisplayName = null;
+        userFullName = null;
+        isAdmin = false;
+        updateAuthUI();
+        showHome();
+        showSecurityWarning("تم تسجيل الخروج بنجاح");
+      })
+      .catch((error) => {
+        console.error("Logout error:", error);
+        showSecurityWarning("حدث خطأ أثناء تسجيل الخروج");
+      });
+  }
+}
+
+// ===== لوحة تحكم المدير =====
+function showAdminPanel() {
+  if (!isAdmin) {
+    showSecurityWarning("ليس لديك صلاحية الوصول إلى لوحة التحكم");
+    return;
+  }
+  
+  closeSidebar();
+  document.getElementById("content").innerHTML = `
+    <div class="form-box">
+      <h2 style="color:#8b5cf6;">👑 لوحة تحكم المدير</h2>
+      
+      <div style="margin:20px 0;">
+        <h3 style="color:#38bdf8;">الإحصائيات</h3>
+        <div id="adminStats" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="stat-box">جاري التحميل...</div>
+        </div>
+      </div>
+      
+      <div style="margin:20px 0;">
+        <h3 style="color:#38bdf8;">المستخدمون</h3>
+        <input type="text" id="searchUsers" placeholder="🔍 بحث عن مستخدم..." style="width:100%; margin-bottom:10px;">
+        <div id="usersList" style="max-height:300px; overflow-y:auto;"></div>
+      </div>
+      
+      <div style="margin:20px 0;">
+        <h3 style="color:#38bdf8;">الإعلانات</h3>
+        <select id="filterProducts" onchange="filterAdminProducts()" style="width:100%; margin-bottom:10px;">
+          <option value="">جميع الإعلانات</option>
+          <option value="reported">الإعلانات المبلغ عنها</option>
+          <option value="recent">الإعلانات الحديثة</option>
+        </select>
+        <div id="productsList" style="max-height:300px; overflow-y:auto;"></div>
+      </div>
+      
+      <button onclick="showHome()" style="background:#6b7280;">رجوع</button>
+    </div>
+  `;
+  
+  loadAdminStats();
+  loadAdminUsers();
+  loadAdminProducts();
+}
+
+function loadAdminStats() {
+  Promise.all([
+    db.ref("users").once("value"),
+    db.ref("products").once("value"),
+    db.ref("reports").once("value")
+  ]).then(([usersSnap, productsSnap, reportsSnap]) => {
+    const usersCount = usersSnap.numChildren();
+    const productsCount = productsSnap.numChildren();
+    const reportsCount = reportsSnap.numChildren();
+    
+    document.getElementById("adminStats").innerHTML = `
+      <div class="stat-box">
+        <div class="stat-number">${usersCount}</div>
+        <div class="stat-label">مستخدم</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${productsCount}</div>
+        <div class="stat-label">إعلان</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${reportsCount}</div>
+        <div class="stat-label">تبليغ</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${new Date().toLocaleDateString('ar-SA')}</div>
+        <div class="stat-label">التاريخ</div>
+      </div>
+    `;
+  });
+}
+
+function loadAdminUsers() {
+  db.ref("users").limitToLast(50).once("value", snapshot => {
+    const users = snapshot.val();
+    const usersList = document.getElementById("usersList");
+    usersList.innerHTML = '';
+    
+    if (!users) {
+      usersList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا يوجد مستخدمين</p>';
+      return;
+    }
+    
+    Object.keys(users).forEach(uid => {
+      const user = users[uid];
+      const userCard = `
+        <div style="
+          background:#111318;
+          padding:10px;
+          margin:5px 0;
+          border-radius:6px;
+          border-left:3px solid ${user.isAdmin ? '#8b5cf6' : user.isVerified ? '#10b981' : '#38bdf8'};
+        ">
+          <div style="font-weight:bold;">${user.fullName || user.username}</div>
+          <div style="font-size:12px; color:#9ca3af;">@${user.username}</div>
+          <div style="font-size:11px; color:#6b7280;">${user.totalProducts || 0} إعلان</div>
+          <button onclick="adminViewUser('${uid}')" style="
+            background:#374151;
+            color:#e5e7eb;
+            border:none;
+            padding:3px 8px;
+            border-radius:4px;
+            font-size:11px;
+            margin-top:5px;
+            cursor:pointer;
+          ">عرض</button>
+        </div>
+      `;
+      usersList.innerHTML += userCard;
     });
+  });
+}
+
+function loadAdminProducts() {
+  db.ref("products").orderByChild("createdAt").limitToLast(50).once("value", snapshot => {
+    const products = snapshot.val();
+    const productsList = document.getElementById("productsList");
+    productsList.innerHTML = '';
+    
+    if (!products) {
+      productsList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا يوجد إعلانات</p>';
+      return;
+    }
+    
+    Object.keys(products).forEach(key => {
+      const product = products[key];
+      const productCard = `
+        <div style="
+          background:#111318;
+          padding:10px;
+          margin:5px 0;
+          border-radius:6px;
+          border-left:3px solid ${product.status === 'sold' ? '#ef4444' : product.status === 'reserved' ? '#f59e0b' : '#10b981'};
+        ">
+          <div style="font-weight:bold;">${product.name}</div>
+          <div style="font-size:12px; color:#9ca3af;">${product.price} د.ع | ${product.category}</div>
+          <div style="font-size:11px; color:#6b7280;">${product.seller}</div>
+          <div style="display:flex; gap:5px; margin-top:5px;">
+            <button onclick="adminEditProduct('${key}')" style="
+              background:#38bdf8;
+              color:#000;
+              border:none;
+              padding:3px 8px;
+              border-radius:4px;
+              font-size:11px;
+              cursor:pointer;
+            ">تعديل</button>
+            <button onclick="adminDeleteProduct('${key}')" style="
+              background:#ef4444;
+              color:white;
+              border:none;
+              padding:3px 8px;
+              border-radius:4px;
+              font-size:11px;
+              cursor:pointer;
+            ">حذف</button>
+          </div>
+        </div>
+      `;
+      productsList.innerHTML += productCard;
+    });
+  });
+}
+
+function adminViewUser(uid) {
+  window.location.href = `profile.html?id=${uid}`;
+}
+
+function adminEditProduct(key) {
+  editProduct(key);
+}
+
+function adminDeleteProduct(key) {
+  deleteProduct(key);
 }
 
 // ===== إضافة دوال نظام الملف الشخصي =====
@@ -548,36 +1096,90 @@ function viewMyProfile() {
   }
 }
 
+// ===== دوال مساعدة =====
+function escapeHTML(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function maskPhoneNumber(phone) {
+  if (!phone || phone.length !== 11) return phone;
+  return phone.substring(0, 4) + '****' + phone.substring(8);
+}
+
+function formatPrice(price) {
+  return parseInt(price).toLocaleString('ar-SA');
+}
+
+function getStatusText(status) {
+  const statuses = {
+    'available': 'متاح',
+    'sold': 'مباع',
+    'reserved': 'محجوز'
+  };
+  return statuses[status] || status;
+}
+
 // متابعة حالة المصادقة
-firebase.auth().onAuthStateChanged((user) => {
+auth.onAuthStateChanged((user) => {
   if (user) {
     currentUser = user;
     userUID = user.uid;
     
-    // الحصول على اسم المستخدم من قاعدة البيانات
-    db.ref("users/" + user.uid).once("value", snapshot => {
-      const userData = snapshot.val();
-      if (userData) {
-        userDisplayName = userData.username;
-        updateAuthUI();
-        
-        // تحديث وقت آخر نشاط
-        db.ref("users/" + user.uid).update({
-          lastActive: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    });
+    // التحقق إذا كان المستخدم مسجلاً أم مجهول
+    if (user.email) {
+      // الحصول على اسم المستخدم من قاعدة البيانات
+      db.ref("users/" + user.uid).once("value", snapshot => {
+        const userData = snapshot.val();
+        if (userData) {
+          userDisplayName = userData.username;
+          userFullName = userData.fullName;
+          isAdmin = userData.isAdmin === true;
+          updateAuthUI();
+          
+          // تحديث وقت آخر نشاط
+          db.ref("users/" + user.uid).update({
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      });
+    } else {
+      // مستخدم مجهول
+      userDisplayName = "زائر";
+      updateAuthUI();
+    }
   } else {
     // المستخدم غير مسجل
     currentUser = null;
     userDisplayName = null;
+    userFullName = null;
+    isAdmin = false;
     updateAuthUI();
   }
 });
 
 // بدء الصفحة الرئيسية
-showHome();
-updateAuthUI();
+document.addEventListener("DOMContentLoaded", function() {
+  showHome();
+  updateAuthUI();
+  initSessionManagement();
+  
+  // حماية ضد هجمات البرمجيات النصية
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    e.preventDefault();
+  });
+  
+  // منع فحص الكود
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+      e.preventDefault();
+    }
+  });
+});
 </script>
 </body>
 </html>
