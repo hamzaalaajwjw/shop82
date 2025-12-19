@@ -1,5 +1,3 @@
-[file name]: style.css
-[file content begin]
 /* ===== Base ===== */
 *{box-sizing:border-box}
 body, input, select, button, textarea {
@@ -863,4 +861,4 @@ img, svg {
   }
 }
 </style>
-[file content end]
+
