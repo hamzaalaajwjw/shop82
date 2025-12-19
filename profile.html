@@ -118,10 +118,12 @@
             border-radius: 50%;
             border: 2px solid #0f1115;
             z-index: 1;
+            transition: all 0.3s ease;
         }
         
         .status-online {
             background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
         
         .status-offline {
@@ -181,6 +183,7 @@
             border: 1px solid #374151;
             font-size: 14px;
             word-wrap: break-word;
+            transition: all 0.3s ease;
         }
         
         .edit-bio-btn {
@@ -195,10 +198,12 @@
             font-size: 12px;
             cursor: pointer;
             display: none;
+            transition: all 0.2s;
         }
         
         .edit-bio-btn:hover {
             background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-1px);
         }
         
         .profile-stats {
@@ -213,13 +218,14 @@
             border-radius: 8px;
             padding: 15px;
             text-align: center;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
             cursor: pointer;
         }
         
         .stat-item:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             background: rgba(31, 41, 55, 0.8);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .stat-number {
@@ -227,6 +233,7 @@
             font-size: 24px;
             font-weight: bold;
             display: block;
+            transition: all 0.3s ease;
         }
         
         .stat-label {
@@ -250,7 +257,7 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             border: none;
             display: flex;
             align-items: center;
@@ -260,13 +267,18 @@
         }
         
         .btn-primary {
-            background: #38bdf8;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #0ea5e9;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
         }
         
         .btn-secondary {
@@ -277,25 +289,29 @@
         
         .btn-secondary:hover {
             background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-2px);
         }
         
         .btn-success {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
         
         .btn-success:hover {
-            background: #059669;
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         
         .btn-danger {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
         
         .btn-danger:hover {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
         
         .btn-outline {
@@ -307,6 +323,7 @@
         .btn-outline:hover {
             background: #1f2937;
             color: #e5e7eb;
+            transform: translateY(-2px);
         }
         
         /* Tabs */
@@ -332,7 +349,7 @@
             font-weight: 500;
             white-space: nowrap;
             border-bottom: 3px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -353,7 +370,7 @@
         .tab-content {
             display: none;
             padding: 25px 0;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.4s ease;
         }
         
         .tab-content.active {
@@ -361,168 +378,14 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* Reviews Section */
-        .reviews-section {
-            background: #1c1f27;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .section-title {
-            color: #38bdf8;
-            font-size: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .rating-summary {
-            background: rgba(31, 41, 55, 0.5);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .average-rating {
-            text-align: center;
-            min-width: 120px;
-        }
-        
-        .rating-number {
-            color: #f59e0b;
-            font-size: 48px;
-            font-weight: bold;
-            line-height: 1;
-        }
-        
-        .rating-stars {
-            color: #f59e0b;
-            font-size: 20px;
-            margin: 10px 0;
-            direction: ltr;
-        }
-        
-        .rating-count {
-            color: #9ca3af;
-            font-size: 14px;
-        }
-        
-        .rating-bars {
-            flex: 1;
-            min-width: 250px;
-        }
-        
-        .rating-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-        }
-        
-        .bar-label {
-            color: #9ca3af;
-            width: 60px;
-            font-size: 14px;
-        }
-        
-        .bar-container {
-            flex: 1;
-            height: 8px;
-            background: #374151;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .bar-fill {
-            height: 100%;
-            background: #f59e0b;
-            border-radius: 4px;
-        }
-        
-        .review-card {
-            background: #1f2937;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #374151;
-            transition: transform 0.2s;
-        }
-        
-        .review-card:hover {
-            transform: translateY(-2px);
-            border-color: #38bdf8;
-        }
-        
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .reviewer-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .reviewer-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            position: relative;
-        }
-        
-        .reviewer-status {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid #1f2937;
-        }
-        
-        .reviewer-name {
-            color: #e5e7eb;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        
-        .reviewer-name:hover {
-            color: #38bdf8;
-        }
-        
-        .review-date {
-            color: #9ca3af;
-            font-size: 12px;
-        }
-        
-        .review-comment {
-            color: #d1d5db;
-            line-height: 1.6;
-            padding-top: 15px;
-            border-top: 1px solid #374151;
+            from { 
+                opacity: 0; 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
         }
         
         /* Follow Section */
@@ -544,7 +407,7 @@
             border-radius: 8px;
             padding: 15px;
             border: 1px solid #374151;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -552,9 +415,10 @@
         }
         
         .follow-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             border-color: #38bdf8;
             background: #2d3748;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .follow-avatar {
@@ -570,6 +434,7 @@
             color: white;
             flex-shrink: 0;
             position: relative;
+            transition: all 0.3s ease;
         }
         
         .follow-status {
@@ -580,6 +445,7 @@
             height: 12px;
             border-radius: 50%;
             border: 2px solid #1f2937;
+            transition: all 0.3s ease;
         }
         
         .follow-info {
@@ -618,266 +484,56 @@
         .follow-btn {
             padding: 6px 12px;
             font-size: 12px;
-            min-width: auto;
+            min-width: 80px;
+            transition: all 0.3s ease !important;
         }
         
-        /* Add Review Section */
-        .add-review-section {
-            background: #1c1f27;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #374151;
+        /* Loading State */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
         }
         
-        .rating-input {
-            direction: ltr;
-            text-align: right;
-            margin-bottom: 20px;
-        }
-        
-        .rating-input .star {
-            font-size: 32px;
-            color: #4b5563;
-            cursor: pointer;
-            transition: color 0.2s, transform 0.2s;
-            margin: 0 3px;
-        }
-        
-        .rating-input .star:hover {
-            transform: scale(1.2);
-        }
-        
-        .rating-input .star.active {
-            color: #f59e0b;
-        }
-        
-        .comment-input {
-            width: 100%;
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 15px;
-            color: #e5e7eb;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 100px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .comment-input:focus {
-            outline: none;
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-        }
-        
-        /* Contact Info */
-        .contact-section {
-            background: #1c1f27;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .contact-item {
-            background: #1f2937;
-            border-radius: 8px;
-            padding: 15px;
-            border-left: 3px solid #38bdf8;
-        }
-        
-        .contact-label {
-            color: #9ca3af;
-            font-size: 13px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .contact-value {
-            color: #e5e7eb;
-            font-size: 15px;
-            font-weight: 500;
-            word-break: break-all;
-        }
-        
-        .contact-link {
-            color: #38bdf8;
-            text-decoration: none;
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: #38bdf8;
+            animation: spin 0.8s linear infinite;
             display: inline-block;
-            margin-top: 5px;
-            font-size: 13px;
         }
         
-        .contact-link:hover {
-            text-decoration: underline;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
-        /* Products Grid */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        /* Success Animation */
+        .success-animation {
+            animation: successPop 0.5s ease;
         }
         
-        .product-card {
-            background: #1f2937;
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid #374151;
-            transition: all 0.2s;
-            cursor: pointer;
+        @keyframes successPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         
-        .product-card:hover {
-            transform: translateY(-2px);
-            border-color: #38bdf8;
-            background: #2d3748;
+        /* Pulse Animation for Stats */
+        .pulse {
+            animation: pulse 0.6s ease;
         }
         
-        .product-image {
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            border-radius: 6px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: white;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
-        .product-name {
-            color: #e5e7eb;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .product-price {
-            color: #38bdf8;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .product-meta {
-            display: flex;
-            justify-content: space-between;
-            color: #9ca3af;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-        
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: #9ca3af;
-        }
-        
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .empty-text {
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        
-        .empty-subtext {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        /* Bio Editor Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-        
-        .modal {
-            background: #1c1f27;
-            border-radius: 12px;
-            padding: 25px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid #374151;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-title {
-            color: #38bdf8;
-            font-size: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .bio-editor {
-            width: 100%;
-            min-height: 120px;
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 15px;
-            color: #e5e7eb;
-            font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
-            margin-bottom: 15px;
-        }
-        
-        .bio-editor:focus {
-            outline: none;
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-        }
-        
-        .char-count {
-            text-align: left;
-            color: #9ca3af;
-            font-size: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .char-count.warning {
-            color: #f59e0b;
-        }
-        
-        .char-count.error {
-            color: #ef4444;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+        /* Smooth transitions for numbers */
+        .number-transition {
+            transition: all 0.3s ease;
         }
         
         /* Responsive Design */
@@ -915,15 +571,8 @@
                 min-width: 140px;
             }
             
-            .follow-grid,
-            .products-grid {
+            .follow-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .rating-summary {
-                flex-direction: column;
-                text-align: center;
-                gap: 15px;
             }
             
             .tabs {
@@ -971,26 +620,6 @@
                 justify-content: center;
             }
         }
-        
-        /* Loading State */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-        
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(56, 189, 248, 0.3);
-            border-radius: 50%;
-            border-top-color: #38bdf8;
-            animation: spin 1s ease-in-out infinite;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -1035,19 +664,19 @@
                     
                     <div class="profile-stats">
                         <div class="stat-item" onclick="showTab('products')">
-                            <span class="stat-number" id="productsCount">0</span>
+                            <span class="stat-number number-transition" id="productsCount">0</span>
                             <span class="stat-label">إعلانات</span>
                         </div>
                         <div class="stat-item" onclick="showTab('followers')">
-                            <span class="stat-number" id="followersCount">0</span>
+                            <span class="stat-number number-transition" id="followersCount">0</span>
                             <span class="stat-label">متابعين</span>
                         </div>
                         <div class="stat-item" onclick="showTab('following')">
-                            <span class="stat-number" id="followingCount">0</span>
+                            <span class="stat-number number-transition" id="followingCount">0</span>
                             <span class="stat-label">يتبع</span>
                         </div>
                         <div class="stat-item" onclick="showTab('reviews')">
-                            <span class="stat-number" id="totalReviews">0</span>
+                            <span class="stat-number number-transition" id="totalReviews">0</span>
                             <span class="stat-label">تقييمات</span>
                         </div>
                     </div>
@@ -1095,90 +724,6 @@
 
     <!-- Tab Content -->
     <div class="container">
-        <!-- Info Tab -->
-        <div id="infoTab" class="tab-content active">
-            <div class="contact-section">
-                <h2 class="section-title">📞 معلومات الاتصال</h2>
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <span class="contact-label">اسم المستخدم:</span>
-                        <span class="contact-value" id="displayUsername">@username</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">رقم الهاتف:</span>
-                        <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">البريد الإلكتروني:</span>
-                        <span class="contact-value" id="displayEmail">محمي</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">تاريخ الانضمام:</span>
-                        <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">آخر ظهور:</span>
-                        <span class="contact-value" id="lastActive">غير معروف</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">الحالة:</span>
-                        <span class="contact-value" id="accountStatus">نشط</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Add Review Section -->
-            <div class="add-review-section" id="addReviewSection">
-                <h2 class="section-title">✍️ أضف تقييمك</h2>
-                <div class="rating-input" id="ratingInput">
-                    <span class="star" data-rating="1">☆</span>
-                    <span class="star" data-rating="2">☆</span>
-                    <span class="star" data-rating="3">☆</span>
-                    <span class="star" data-rating="4">☆</span>
-                    <span class="star" data-rating="5">☆</span>
-                </div>
-                <textarea class="comment-input" id="commentInput" placeholder="اكتب تعليقك هنا (اختياري)..."></textarea>
-                <button class="btn btn-primary submit-btn" id="submitReviewBtn" onclick="submitReview()">
-                    إرسال التقييم
-                </button>
-            </div>
-        </div>
-
-        <!-- Products Tab -->
-        <div id="productsTab" class="tab-content">
-            <div class="section-title">🛒 إعلانات المستخدم</div>
-            <div id="userProducts" class="empty-state">
-                <div class="empty-icon">🛒</div>
-                <div class="empty-text">جارٍ تحميل الإعلانات...</div>
-            </div>
-        </div>
-
-        <!-- Reviews Tab -->
-        <div id="reviewsTab" class="tab-content">
-            <div class="reviews-section">
-                <h2 class="section-title">⭐ التقييمات</h2>
-                
-                <div class="rating-summary">
-                    <div class="average-rating">
-                        <div class="rating-number" id="averageRating">0.0</div>
-                        <div class="rating-stars" id="ratingStars">☆☆☆☆☆</div>
-                        <div class="rating-count" id="ratingCount">من 0 تقييم</div>
-                    </div>
-                    
-                    <div class="rating-bars" id="ratingBars">
-                        <!-- سيتم ملؤها بالجافاسكريبت -->
-                    </div>
-                </div>
-                
-                <div id="reviewsList">
-                    <div class="empty-state">
-                        <div class="empty-icon">⭐</div>
-                        <div class="empty-text">جارٍ تحميل التقييمات...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Followers Tab -->
         <div id="followersTab" class="tab-content">
             <div class="follow-section">
@@ -1202,19 +747,6 @@
                         <div class="empty-text">جارٍ تحميل قائمة المتابعة...</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bio Editor Modal -->
-    <div id="bioEditorModal" class="modal-overlay" style="display: none;">
-        <div class="modal">
-            <h3 class="modal-title">تعديل الوصف الشخصي</h3>
-            <textarea class="bio-editor" id="bioEditor" placeholder="اكتب وصفك الشخصي هنا (حد أقصى 70 حرفاً)..." maxlength="70"></textarea>
-            <div class="char-count" id="charCount">0/70</div>
-            <div class="modal-actions">
-                <button class="btn btn-outline" onclick="closeBioEditor()">إلغاء</button>
-                <button class="btn btn-primary" onclick="saveBio()">حفظ</button>
             </div>
         </div>
     </div>
@@ -1247,10 +779,8 @@
         // متغيرات عامة
         let currentUserId = null;
         let profileUserId = null;
-        let currentUserRating = 0;
         let isFollowing = false;
         let isBlocked = false;
-        let currentUserBio = '';
         
         // Get user ID from URL
         function getUserIdFromURL() {
@@ -1275,31 +805,21 @@
                     checkFollowStatus();
                     checkBlockStatus();
                     
-                    // إخفاء قسم إضافة التقييم إذا كان المستخدم يزور صفحته الخاصة
+                    // إخفاء أزرار المتابعة والحظر إذا كان المستخدم يزور صفحته الخاصة
                     if (currentUserId === profileUserId) {
-                        document.getElementById('addReviewSection').style.display = 'none';
                         document.getElementById('followButton').style.display = 'none';
                         document.getElementById('blockButton').style.display = 'none';
-                        document.getElementById('editBioBtn').style.display = 'block';
                     }
                 } else {
                     // إذا لم يكن مسجلاً دخول، إخفاء الأزرار غير المناسبة
                     document.getElementById('followButton').style.display = 'none';
                     document.getElementById('blockButton').style.display = 'none';
-                    document.getElementById('addReviewSection').style.display = 'none';
-                    document.getElementById('editBioBtn').style.display = 'none';
                     loadProfileData(profileUserId);
                 }
             });
             
-            // إعداد تقييم النجوم
-            setupRatingStars();
-            
             // تعيين تبويب النشاط الأول
-            showTab('info');
-            
-            // إعداد محرر الوصف
-            setupBioEditor();
+            showTab('followers');
         });
         
         // Load Profile Data
@@ -1312,84 +832,25 @@
                     const displayName = userData.fullName || userData.username || 'مستخدم';
                     document.getElementById('fullNameText').textContent = displayName;
                     document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
-                    document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
-                    
-                    // عرض البريد الإلكتروني إذا كان متوفراً
-                    if (userData.email) {
-                        document.getElementById('displayEmail').textContent = userData.email;
-                    }
-                    
-                    // عرض الوصف الشخصي
-                    if (userData.bio) {
-                        document.getElementById('userBio').textContent = userData.bio;
-                        currentUserBio = userData.bio;
-                    } else {
-                        document.getElementById('userBio').textContent = 'لا يوجد وصف شخصي';
-                        currentUserBio = '';
-                    }
-                    
-                    // تحديث حقل محرر الوصف
-                    document.getElementById('bioEditor').value = currentUserBio;
-                    updateCharCount();
-                    
-                    // عرض شارة المدير إذا كان مديراً
-                    if (userData.isAdmin) {
-                        document.getElementById('adminBadge').style.display = 'inline-block';
-                    }
-                    
-                    // عرض شارة التوثيق إذا كان موثقاً
-                    if (userData.isVerified) {
-                        document.getElementById('verifiedBadge').style.display = 'block';
-                    }
-                    
-                    // تحديث مؤشر النشاط
-                    updateStatusIndicator(userData);
                     
                     // توليد صورة رمزية من الحرف الأول
                     const firstLetter = displayName.charAt(0).toUpperCase();
                     document.getElementById('userAvatar').textContent = firstLetter;
                     
+                    // تحديث مؤشر النشاط
+                    updateStatusIndicator(userData);
+                    
                     // عرض الإحصائيات
                     updateStatsFromUserData(userData);
-                    
-                    // عرض تاريخ الانضمام
-                    const joinDate = userData.joinDate || formatDate(userData.createdAt) || 'غير معروف';
-                    document.getElementById('joinDate').textContent = joinDate;
-                    
-                    // عرض آخر ظهور
-                    if (userData.lastActive) {
-                        const lastActive = formatTimeAgo(userData.lastActive);
-                        document.getElementById('lastActive').textContent = lastActive;
-                    }
-                    
-                    // عرض حالة الحساب
-                    if (userData.accountStatus) {
-                        const statusText = userData.accountStatus === 'active' ? 'نشط' : 
-                                         userData.accountStatus === 'suspended' ? 'موقوف' : 'غير نشط';
-                        const statusColor = userData.accountStatus === 'active' ? '#10b981' : 
-                                          userData.accountStatus === 'suspended' ? '#ef4444' : '#9ca3af';
-                        document.getElementById('accountStatus').textContent = statusText;
-                        document.getElementById('accountStatus').style.color = statusColor;
-                    }
-                    
-                    // سحب رقم الهاتف من منشورات المستخدم
-                    fetchUserPhoneNumber(userId);
-                    
-                    // تحميل التقييمات
-                    calculateUserRating(userId);
                     
                     // تحميل قوائم المتابعين والمتابعة
                     loadFollowersList(userId);
                     loadFollowingList(userId);
                     
-                    // تحميل إعلانات المستخدم
-                    loadUserProducts(userId);
-                    
                 } else {
                     // إذا لم يوجد المستخدم
                     document.getElementById('fullNameText').textContent = 'مستخدم غير موجود';
                     document.getElementById('userName').textContent = '@unknown';
-                    showTab('info');
                 }
             });
         }
@@ -1428,34 +889,6 @@
             document.getElementById('totalReviews').textContent = userData.totalReviews || 0;
         }
         
-        // Fetch User Phone Number from Posts
-        function fetchUserPhoneNumber(userId) {
-            db.ref('products').orderByChild('uid').equalTo(userId).limitToLast(1).once('value', (snapshot) => {
-                const products = snapshot.val();
-                let phoneNumber = 'غير متوفر';
-                
-                if (products) {
-                    const product = Object.values(products)[0];
-                    if (product.phone) {
-                        // إظهار الرقم كاملاً
-                        phoneNumber = product.phone;
-                    }
-                }
-                
-                document.getElementById('displayPhone').textContent = phoneNumber;
-                
-                // إذا لم يتم العثور على رقم في المنتجات، حاول البحث في بيانات المستخدم
-                if (phoneNumber === 'غير متوفر') {
-                    db.ref('users/' + userId).once('value', (userSnapshot) => {
-                        const userData = userSnapshot.val();
-                        if (userData && userData.phone) {
-                            document.getElementById('displayPhone').textContent = userData.phone;
-                        }
-                    });
-                }
-            });
-        }
-        
         // Check Follow Status
         function checkFollowStatus() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
@@ -1489,6 +922,10 @@
                 followText.textContent = '✓ متابع';
                 followBtn.classList.remove('btn-primary');
                 followBtn.classList.add('btn-success');
+                followBtn.classList.add('success-animation');
+                setTimeout(() => {
+                    followBtn.classList.remove('success-animation');
+                }, 500);
             } else {
                 followText.textContent = '+ متابعة';
                 followBtn.classList.remove('btn-success');
@@ -1512,59 +949,219 @@
             }
         }
         
-        // Toggle Follow
+        // Toggle Follow - إصلاح المشكلة الرئيسية
         function toggleFollow() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
                 alert('لا يمكنك متابعة نفسك');
                 return;
             }
             
-            const followRef = db.ref('followers/' + profileUserId + '/' + currentUserId);
-            const followingRef = db.ref('following/' + currentUserId + '/' + profileUserId);
-            const userFollowersRef = db.ref('users/' + profileUserId + '/followersCount');
-            const currentUserFollowingRef = db.ref('users/' + currentUserId + '/followingCount');
-            
             const followBtn = document.getElementById('followButton');
-            followBtn.classList.add('loading');
-            followBtn.innerHTML = '<span class="spinner"></span>';
+            const followText = document.getElementById('followText');
             
-            followRef.once('value', (snapshot) => {
-                const currentlyFollowing = snapshot.exists();
+            // تعطيل الزر أثناء المعالجة
+            followBtn.disabled = true;
+            followBtn.classList.add('loading');
+            followText.innerHTML = '<span class="spinner"></span>';
+            
+            if (isFollowing) {
+                // إلغاء المتابعة
+                unfollowUser();
+            } else {
+                // المتابعة
+                followUser();
+            }
+        }
+        
+        // Follow User
+        async function followUser() {
+            try {
+                const timestamp = Date.now();
                 
-                if (currentlyFollowing) {
-                    // إلغاء المتابعة
-                    followRef.remove().then(() => {
-                        followingRef.remove();
-                        userFollowersRef.transaction((current) => (current || 1) - 1);
-                        currentUserFollowingRef.transaction((current) => (current || 1) - 1);
-                        isFollowing = false;
-                        updateFollowButton();
-                        loadFollowersList(profileUserId);
-                        loadFollowingList(currentUserId);
-                        followBtn.classList.remove('loading');
-                    });
-                } else {
-                    // المتابعة
-                    const followData = {
-                        timestamp: Date.now(),
-                        userId: currentUserId
-                    };
-                    
-                    followRef.set(followData).then(() => {
-                        followingRef.set({
-                            timestamp: Date.now(),
-                            userId: profileUserId
-                        });
-                        userFollowersRef.transaction((current) => (current || 0) + 1);
-                        currentUserFollowingRef.transaction((current) => (current || 0) + 1);
-                        isFollowing = true;
-                        updateFollowButton();
-                        loadFollowersList(profileUserId);
-                        loadFollowingList(currentUserId);
-                        followBtn.classList.remove('loading');
-                    });
+                // 1. إضافة إلى متابعي المستخدم الهدف
+                await db.ref('followers/' + profileUserId + '/' + currentUserId).set({
+                    timestamp: timestamp,
+                    userId: currentUserId
+                });
+                
+                // 2. إضافة إلى قائمة المتابعة للمستخدم الحالي
+                await db.ref('following/' + currentUserId + '/' + profileUserId).set({
+                    timestamp: timestamp,
+                    userId: profileUserId
+                });
+                
+                // 3. تحديث العدادات
+                await updateFollowCounters(1);
+                
+                // 4. تحديث حالة المتابعة محلياً
+                isFollowing = true;
+                
+                // 5. تحديث الواجهة
+                updateFollowButton();
+                updateStatsAnimation('followersCount', 1);
+                updateStatsAnimation('followingCount', 1);
+                
+                // 6. إعادة تحميل القوائم
+                loadFollowersList(profileUserId);
+                
+                // 7. إظهار رسالة نجاح
+                showSuccessMessage('تمت المتابعة بنجاح');
+                
+            } catch (error) {
+                console.error('Error following user:', error);
+                alert('حدث خطأ أثناء المتابعة');
+            } finally {
+                // إعادة تمكين الزر
+                const followBtn = document.getElementById('followButton');
+                const followText = document.getElementById('followText');
+                followBtn.disabled = false;
+                followBtn.classList.remove('loading');
+                followText.textContent = '✓ متابع';
+            }
+        }
+        
+        // Unfollow User
+        async function unfollowUser() {
+            try {
+                // 1. إزالة من متابعي المستخدم الهدف
+                await db.ref('followers/' + profileUserId + '/' + currentUserId).remove();
+                
+                // 2. إزالة من قائمة المتابعة للمستخدم الحالي
+                await db.ref('following/' + currentUserId + '/' + profileUserId).remove();
+                
+                // 3. تحديث العدادات
+                await updateFollowCounters(-1);
+                
+                // 4. تحديث حالة المتابعة محلياً
+                isFollowing = false;
+                
+                // 5. تحديث الواجهة
+                updateFollowButton();
+                updateStatsAnimation('followersCount', -1);
+                updateStatsAnimation('followingCount', -1);
+                
+                // 6. إعادة تحميل القوائم
+                loadFollowersList(profileUserId);
+                
+                // 7. إظهار رسالة نجاح
+                showSuccessMessage('تم إلغاء المتابعة بنجاح');
+                
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+                alert('حدث خطأ أثناء إلغاء المتابعة');
+            } finally {
+                // إعادة تمكين الزر
+                const followBtn = document.getElementById('followButton');
+                const followText = document.getElementById('followText');
+                followBtn.disabled = false;
+                followBtn.classList.remove('loading');
+                followText.textContent = '+ متابعة';
+            }
+        }
+        
+        // Update Follow Counters
+        async function updateFollowCounters(change) {
+            try {
+                // تحديث عدد متابعي المستخدم الهدف
+                const followersRef = db.ref('users/' + profileUserId + '/followersCount');
+                const followersSnapshot = await followersRef.once('value');
+                const currentFollowers = followersSnapshot.val() || 0;
+                await followersRef.set(Math.max(0, currentFollowers + change));
+                
+                // تحديث عدد المتابعة للمستخدم الحالي
+                if (currentUserId) {
+                    const followingRef = db.ref('users/' + currentUserId + '/followingCount');
+                    const followingSnapshot = await followingRef.once('value');
+                    const currentFollowing = followingSnapshot.val() || 0;
+                    await followingRef.set(Math.max(0, currentFollowing + change));
                 }
-            });
+                
+            } catch (error) {
+                console.error('Error updating counters:', error);
+            }
+        }
+        
+        // Update Stats with Animation
+        function updateStatsAnimation(statId, change) {
+            const statElement = document.getElementById(statId);
+            if (!statElement) return;
+            
+            const currentValue = parseInt(statElement.textContent) || 0;
+            const newValue = Math.max(0, currentValue + change);
+            
+            // إضافة تأثير النبض
+            statElement.classList.add('pulse');
+            
+            // تحديث القيمة مع تأثير تدريجي
+            let current = currentValue;
+            const step = change > 0 ? 1 : -1;
+            const interval = setInterval(() => {
+                current += step;
+                statElement.textContent = current;
+                
+                if (current === newValue) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        statElement.classList.remove('pulse');
+                    }, 300);
+                }
+            }, 50);
+        }
+        
+        // Show Success Message
+        function showSuccessMessage(message) {
+            // إنشاء عنصر الرسالة
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                font-weight: bold;
+            `;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            // إزالة الرسالة بعد 3 ثواني
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+            
+            // إضافة أنيميشن
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { 
+                        transform: translateX(100%); 
+                        opacity: 0; 
+                    }
+                    to { 
+                        transform: translateX(0); 
+                        opacity: 1; 
+                    }
+                }
+                @keyframes slideOut {
+                    from { 
+                        transform: translateX(0); 
+                        opacity: 1; 
+                    }
+                    to { 
+                        transform: translateX(100%); 
+                        opacity: 0; 
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         }
         
         // Toggle Block User
@@ -1574,11 +1171,14 @@
                 return;
             }
             
-            const blockRef = db.ref('blocks/' + currentUserId + '/' + profileUserId);
             const blockBtn = document.getElementById('blockButton');
+            const blockText = document.getElementById('blockText');
             
+            blockBtn.disabled = true;
             blockBtn.classList.add('loading');
-            blockBtn.innerHTML = '<span class="spinner"></span>';
+            blockText.innerHTML = '<span class="spinner"></span>';
+            
+            const blockRef = db.ref('blocks/' + currentUserId + '/' + profileUserId);
             
             blockRef.once('value', (snapshot) => {
                 const currentlyBlocked = snapshot.exists();
@@ -1589,11 +1189,16 @@
                         blockRef.remove().then(() => {
                             isBlocked = false;
                             updateBlockButton();
+                            showSuccessMessage('تم إلغاء حظر المستخدم');
+                        }).finally(() => {
+                            blockBtn.disabled = false;
                             blockBtn.classList.remove('loading');
-                            alert('تم إلغاء حظر المستخدم');
+                            blockText.textContent = 'حظر';
                         });
                     } else {
+                        blockBtn.disabled = false;
                         blockBtn.classList.remove('loading');
+                        blockText.textContent = '✓ محظور';
                     }
                 } else {
                     // حظر المستخدم
@@ -1604,17 +1209,22 @@
                         }).then(() => {
                             isBlocked = true;
                             updateBlockButton();
+                            showSuccessMessage('تم حظر المستخدم بنجاح');
+                        }).finally(() => {
+                            blockBtn.disabled = false;
                             blockBtn.classList.remove('loading');
-                            alert('تم حظر المستخدم بنجاح');
+                            blockText.textContent = '✓ محظور';
                         });
                     } else {
+                        blockBtn.disabled = false;
                         blockBtn.classList.remove('loading');
+                        blockText.textContent = 'حظر';
                     }
                 }
             });
         }
         
-        // Load Followers List - الطريقة الصحيحة
+        // Load Followers List
         function loadFollowersList(userId) {
             db.ref('followers/' + userId).once('value', (snapshot) => {
                 const followers = snapshot.val();
@@ -1628,24 +1238,15 @@
                             <div class="empty-subtext">لم يتابع هذا المستخدم أحد بعد</div>
                         </div>
                     `;
-                    
-                    // تحديث العدد
-                    document.getElementById('followersCount').textContent = '0';
                     return;
                 }
                 
-                // الحصول على IDs جميع المتابعين
                 const followerIds = Object.keys(followers);
-                
-                // تحديث العدد
-                document.getElementById('followersCount').textContent = followerIds.length;
-                
-                // تحميل بيانات المتابعين
                 loadUsersList(followerIds, followersList, 'followers', 'متابعون');
             });
         }
         
-        // Load Following List - الطريقة الصحيحة
+        // Load Following List
         function loadFollowingList(userId) {
             db.ref('following/' + userId).once('value', (snapshot) => {
                 const following = snapshot.val();
@@ -1659,25 +1260,16 @@
                             <div class="empty-subtext">لم يبدأ هذا المستخدم بمتابعة أحد بعد</div>
                         </div>
                     `;
-                    
-                    // تحديث العدد
-                    document.getElementById('followingCount').textContent = '0';
                     return;
                 }
                 
-                // الحصول على IDs جميع الأشخاص الذين يتابعهم
                 const followingIds = Object.keys(following);
-                
-                // تحديث العدد
-                document.getElementById('followingCount').textContent = followingIds.length;
-                
-                // تحميل بيانات الأشخاص الذين يتابعهم
                 loadUsersList(followingIds, followingList, 'following', 'المتابعة');
             });
         }
         
-        // Load Users List (for followers/following)
-        function loadUsersList(userIds, container, type, title) {
+        // Load Users List
+        async function loadUsersList(userIds, container, type, title) {
             container.innerHTML = '<div class="follow-grid"></div>';
             const grid = container.querySelector('.follow-grid');
             
@@ -1699,88 +1291,83 @@
                 }))
             );
             
-            Promise.all(userPromises).then(userData => {
-                // تصفية المستخدمين الذين لا توجد بيانات لهم
-                const validUsers = userData.filter(({data}) => data);
+            const userData = await Promise.all(userPromises);
+            const validUsers = userData.filter(({data}) => data);
+            
+            if (validUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
+                        <div class="empty-text">لا يوجد ${title}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // تحميل حالة المتابعة للمستخدمين
+            const followStatusPromises = validUsers.map(({id}) => {
+                if (!currentUserId || currentUserId === id) return Promise.resolve(false);
+                return db.ref('followers/' + id + '/' + currentUserId).once('value')
+                    .then(snap => snap.exists());
+            });
+            
+            const followStatuses = await Promise.all(followStatusPromises);
+            
+            validUsers.forEach(({id, data}, index) => {
+                const displayName = data.fullName || data.username || 'مستخدم';
+                const firstLetter = displayName.charAt(0).toUpperCase();
+                const productCount = data.totalProducts || 0;
+                const followersCount = data.followersCount || 0;
+                const isUserFollowing = followStatuses[index];
                 
-                if (validUsers.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
-                            <div class="empty-text">لا يوجد ${title}</div>
-                        </div>
-                    `;
-                    return;
+                // تحديث مؤشر النشاط
+                let statusClass = 'status-offline';
+                if (data.accountStatus === 'suspended') {
+                    statusClass = 'status-offline';
+                } else if (data.lastActive) {
+                    const lastActive = new Date(data.lastActive);
+                    const now = new Date();
+                    const diffMinutes = (now - lastActive) / (1000 * 60);
+                    statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
                 }
                 
-                validUsers.forEach(({id, data}) => {
-                    const displayName = data.fullName || data.username || 'مستخدم';
-                    const firstLetter = displayName.charAt(0).toUpperCase();
-                    const productCount = data.totalProducts || 0;
-                    const followersCount = data.followersCount || 0;
+                const userCard = document.createElement('div');
+                userCard.className = 'follow-card';
+                userCard.onclick = () => viewUserProfile(id);
+                
+                let followButtonHTML = '';
+                if (currentUserId && currentUserId !== id) {
+                    const btnClass = isUserFollowing ? 'btn-success' : 'btn-outline';
+                    const btnText = isUserFollowing ? '✓ متابع' : 'متابعة';
                     
-                    // تحديث مؤشر النشاط
-                    let statusClass = 'status-offline';
-                    if (data.accountStatus === 'suspended') {
-                        statusClass = 'status-offline';
-                    } else if (data.lastActive) {
-                        const lastActive = new Date(data.lastActive);
-                        const now = new Date();
-                        const diffMinutes = (now - lastActive) / (1000 * 60);
-                        statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
-                    }
-                    
-                    const userCard = document.createElement('div');
-                    userCard.className = 'follow-card';
-                    userCard.onclick = () => viewUserProfile(id);
-                    
-                    // التحقق مما إذا كان المستخدم الحالي يتابع هذا المستخدم
-                    let followButtonHTML = '';
-                    if (currentUserId && currentUserId !== id) {
-                        db.ref('followers/' + id + '/' + currentUserId).once('value', (snap) => {
-                            const isFollowingUser = snap.exists();
-                            const followBtn = userCard.querySelector('.follow-btn');
-                            if (followBtn) {
-                                if (isFollowingUser) {
-                                    followBtn.textContent = '✓ متابع';
-                                    followBtn.classList.remove('btn-outline');
-                                    followBtn.classList.add('btn-success');
-                                } else {
-                                    followBtn.textContent = 'متابعة';
-                                    followBtn.classList.remove('btn-success');
-                                    followBtn.classList.add('btn-outline');
-                                }
-                            }
-                        });
-                        
-                        followButtonHTML = `
-                            <button class="btn btn-outline follow-btn" onclick="event.stopPropagation(); toggleFollowListUser('${id}', this)">
-                                متابعة
-                            </button>`;
-                    }
-                    
-                    userCard.innerHTML = `
-                        <div class="follow-avatar">${firstLetter}
-                            <div class="follow-status ${statusClass}"></div>
+                    followButtonHTML = `
+                        <button class="btn ${btnClass} follow-btn" 
+                                onclick="event.stopPropagation(); toggleFollowFromList('${id}', this)">
+                            ${btnText}
+                        </button>`;
+                }
+                
+                userCard.innerHTML = `
+                    <div class="follow-avatar">${firstLetter}
+                        <div class="follow-status ${statusClass}"></div>
+                    </div>
+                    <div class="follow-info">
+                        <div class="follow-name">${displayName}</div>
+                        <div class="follow-username">@${data.username || 'user'}</div>
+                        <div class="follow-stats">
+                            <span class="follow-stat">${productCount} إعلان</span>
+                            <span class="follow-stat">${followersCount} متابع</span>
                         </div>
-                        <div class="follow-info">
-                            <div class="follow-name">${displayName}</div>
-                            <div class="follow-username">@${data.username || 'user'}</div>
-                            <div class="follow-stats">
-                                <span class="follow-stat">${productCount} إعلان</span>
-                                <span class="follow-stat">${followersCount} متابع</span>
-                            </div>
-                        </div>
-                        ${followButtonHTML}
-                    `;
-                    
-                    grid.appendChild(userCard);
-                });
+                    </div>
+                    ${followButtonHTML}
+                `;
+                
+                grid.appendChild(userCard);
             });
         }
         
-        // Toggle Follow for user in list
-        function toggleFollowListUser(targetUserId, button) {
+        // Toggle Follow from List
+        async function toggleFollowFromList(targetUserId, button) {
             event.stopPropagation();
             
             if (!currentUserId) {
@@ -1796,65 +1383,73 @@
             const followRef = db.ref('followers/' + targetUserId + '/' + currentUserId);
             const followingRef = db.ref('following/' + currentUserId + '/' + targetUserId);
             
+            button.disabled = true;
             button.classList.add('loading');
+            const originalText = button.textContent;
             button.innerHTML = '<span class="spinner"></span>';
             
-            followRef.once('value', (snapshot) => {
-                if (snapshot.exists()) {
+            try {
+                const snapshot = await followRef.once('value');
+                const isCurrentlyFollowing = snapshot.exists();
+                
+                if (isCurrentlyFollowing) {
                     // إلغاء المتابعة
-                    followRef.remove().then(() => {
-                        followingRef.remove();
-                        updateFollowCounts(targetUserId, -1);
-                        button.textContent = 'متابعة';
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-outline');
-                        button.classList.remove('loading');
-                    });
+                    await followRef.remove();
+                    await followingRef.remove();
+                    await updateFollowCountersForUser(targetUserId, -1);
+                    
+                    button.textContent = 'متابعة';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline');
+                    
+                    showSuccessMessage('تم إلغاء المتابعة');
+                    
                 } else {
                     // المتابعة
-                    const followData = {
-                        timestamp: Date.now(),
-                        userId: currentUserId
-                    };
+                    const timestamp = Date.now();
+                    await followRef.set({ timestamp, userId: currentUserId });
+                    await followingRef.set({ timestamp, userId: targetUserId });
+                    await updateFollowCountersForUser(targetUserId, 1);
                     
-                    followRef.set(followData).then(() => {
-                        followingRef.set({
-                            timestamp: Date.now(),
-                            userId: targetUserId
-                        });
-                        updateFollowCounts(targetUserId, 1);
-                        button.textContent = '✓ متابع';
-                        button.classList.remove('btn-outline');
-                        button.classList.add('btn-success');
-                        button.classList.remove('loading');
-                    });
+                    button.textContent = '✓ متابع';
+                    button.classList.remove('btn-outline');
+                    button.classList.add('btn-success');
+                    button.classList.add('success-animation');
+                    
+                    setTimeout(() => {
+                        button.classList.remove('success-animation');
+                    }, 500);
+                    
+                    showSuccessMessage('تمت المتابعة بنجاح');
                 }
-            });
+                
+            } catch (error) {
+                console.error('Error toggling follow:', error);
+                alert('حدث خطأ أثناء العملية');
+                button.textContent = originalText;
+            } finally {
+                button.disabled = false;
+                button.classList.remove('loading');
+            }
         }
         
-        function updateFollowCounts(targetUserId, change) {
-            // تحديث عدد متابعي المستخدم الهدف
-            db.ref('users/' + targetUserId + '/followersCount').transaction((current) => {
-                return (current || 0) + change;
-            });
-            
-            // تحديث عدد المتابعة للمستخدم الحالي
-            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                return (current || 0) + change;
-            });
-            
-            // تحديث العدد المعروض في صفحة البروفايل الحالية
-            if (targetUserId === profileUserId) {
-                db.ref('users/' + targetUserId + '/followersCount').once('value', (snap) => {
-                    document.getElementById('followersCount').textContent = snap.val() || 0;
-                });
-            }
-            
-            // تحديث العدد المعروض للمستخدم الحالي
-            if (currentUserId === profileUserId) {
-                db.ref('users/' + currentUserId + '/followingCount').once('value', (snap) => {
-                    document.getElementById('followingCount').textContent = snap.val() || 0;
-                });
+        // Update Follow Counters for User
+        async function updateFollowCountersForUser(targetUserId, change) {
+            try {
+                // تحديث عدد متابعي المستخدم الهدف
+                const followersRef = db.ref('users/' + targetUserId + '/followersCount');
+                const followersSnapshot = await followersRef.once('value');
+                const currentFollowers = followersSnapshot.val() || 0;
+                await followersRef.set(Math.max(0, currentFollowers + change));
+                
+                // تحديث عدد المتابعة للمستخدم الحالي
+                const followingRef = db.ref('users/' + currentUserId + '/followingCount');
+                const followingSnapshot = await followingRef.once('value');
+                const currentFollowing = followingSnapshot.val() || 0;
+                await followingRef.set(Math.max(0, currentFollowing + change));
+                
+            } catch (error) {
+                console.error('Error updating user counters:', error);
             }
         }
         
@@ -1863,126 +1458,7 @@
             window.location.href = `profile.html?id=${userId}`;
         }
         
-        // Setup Bio Editor
-        function setupBioEditor() {
-            const bioEditor = document.getElementById('bioEditor');
-            const charCount = document.getElementById('charCount');
-            
-            bioEditor.addEventListener('input', function() {
-                updateCharCount();
-            });
-            
-            bioEditor.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    saveBio();
-                }
-            });
-        }
-        
-        // Update Character Count
-        function updateCharCount() {
-            const bioEditor = document.getElementById('bioEditor');
-            const charCount = document.getElementById('charCount');
-            const currentLength = bioEditor.value.length;
-            const maxLength = 70;
-            
-            charCount.textContent = `${currentLength}/${maxLength}`;
-            
-            if (currentLength >= maxLength - 10) {
-                charCount.className = 'char-count warning';
-            } else if (currentLength >= maxLength) {
-                charCount.className = 'char-count error';
-            } else {
-                charCount.className = 'char-count';
-            }
-        }
-        
-        // Show Bio Editor
-        function showBioEditor() {
-            const modal = document.getElementById('bioEditorModal');
-            const bioEditor = document.getElementById('bioEditor');
-            
-            bioEditor.value = currentUserBio;
-            updateCharCount();
-            modal.style.display = 'flex';
-            bioEditor.focus();
-        }
-        
-        // Close Bio Editor
-        function closeBioEditor() {
-            const modal = document.getElementById('bioEditorModal');
-            modal.style.display = 'none';
-        }
-        
-        // Save Bio
-        function saveBio() {
-            const bioEditor = document.getElementById('bioEditor');
-            const newBio = bioEditor.value.trim();
-            
-            if (newBio.length > 70) {
-                alert('الوصف يجب ألا يتجاوز 70 حرفاً');
-                return;
-            }
-            
-            if (!currentUserId || currentUserId !== profileUserId) {
-                alert('ليس لديك صلاحية لتعديل هذا الوصف');
-                return;
-            }
-            
-            db.ref('users/' + currentUserId).update({
-                bio: newBio,
-                lastActive: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                currentUserBio = newBio;
-                document.getElementById('userBio').textContent = newBio || 'لا يوجد وصف شخصي';
-                closeBioEditor();
-                alert('تم حفظ الوصف بنجاح');
-            }).catch((error) => {
-                console.error('Error saving bio:', error);
-                alert('حدث خطأ أثناء حفظ الوصف');
-            });
-        }
-        
-        // باقي الدوال المتبقية (loadUserProducts, setupRatingStars, submitReview, calculateUserRating, loadUserReviews, etc.)
-        // ... [هنا تضع باقي الدوال من الكود السابق مثل loadUserProducts, setupRatingStars, submitReview, etc.] ...
-        
-        // Helper Functions
-        function formatDate(timestamp) {
-            if (!timestamp) return 'غير معروف';
-            
-            const date = new Date(timestamp);
-            return date.toLocaleDateString('ar-SA', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-        
-        function formatTimeAgo(timestamp) {
-            if (!timestamp) return 'غير معروف';
-            
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / (1000 * 60));
-            const diffHours = Math.floor(diffMins / 60);
-            const diffDays = Math.floor(diffHours / 24);
-            
-            if (diffMins < 1) return 'الآن';
-            if (diffMins < 60) return `قبل ${diffMins} دقيقة`;
-            if (diffHours < 24) return `قبل ${diffHours} ساعة`;
-            if (diffDays < 7) return `قبل ${diffDays} يوم`;
-            if (diffDays < 30) return `قبل ${Math.floor(diffDays / 7)} أسبوع`;
-            if (diffDays < 365) return `قبل ${Math.floor(diffDays / 30)} شهر`;
-            
-            return `قبل ${Math.floor(diffDays / 365)} سنة`;
-        }
-        
-        function formatPrice(price) {
-            if (!price) return '0';
-            return parseInt(price).toLocaleString('ar-SA');
-        }
-        
+        // Share Profile
         function shareProfile() {
             const profileUrl = window.location.href;
             const shareText = `تفضل بزيارة الملف الشخصي لـ ${document.getElementById('fullNameText').textContent} على a3len`;
@@ -1994,9 +1470,8 @@
                     url: profileUrl
                 });
             } else {
-                // Fallback for browsers that don't support Web Share API
                 navigator.clipboard.writeText(profileUrl).then(() => {
-                    alert('تم نسخ رابط الملف الشخصي إلى الحافظة');
+                    showSuccessMessage('تم نسخ رابط الملف الشخصي إلى الحافظة');
                 });
             }
         }
@@ -2024,11 +1499,36 @@
                 loadFollowersList(profileUserId);
             } else if (tabName === 'following') {
                 loadFollowingList(profileUserId);
-            } else if (tabName === 'reviews') {
-                calculateUserRating(profileUserId);
-            } else if (tabName === 'products') {
-                loadUserProducts(profileUserId);
             }
+        }
+        
+        // Helper Functions
+        function formatDate(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 1) return 'الآن';
+            if (diffMins < 60) return `قبل ${diffMins} دقيقة`;
+            if (diffHours < 24) return `قبل ${diffHours} ساعة`;
+            if (diffDays < 7) return `قبل ${diffDays} يوم`;
+            if (diffDays < 30) return `قبل ${Math.floor(diffDays / 7)} أسبوع`;
+            if (diffDays < 365) return `قبل ${Math.floor(diffDays / 30)} شهر`;
+            return `قبل ${Math.floor(diffDays / 365)} سنة`;
         }
     </script>
 </body>
