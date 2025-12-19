@@ -15,121 +15,30 @@
 body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 
 /* ===== Budget Dialog ===== */
-.budget-btn {
-  margin-left: 10px;
-  background:#1f2937;
-  color:#e5e7eb;
-  border:none;
-  padding:5px 10px;
-  cursor:pointer;
-  border-radius:5px;
-}
-.budget-dialog {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#0f1115;
-  color:#e5e7eb;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 10px #000;
-  z-index:1000;
-  display:none;
-}
-.budget-dialog input {
-  width:100%;
-  padding:5px;
-  margin:10px 0;
-  border-radius:5px;
-  border:1px solid #333;
-  background:#1f1f1f;
-  color:#e5e7eb;
-}
-.budget-dialog button {
-  padding:5px 10px;
-  border:none;
-  border-radius:5px;
-  background:#38bdf8;
-  color:#000;
-  cursor:pointer;
-}
+.budget-btn { margin-left: 10px; background:#1f2937; color:#e5e7eb; border:none; padding:5px 10px; cursor:pointer; border-radius:5px; }
+.budget-dialog { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f1115; color:#e5e7eb; padding:20px; border-radius:10px; box-shadow:0 0 10px #000; z-index:1000; display:none; }
+.budget-dialog input { width:100%; padding:5px; margin:10px 0; border-radius:5px; border:1px solid #333; background:#1f1f1f; color:#e5e7eb; }
+.budget-dialog button { padding:5px 10px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
 .budget-dialog .close-btn { background:#ef4444; margin-left:10px; }
 
 /* ===== Product Details Dialog ===== */
-.details-dialog {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#0f1115;
-  color:#e5e7eb;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 10px #000;
-  z-index:1001;
-  display:none;
-}
+.details-dialog { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f1115; color:#e5e7eb; padding:20px; border-radius:10px; box-shadow:0 0 10px #000; z-index:1001; display:none; }
 .details-dialog h2 { margin-top:0; }
 .details-dialog button { margin-top:10px; padding:5px 10px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
 
-/* ===== Login/Register Overlay ===== */
-.auth-overlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.8);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:1050;
-}
-.auth-box {
-  background:#1c1f27;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.auth-box input {
-  padding:10px;
-  border-radius:6px;
-  border:none;
-  background:#111318;
-  color:#e5e7eb;
-}
-.auth-box button {
-  background:#38bdf8;
-  color:#000;
-  padding:10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:bold;
-}
-.auth-box .close-auth { background:#ef4444; margin-top:5px; color:#fff; }
+/* ===== Auth Forms ===== */
+.auth-form { background:#0f1115; color:#e5e7eb; padding:20px; border-radius:10px; max-width:400px; margin:20px auto; }
+.auth-form input { width:100%; padding:8px; margin:10px 0; border-radius:5px; border:1px solid #333; background:#1f1f1f; color:#e5e7eb; }
+.auth-form button { padding:8px 12px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
+.auth-form .error { color:#ef4444; margin-top:5px; }
+
+/* ===== Sidebar Auth Buttons ===== */
+.auth-buttons { margin-top:20px; }
+.auth-buttons button { width:100%; margin-bottom:5px; padding:8px; border:none; border-radius:5px; cursor:pointer; background:#1f2937; color:#e5e7eb; }
+.auth-buttons button:hover { background:#38bdf8; color:#000; }
 </style>
 </head>
 <body>
-
-<!-- ===== إضافة تسجيل دخول / إنشاء حساب ===== -->
-<div style="position:fixed;top:10px;left:10px;z-index:1002;">
-  <button onclick="goLogin()" class="budget-btn">تسجيل دخول</button>
-  <button onclick="goRegister()" class="budget-btn">إنشاء حساب</button>
-</div>
-
-<div class="auth-overlay" id="authOverlay">
-  <div class="auth-box" id="authBox">
-    <h3 id="authTitle">تسجيل دخول</h3>
-    <input type="email" id="authEmail" placeholder="البريد الإلكتروني">
-    <input type="password" id="authPass" placeholder="كلمة المرور">
-    <button onclick="submitAuth()">دخول</button>
-    <button class="close-auth" onclick="closeAuth()">إلغاء</button>
-    <p id="authSwitch" style="text-align:center;color:#aaa;cursor:pointer;margin-top:5px;">ليس لديك حساب؟ تسجيل جديد</p>
-  </div>
-</div>
 
 <header class="topbar">
   <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
@@ -143,6 +52,12 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   <aside class="sidebar">
     <button onclick="showHome()">🏠 الرئيسية</button>
     <button onclick="showPublish()">➕ نشر إعلان</button>
+
+    <div class="auth-buttons">
+      <button onclick="showLogin()">🔑 تسجيل دخول</button>
+      <button onclick="showRegister()">📝 إنشاء حساب</button>
+      <button id="logoutBtn" style="display:none;" onclick="logout()">🚪 تسجيل خروج</button>
+    </div>
   </aside>
 
   <main id="content"></main>
@@ -181,16 +96,19 @@ const firebaseConfig = {
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
 firebase.initializeApp(firebaseConfig);
+
+firebase.auth().signInAnonymously().catch(err => console.error(err));
 const db = firebase.database();
 let userUID = null;
-firebase.auth().onAuthStateChanged(u=>{ if(u) userUID = u.uid; });
+firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
 
-// ===== الأقسام والمحافظات =====
+// ===== Categories & Provinces =====
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
 let budget = null;
+let currentUser = null;
 
-/* ===== Pagination Variables ===== */
+// ===== Pagination =====
 let currentPage = 1;
 const postsPerPage = 6;
 
@@ -204,36 +122,7 @@ function closeSidebar(){
   document.querySelector(".overlay").classList.remove("active");
 }
 
-// ===== Auth Overlay Functions =====
-function goLogin(){
-  document.getElementById("authOverlay").style.display="flex";
-  document.getElementById("authTitle").innerText="تسجيل دخول";
-  document.getElementById("authSwitch").innerText="ليس لديك حساب؟ تسجيل جديد";
-  document.getElementById("authSwitch").onclick = ()=>goRegister();
-}
-function goRegister(){
-  document.getElementById("authOverlay").style.display="flex";
-  document.getElementById("authTitle").innerText="إنشاء حساب جديد";
-  document.getElementById("authSwitch").innerText="لديك حساب؟ تسجيل دخول";
-  document.getElementById("authSwitch").onclick = ()=>goLogin();
-}
-function closeAuth(){ document.getElementById("authOverlay").style.display="none"; }
-
-function submitAuth(){
-  const email = document.getElementById("authEmail").value;
-  const pass = document.getElementById("authPass").value;
-  if(document.getElementById("authTitle").innerText=="تسجيل دخول"){
-    firebase.auth().signInWithEmailAndPassword(email,pass)
-    .then(res=>{ userUID=res.user.uid; closeAuth(); showHome(); })
-    .catch(err=>alert(err.message));
-  } else {
-    firebase.auth().createUserWithEmailAndPassword(email,pass)
-    .then(res=>{ userUID=res.user.uid; closeAuth(); showHome(); })
-    .catch(err=>alert(err.message));
-  }
-}
-
-// ===== الصفحة الرئيسية =====
+// ===== Home Page =====
 function showHome(){
   closeSidebar();
   document.getElementById("content").innerHTML = `
@@ -251,7 +140,7 @@ function showHome(){
   loadProducts();
 }
 
-// ===== Budget Dialog =====
+// ===== Budget =====
 function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
 function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
 function applyBudget(){
@@ -261,7 +150,7 @@ function applyBudget(){
   loadProducts();
 }
 
-// ===== تحميل المنتجات =====
+// ===== Load Products =====
 function loadProducts(){
   const s = document.getElementById("search").value.toLowerCase();
   const c = document.getElementById("cat").value;
@@ -297,7 +186,7 @@ function loadProducts(){
       }
     });
 
-    if(userUID){
+    if(currentUser){
       htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
     }
 
@@ -313,55 +202,48 @@ function loadProducts(){
   });
 }
 
-// ===== Render Pagination Buttons =====
+// ===== Pagination =====
 function renderPagination(total){
   let html = "";
   for(let i=1;i<=total;i++){
-    html += `
-      <button onclick="goPage(${i})"
-        style="
-          margin:3px;
-          padding:6px 10px;
-          border-radius:5px;
-          border:none;
-          cursor:pointer;
-          background:${i===currentPage?'#38bdf8':'#1f2937'};
-          color:${i===currentPage?'#000':'#fff'};
-        ">
-        ${i}
-      </button>`;
+    html += `<button onclick="goPage(${i})"
+      style="
+        margin:3px;
+        padding:6px 10px;
+        border-radius:5px;
+        border:none;
+        cursor:pointer;
+        background:${i===currentPage?'#38bdf8':'#1f2937'};
+        color:${i===currentPage?'#000':'#fff'};
+      ">${i}</button>`;
   }
   document.getElementById("pagination").innerHTML = html;
 }
+function goPage(p){ currentPage = p; loadProducts(); }
 
-function goPage(p){
-  currentPage = p;
-  loadProducts();
-}
-
-// ===== حذف / تعديل / نشر =====
+// ===== Delete / Edit / Publish =====
 function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
 function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
 
 function showPublish(p=null,k=null){
   closeSidebar();
+  const sellerName = currentUser?currentUser.username:"";
   document.getElementById("content").innerHTML = `
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
       <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
       <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
       <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      <input id="seller" placeholder="اسم البائع" value="${sellerName}" readonly>
       <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
-      <select id="province">
-        ${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
-      </select>
+      <select id="province">${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}</select>
       <select id="delivery">
         <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
         <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
       </select>
       <button onclick="save('${k||""}')">💾 حفظ</button>
-    </div>`;
+    </div>
+  `;
 }
 
 function save(k){
@@ -370,7 +252,6 @@ function save(k){
     alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر.");
     return;
   }
-
   const data = {
     name: document.getElementById("name").value,
     price: document.getElementById("price").value,
@@ -402,11 +283,83 @@ function showDetails(k){
     document.getElementById("detailsDialog").style.display="block";
   });
 }
-
 function closeDetails(){ document.getElementById("detailsDialog").style.display="none"; }
 
-// ===== بدء الصفحة الرئيسية =====
-showHome();
-</script>
-</body>
-</html>
+// ===== Auth =====
+function showRegister(){
+  closeSidebar();
+  document.getElementById("content").innerHTML = `
+    <div class="auth-form">
+      <h2>إنشاء حساب</h2>
+      <input id="regUsername" placeholder="اسم المستخدم (إنكليزي فقط)" maxlength="10">
+      <input id="regEmail" type="email" placeholder="البريد الإلكتروني">
+      <input id="regPassword" type="password" placeholder="كلمة المرور">
+      <button onclick="registerUser()">إنشاء حساب</button>
+      <div class="error" id="regError"></div>
+    </div>
+  `;
+}
+function showLogin(){
+  closeSidebar();
+  document.getElementById("content").innerHTML = `
+    <div class="auth-form">
+      <h2>تسجيل دخول</h2>
+      <input id="loginUsername" placeholder="اسم المستخدم" maxlength="10">
+      <input id="loginPassword" type="password" placeholder="كلمة المرور">
+      <button onclick="loginUser()">تسجيل دخول</button>
+      <div class="error" id="loginError"></div>
+    </div>
+  `;
+}
+function registerUser(){
+  const username = document.getElementById("regUsername").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value.trim();
+  const error = document.getElementById("regError");
+
+  if(!/^[A-Za-z]{1,10}$/.test(username)){ error.textContent="اسم المستخدم إنكليزي فقط وبحد أقصى 10 أحرف"; return; }
+  if(!email || !password){ error.textContent="يجب إدخال البريد وكلمة المرور"; return; }
+
+  db.ref("users").orderByChild("username").equalTo(username).once("value", snap=>{
+    if(snap.exists()){ error.textContent="اسم المستخدم محجوز مسبقاً"; return; }
+    firebase.auth().createUserWithEmailAndPassword(email,password)
+      .then(res=>{
+        const uid = res.user.uid;
+        db.ref("users/"+uid).set({username,email,createdAt:Date.now()});
+        currentUser={uid,username,email};
+        updateAuthButtons();
+        showHome();
+      })
+      .catch(err=> error.textContent=err.message);
+  });
+}
+function loginUser(){
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const error = document.getElementById("loginError");
+
+  if(!username || !password){ error.textContent="يرجى إدخال اسم المستخدم وكلمة المرور"; return; }
+
+  db.ref("users").orderByChild("username").equalTo(username).once("value", snap=>{
+    if(!snap.exists()){ error.textContent="اسم المستخدم غير موجود"; return; }
+    const userData = Object.values(snap.val())[0];
+    const userUID_ = Object.keys(snap.val())[0];
+    firebase.auth().signInWithEmailAndPassword(userData.email,password)
+      .then(res=>{
+        currentUser={uid:userUID_,username:userData.username,email:userData.email};
+        updateAuthButtons();
+        showHome();
+      })
+      .catch(err=>error.textContent="كلمة المرور غير صحيحة");
+  });
+}
+function logout(){
+  firebase.auth().signOut().then(()=>{ currentUser=null; updateAuthButtons(); showHome(); });
+}
+function updateAuthButtons(){
+  document.querySelector(".auth-buttons button[onclick='showLogin()']").style.display=currentUser?"none":"inline-block";
+  document.querySelector(".auth-buttons button[onclick='showRegister()']").style.display=currentUser?"none":"inline-block";
+  document.getElementById("logoutBtn").style.display=currentUser?"inline-block":"none";
+}
+
+// ===== Initialize
