@@ -72,6 +72,54 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 }
 .details-dialog h2 { margin-top:0; }
 .details-dialog button { margin-top:10px; padding:5px 10px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
+
+/* ===== إضافة نظام المصادقة ===== */
+.auth-section { 
+  margin-top: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+.user-info { 
+  padding: 15px; 
+  background: #1f2937; 
+  border-radius: 6px; 
+  text-align: center; 
+  margin-top: auto; 
+}
+.user-info p { 
+  margin: 0; 
+  color: #38bdf8; 
+  font-weight: bold; 
+  margin-bottom: 10px; 
+}
+.logout-btn { 
+  width: 100%; 
+  padding: 8px; 
+  background: #ef4444; 
+  color: white; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  font-size: 14px; 
+}
+.logout-btn:hover { 
+  background: #dc2626; 
+}
+.auth-btn { 
+  width: 100%; 
+  padding: 10px; 
+  background: #1f2937; 
+  border: none; 
+  color: #e5e7eb; 
+  font-size: 16px; 
+  cursor: pointer; 
+  border-radius: 6px; 
+  text-align: center; 
+}
+.auth-btn:hover { 
+  background: #374151; 
+}
 </style>
 </head>
 <body>
@@ -88,6 +136,9 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   <aside class="sidebar">
     <button onclick="showHome()">🏠 الرئيسية</button>
     <button onclick="showPublish()">➕ نشر إعلان</button>
+    
+    <!-- إضافة قسم المصادقة -->
+    <div id="authSection" class="auth-section"></div>
   </aside>
 
   <main id="content"></main>
@@ -140,6 +191,10 @@ let budget = null;
 /* ===== Pagination Variables ===== */
 let currentPage = 1;
 const postsPerPage = 6;
+
+// ===== إضافة متغيرات المصادقة =====
+let currentUser = null;
+let userDisplayName = null;
 
 // Sidebar
 function toggleSidebar(){
@@ -261,15 +316,24 @@ function goPage(p){
 function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
 function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
 
+// ===== تعديل دالة showPublish لدعم المصادقة =====
 function showPublish(p=null,k=null){
   closeSidebar();
+  
+  // استخدام اسم المستخدم إذا كان مسجلاً
+  const sellerName = userDisplayName || (p ? p.seller : "");
+  const sellerField = userDisplayName ? 
+    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
+     <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
+    `<input id="seller" placeholder="اسم البائع" value="${sellerName}">`;
+  
   document.getElementById("content").innerHTML = `
     <div class="form-box">
       <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
       <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
       <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
       <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
+      ${sellerField}
       <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
       <select id="province">
         ${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
@@ -289,11 +353,14 @@ function save(k){
     return;
   }
 
+  // استخدام اسم المستخدم المسجل إذا كان متوفراً
+  const seller = userDisplayName || document.getElementById("seller").value;
+
   const data = {
     name: document.getElementById("name").value,
     price: document.getElementById("price").value,
     category: document.getElementById("category").value,
-    seller: document.getElementById("seller").value,
+    seller: seller,
     phone: phone,
     province: document.getElementById("province").value,
     delivery: document.getElementById("delivery").value,
@@ -325,8 +392,67 @@ function closeDetails(){
   document.getElementById("detailsDialog").style.display="none";
 }
 
+// ===== إضافة دوال المصادقة =====
+function updateAuthUI() {
+  const authSection = document.getElementById("authSection");
+  if (!authSection) return;
+  
+  if (currentUser && userDisplayName) {
+    // المستخدم مسجل الدخول
+    authSection.innerHTML = `
+      <div class="user-info">
+        <p>👤 ${userDisplayName}</p>
+        <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+      </div>
+    `;
+  } else {
+    // المستخدم غير مسجل
+    authSection.innerHTML = `
+      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
+      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
+    `;
+  }
+}
+
+function logoutUser() {
+  firebase.auth().signOut()
+    .then(() => {
+      currentUser = null;
+      userDisplayName = null;
+      updateAuthUI();
+      showHome();
+    })
+    .catch((error) => {
+      console.error("Logout error:", error);
+      alert("حدث خطأ أثناء تسجيل الخروج");
+    });
+}
+
+// متابعة حالة المصادقة
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    userUID = user.uid;
+    
+    // الحصول على اسم المستخدم من قاعدة البيانات
+    db.ref("users/" + user.uid).once("value", snapshot => {
+      const userData = snapshot.val();
+      if (userData) {
+        userDisplayName = userData.username;
+        updateAuthUI();
+      }
+    });
+  } else {
+    // المستخدم غير مسجل
+    currentUser = null;
+    userDisplayName = null;
+    updateAuthUI();
+  }
+});
+
 // بدء الصفحة الرئيسية
 showHome();
+updateAuthUI();
 </script>
 </body>
 </html>
