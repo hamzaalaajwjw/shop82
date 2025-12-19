@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شات - تطبيق المحادثات الخاصة</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- شاشة التحميل -->
+    <div id="loading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>جاري التحميل...</p>
+    </div>
+
+    <!-- شاشة التسجيل/الدخول -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1><i class="fas fa-comments"></i> شات</h1>
+                <p>تطبيق المحادثات الخاصة</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">تسجيل الدخول</button>
+                <button class="auth-tab" data-tab="signup">إنشاء حساب</button>
+            </div>
+            
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> دخول
+                </button>
+            </form>
+            
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupName"><i class="fas fa-user"></i> الاسم الكامل</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPhoto"><i class="fas fa-camera"></i> صورة الملف الشخصي (رابط)</label>
+                    <input type="text" id="signupPhoto" placeholder="https://example.com/photo.jpg">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>بالدخول أنت توافق على <a href="#">شروط الخدمة</a> و <a href="#">سياسة الخصوصية</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="appScreen" class="app-screen hidden">
+        <!-- الشريط الجانبي -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <img id="currentUserPhoto" src="https://ui-avatars.com/api/?name=User&background=random" alt="صورة الملف الشخصي">
+                    <div class="user-info">
+                        <h3 id="currentUserName">المستخدم</h3>
+                        <span id="currentUserStatus" class="status online">متصل</span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="btn-icon" title="تسجيل الخروج">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchUsers" placeholder="ابحث عن مستخدم...">
+            </div>
+            
+            <div class="sidebar-menu">
+                <button class="menu-item active" data-section="chats">
+                    <i class="fas fa-comments"></i>
+                    <span>المحادثات</span>
+                    <span id="unreadCount" class="badge hidden">0</span>
+                </button>
+                <button class="menu-item" data-section="contacts">
+                    <i class="fas fa-users"></i>
+                    <span>جهات الاتصال</span>
+                </button>
+                <button class="menu-item" data-section="profile">
+                    <i class="fas fa-user-cog"></i>
+                    <span>الملف الشخصي</span>
+                </button>
+            </div>
+            
+            <div class="chats-list">
+                <!-- قائمة المحادثات يتم ملؤها ديناميكياً -->
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- شاشة الترحيب -->
+            <div id="welcomeScreen" class="welcome-screen">
+                <div class="welcome-content">
+                    <i class="fas fa-comments welcome-icon"></i>
+                    <h2>مرحباً في شات!</h2>
+                    <p>اختر محادثة من القائمة أو ابدأ محادثة جديدة</p>
+                    <button id="newChatBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> محادثة جديدة
+                    </button>
+                </div>
+            </div>
+
+            <!-- شاشة المحادثة -->
+            <div id="chatScreen" class="chat-screen hidden">
+                <div class="chat-header">
+                    <button id="backToChats" class="btn-icon back-btn">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <div class="chat-user-info">
+                        <img id="chatUserPhoto" src="" alt="صورة المستخدم">
+                        <div>
+                            <h3 id="chatUserName">اسم المستخدم</h3>
+                            <span id="chatUserStatus" class="status">آخر ظهور</span>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="btn-icon" title="مكالمة صوتية">
+                            <i class="fas fa-phone"></i>
+                        </button>
+                        <button class="btn-icon" title="مكالمة فيديو">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn-icon" title="معلومات المحادثة">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messagesContainer">
+                    <!-- الرسائل تظهر هنا -->
+                </div>
+                
+                <div class="message-input">
+                    <button class="btn-icon" title="إضافة ملف">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="text" id="messageInput" placeholder="اكتب رسالة هنا...">
+                    <button id="sendMessageBtn" class="btn-icon send-btn" title="إرسال">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شاشة جهات الاتصال -->
+            <div id="contactsScreen" class="contacts-screen hidden">
+                <div class="contacts-header">
+                    <h2><i class="fas fa-users"></i> جهات الاتصال</h2>
+                    <button id="addContactBtn" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> إضافة جهة اتصال
+                    </button>
+                </div>
+                <div class="contacts-list">
+                    <!-- قائمة جهات الاتصال -->
+                </div>
+            </div>
+
+            <!-- شاشة الملف الشخصي -->
+            <div id="profileScreen" class="profile-screen hidden">
+                <div class="profile-header">
+                    <h2><i class="fas fa-user-cog"></i> الملف الشخصي</h2>
+                </div>
+                <div class="profile-content">
+                    <div class="profile-photo-container">
+                        <img id="profilePhoto" src="" alt="صورة الملف الشخصي">
+                        <button id="changePhotoBtn" class="btn-secondary">
+                            <i class="fas fa-camera"></i> تغيير الصورة
+                        </button>
+                    </div>
+                    <div class="profile-form">
+                        <div class="form-group">
+                            <label for="profileName">الاسم الكامل</label>
+                            <input type="text" id="profileName">
+                        </div>
+                        <div class="form-group">
+                            <label for="profileEmail">البريد الإلكتروني</label>
+                            <input type="email" id="profileEmail" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileStatus">الحالة</label>
+                            <input type="text" id="profileStatus" placeholder="اكتب حالتك...">
+                        </div>
+                        <button id="saveProfileBtn" class="btn-primary">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- نافذة البحث عن مستخدمين -->
+        <div id="searchModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>ابحث عن مستخدمين</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="globalSearch" placeholder="ابحث بالاسم أو البريد الإلكتروني...">
+                    <div class="search-results">
+                        <!-- نتائج البحث تظهر هنا -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعارات -->
+    <div id="notification" class="notification hidden"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="scripts/firebase-config.js"></script>
+    <script type="module" src="scripts/auth.js"></script>
+    <script type="module" src="scripts/users.js"></script>
+    <script type="module" src="scripts/chat.js"></script>
+    <script type="module" src="scripts/app.js"></script>
+</body>
+</html>
