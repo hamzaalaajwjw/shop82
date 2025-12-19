@@ -144,6 +144,31 @@
             margin-top: 5px;
         }
         
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            gap: 8px;
+        }
+        
+        .remember-me input {
+            width: auto;
+        }
+        
+        .remember-me label {
+            margin: 0;
+            font-size: 14px;
+            color: #d1d5db;
+            cursor: pointer;
+        }
+        
+        .remember-tooltip {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+        
         @media (max-width: 480px) {
             .register-container {
                 padding: 20px;
@@ -191,6 +216,15 @@
                 <input type="password" id="confirmPassword" required autocomplete="new-password">
             </div>
             
+            <!-- ===== إضافة خيار تذكر تسجيل الدخول ===== -->
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe">تذكر تسجيل الدخول</label>
+            </div>
+            <div class="remember-tooltip">
+                (سيتم تذكرك حتى عند إغلاق المتصفح)
+            </div>
+            
             <button type="submit" class="register-btn">إنشاء حساب</button>
         </form>
         
@@ -221,6 +255,17 @@
         const auth = firebase.auth();
         const db = firebase.database();
         
+        // ===== تحميل إعداد تذكر الدخول إذا كان موجوداً =====
+        window.onload = function() {
+            const savedRememberMe = localStorage.getItem('rememberMe');
+            if (savedRememberMe !== null) {
+                const rememberCheckbox = document.getElementById('rememberMe');
+                if (rememberCheckbox) {
+                    rememberCheckbox.checked = savedRememberMe === 'true';
+                }
+            }
+        };
+        
         // منع إرسال النموذج
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -233,6 +278,7 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
             
@@ -249,6 +295,12 @@
             
             if (!/^[a-zA-Z0-9_]+$/.test(username)) {
                 errorDiv.textContent = 'اسم المستخدم يجب أن يكون بالإنجليزية فقط (أحرف، أرقام، _)';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (username.length < 3 || username.length > 20) {
+                errorDiv.textContent = 'اسم المستخدم يجب أن يكون بين 3 و 20 حرفاً';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -278,6 +330,12 @@
                     .then((userCredential) => {
                         const user = userCredential.user;
                         
+                        // ===== حفظ إعداد تذكر الدخول =====
+                        localStorage.setItem('rememberMe', rememberMe);
+                        if (rememberMe) {
+                            localStorage.setItem('userUID', user.uid);
+                        }
+                        
                         // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
                         db.ref("users/" + user.uid).set({
                             fullName: fullName || username, // استخدم الاسم الكامل أو اسم المستخدم
@@ -302,6 +360,15 @@
                             rating: 0
                         });
                         
+                        // ===== إرسال بريد التحقق (اختياري) =====
+                        user.sendEmailVerification()
+                            .then(() => {
+                                console.log("تم إرسال بريد التحقق");
+                            })
+                            .catch(error => {
+                                console.error("خطأ في إرسال بريد التحقق:", error);
+                            });
+                        
                         successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! سيتم تحويلك...';
                         successDiv.style.display = 'block';
                         
@@ -318,12 +385,33 @@
                             errorDiv.textContent = 'البريد الإلكتروني غير صالح';
                         } else if (error.code === 'auth/weak-password') {
                             errorDiv.textContent = 'كلمة السر ضعيفة جداً';
+                        } else if (error.code === 'auth/operation-not-allowed') {
+                            errorDiv.textContent = 'إنشاء الحساب غير مسموح حالياً';
                         } else {
-                            errorDiv.textContent = 'حدث خطأ أثناء إنشاء الحساب';
+                            errorDiv.textContent = 'حدث خطأ أثناء إنشاء الحساب: ' + error.message;
                         }
                         errorDiv.style.display = 'block';
                     });
+            }).catch(error => {
+                console.error('Database error:', error);
+                errorDiv.textContent = 'خطأ في التحقق من اسم المستخدم';
+                errorDiv.style.display = 'block';
             });
+        }
+        
+        // ===== وظائف مساعدة للتحقق =====
+        function validateUsername(username) {
+            const regex = /^[a-zA-Z0-9_]+$/;
+            return regex.test(username) && username.length >= 3 && username.length <= 20;
+        }
+        
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+        
+        function validateEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
         }
     </script>
 </body>
