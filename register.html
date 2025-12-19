@@ -54,6 +54,7 @@
         
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
         
         .form-group label {
@@ -79,6 +80,49 @@
             border-color: #38bdf8;
         }
         
+        /* إضافة أيقونة التحقق */
+        .valid {
+            border-color: #10b981 !important;
+        }
+        
+        .invalid {
+            border-color: #ef4444 !important;
+        }
+        
+        .validation-icon {
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            font-size: 18px;
+            display: none;
+        }
+        
+        .valid-icon {
+            color: #10b981;
+        }
+        
+        .invalid-icon {
+            color: #ef4444;
+        }
+        
+        .password-strength {
+            height: 5px;
+            background: #374151;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        .strength-weak { background: #ef4444; }
+        .strength-medium { background: #f59e0b; }
+        .strength-strong { background: #10b981; }
+        
         .register-btn {
             width: 100%;
             padding: 14px;
@@ -95,6 +139,11 @@
         
         .register-btn:hover {
             background: #0ea5e9;
+        }
+        
+        .register-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
         }
         
         .links {
@@ -144,6 +193,51 @@
             margin-top: 5px;
         }
         
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 3px 0;
+            font-size: 11px;
+        }
+        
+        .requirement.met {
+            color: #10b981;
+        }
+        
+        .requirement.unmet {
+            color: #9ca3af;
+        }
+        
+        .requirement-icon {
+            font-size: 14px;
+        }
+        
+        .terms-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .terms-checkbox input {
+            width: auto;
+        }
+        
+        .terms-checkbox label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .terms-checkbox a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+        
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+        
         @media (max-width: 480px) {
             .register-container {
                 padding: 20px;
@@ -167,31 +261,105 @@
                 <label for="fullName">الاسم الكامل (سيظهر في البروفايل)</label>
                 <input type="text" id="fullName" placeholder="مثال: محمد أحمد" autocomplete="name">
                 <div class="password-requirements">سيظهر هذا الاسم في صفحتك الشخصية</div>
+                <span id="fullNameValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="fullNameInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
             <div class="form-group">
                 <label for="username">اسم المستخدم (بالإنجليزية فقط)</label>
                 <input type="text" id="username" required autocomplete="username">
-                <div class="password-requirements">يجب أن يحتوي على أحرف إنجليزية وأرقام و _ فقط</div>
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqLength">
+                        <span class="requirement-icon">○</span>
+                        <span>3-20 حرف</span>
+                    </div>
+                    <div class="requirement unmet" id="reqChars">
+                        <span class="requirement-icon">○</span>
+                        <span>أحرف إنجليزية وأرقام و _ فقط</span>
+                    </div>
+                </div>
+                <span id="usernameValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="usernameInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
             <div class="form-group">
                 <label for="email">البريد الإلكتروني</label>
                 <input type="email" id="email" required autocomplete="email">
+                <span id="emailValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="emailInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
             <div class="form-group">
                 <label for="password">كلمة السر</label>
                 <input type="password" id="password" required autocomplete="new-password">
-                <div class="password-requirements">6 أحرف على الأقل</div>
+                <div class="password-strength">
+                    <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                </div>
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqMinLength">
+                        <span class="requirement-icon">○</span>
+                        <span>6 أحرف على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqUpperCase">
+                        <span class="requirement-icon">○</span>
+                        <span>حرف كبير واحد على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqLowerCase">
+                        <span class="requirement-icon">○</span>
+                        <span>حرف صغير واحد على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqNumber">
+                        <span class="requirement-icon">○</span>
+                        <span>رقم واحد على الأقل</span>
+                    </div>
+                </div>
+                <span id="passwordValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="passwordInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
             <div class="form-group">
                 <label for="confirmPassword">تأكيد كلمة السر</label>
                 <input type="password" id="confirmPassword" required autocomplete="new-password">
+                <div class="password-requirements" id="confirmMessage"></div>
+                <span id="confirmValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="confirmInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
-            <button type="submit" class="register-btn">إنشاء حساب</button>
+            <!-- ===== إضافة شروط الاستخدام ===== -->
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    أوافق على <a href="#" onclick="showTerms()">شروط الاستخدام</a> و <a href="#" onclick="showPrivacy()">سياسة الخصوصية</a>
+                </label>
+            </div>
+            
+            <!-- ===== إضافة كابتشا بسيطة ===== -->
+            <div class="form-group" id="captchaContainer" style="display: none;">
+                <label for="captcha">التحقق من أنك لست روبوت</label>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div id="captchaText" style="
+                        background: #374151;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        font-family: monospace;
+                        font-size: 20px;
+                        letter-spacing: 5px;
+                        color: #38bdf8;
+                        user-select: none;
+                    ">A3LEN</div>
+                    <button type="button" onclick="refreshCaptcha()" style="
+                        background: none;
+                        border: none;
+                        color: #38bdf8;
+                        cursor: pointer;
+                        font-size: 18px;
+                    ">↻</button>
+                </div>
+                <input type="text" id="captcha" placeholder="أعد كتابة النص أعلاه">
+                <div id="captchaMessage" style="color: #9ca3af; font-size: 12px; margin-top: 5px;"></div>
+            </div>
+            
+            <button type="submit" class="register-btn" id="registerBtn" disabled>إنشاء حساب</button>
         </form>
         
         <div class="links">
@@ -204,6 +372,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
     <script>
         // إعداد Firebase
@@ -220,6 +389,57 @@
         
         const auth = firebase.auth();
         const db = firebase.database();
+        const analytics = firebase.analytics();
+        
+        // متغيرات التحقق
+        let captchaCode = '';
+        let isCaptchaValid = false;
+        let isFormValid = false;
+        
+        // توليد كابتشا عشوائي
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 5; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            captchaCode = result;
+            document.getElementById('captchaText').textContent = result;
+        }
+        
+        function refreshCaptcha() {
+            generateCaptcha();
+            document.getElementById('captcha').value = '';
+            document.getElementById('captchaMessage').textContent = '';
+            document.getElementById('captcha').classList.remove('valid', 'invalid');
+        }
+        
+        // عرض شروط الاستخدام
+        function showTerms() {
+            alert(`شروط الاستخدام:
+            
+1. الالتزام بالقوانين المحلية والدولية.
+2. عدم نشر محتوى مسيء أو غير قانوني.
+3. المسؤولية الكاملة عن المحتوى المنشور.
+4. احترام خصوصية الآخرين.
+5. يحق للإدارة حذف أي محتوى مخالف.
+            
+باستخدام المنصة، فإنك توافق على هذه الشروط.`);
+            return false;
+        }
+        
+        function showPrivacy() {
+            alert(`سياسة الخصوصية:
+            
+1. نحن نحترم خصوصيتك ونحمي بياناتك الشخصية.
+2. نستخدم البيانات فقط لتقديم الخدمة.
+3. لا نشارك بياناتك مع أطراف ثالثة.
+4. يمكنك طلب حذف حسابك في أي وقت.
+5. نستخدم تقنيات حماية متقدمة.
+            
+للمزيد من التفاصيل، راجع سياسة الخصوصية الكاملة.`);
+            return false;
+        }
         
         // منع إرسال النموذج
         document.getElementById('registerForm').addEventListener('submit', function(e) {
@@ -227,104 +447,395 @@
             registerUser();
         });
         
+        // التحقق من صحة الاسم الكامل
+        function validateFullName() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const isValid = fullName.length >= 2 && fullName.length <= 50;
+            updateValidationUI('fullName', isValid);
+            checkFormValidity();
+        }
+        
+        // التحقق من اسم المستخدم
+        function validateUsername() {
+            const username = document.getElementById('username').value.trim();
+            
+            // التحقق من الطول
+            const reqLength = document.getElementById('reqLength');
+            const isLengthValid = username.length >= 3 && username.length <= 20;
+            updateRequirement(reqLength, isLengthValid);
+            
+            // التحقق من الأحرف المسموحة
+            const reqChars = document.getElementById('reqChars');
+            const isCharsValid = /^[a-zA-Z0-9_]+$/.test(username);
+            updateRequirement(reqChars, isCharsValid);
+            
+            const isValid = isLengthValid && isCharsValid;
+            updateValidationUI('username', isValid);
+            
+            // التحقق من عدم تكرار اسم المستخدم (غير متزامن)
+            if (isValid && username.length >= 3) {
+                checkUsernameAvailability(username);
+            }
+            
+            checkFormValidity();
+            return isValid;
+        }
+        
+        // التحقق من توفر اسم المستخدم
+        function checkUsernameAvailability(username) {
+            db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
+                const exists = snapshot.exists();
+                const usernameInput = document.getElementById('username');
+                const reqChars = document.getElementById('reqChars');
+                
+                if (exists) {
+                    usernameInput.classList.add('invalid');
+                    usernameInput.classList.remove('valid');
+                    reqChars.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">اسم المستخدم موجود مسبقاً</span>';
+                    updateValidationUI('username', false);
+                } else if (/^[a-zA-Z0-9_]+$/.test(username)) {
+                    reqChars.innerHTML = '<span class="requirement-icon">✓</span><span>أحرف إنجليزية وأرقام و _ فقط</span>';
+                    reqChars.classList.add('met');
+                    reqChars.classList.remove('unmet');
+                }
+                checkFormValidity();
+            });
+        }
+        
+        // التحقق من البريد الإلكتروني
+        function validateEmail() {
+            const email = document.getElementById('email').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = emailRegex.test(email);
+            updateValidationUI('email', isValid);
+            checkFormValidity();
+            return isValid;
+        }
+        
+        // التحقق من قوة كلمة السر
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            
+            // متطلبات كلمة السر
+            const requirements = {
+                minLength: password.length >= 6,
+                hasUpperCase: /[A-Z]/.test(password),
+                hasLowerCase: /[a-z]/.test(password),
+                hasNumber: /[0-9]/.test(password)
+            };
+            
+            // تحديث واجهة المتطلبات
+            updateRequirement(document.getElementById('reqMinLength'), requirements.minLength);
+            updateRequirement(document.getElementById('reqUpperCase'), requirements.hasUpperCase);
+            updateRequirement(document.getElementById('reqLowerCase'), requirements.hasLowerCase);
+            updateRequirement(document.getElementById('reqNumber'), requirements.hasNumber);
+            
+            // حساب قوة كلمة السر
+            let strength = 0;
+            if (requirements.minLength) strength++;
+            if (requirements.hasUpperCase) strength++;
+            if (requirements.hasLowerCase) strength++;
+            if (requirements.hasNumber) strength++;
+            
+            // تحديث شريط القوة
+            const strengthFill = document.getElementById('passwordStrengthFill');
+            const percent = (strength / 4) * 100;
+            strengthFill.style.width = percent + '%';
+            
+            let strengthClass = '';
+            if (strength === 1) {
+                strengthClass = 'strength-weak';
+            } else if (strength === 2 || strength === 3) {
+                strengthClass = 'strength-medium';
+            } else if (strength === 4) {
+                strengthClass = 'strength-strong';
+            }
+            
+            strengthFill.className = 'password-strength-fill ' + strengthClass;
+            
+            const isValid = requirements.minLength && requirements.hasUpperCase && 
+                          requirements.hasLowerCase && requirements.hasNumber;
+            updateValidationUI('password', isValid);
+            checkFormValidity();
+            validateConfirmPassword();
+            return isValid;
+        }
+        
+        // التحقق من تأكيد كلمة السر
+        function validateConfirmPassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirmMessage = document.getElementById('confirmMessage');
+            
+            let isValid = false;
+            let message = '';
+            let messageColor = '';
+            
+            if (confirmPassword.length === 0) {
+                message = 'أدخل تأكيد كلمة السر';
+                messageColor = '#9ca3af';
+            } else if (password !== confirmPassword) {
+                message = 'كلمتا السر غير متطابقتين';
+                messageColor = '#ef4444';
+            } else {
+                message = 'كلمتا السر متطابقتان ✓';
+                messageColor = '#10b981';
+                isValid = true;
+            }
+            
+            confirmMessage.innerHTML = `<span style="color:${messageColor}">${message}</span>`;
+            updateValidationUI('confirm', isValid);
+            checkFormValidity();
+            return isValid;
+        }
+        
+        // التحقق من الكابتشا
+        function validateCaptcha() {
+            const captchaInput = document.getElementById('captcha').value.toUpperCase();
+            const captchaMessage = document.getElementById('captchaMessage');
+            
+            isCaptchaValid = captchaInput === captchaCode;
+            
+            if (captchaInput.length === 0) {
+                captchaMessage.textContent = 'أدخل رمز التحقق';
+                captchaMessage.style.color = '#9ca3af';
+            } else if (!isCaptchaValid) {
+                captchaMessage.textContent = 'رمز التحقق غير صحيح';
+                captchaMessage.style.color = '#ef4444';
+            } else {
+                captchaMessage.textContent = 'رمز التحقق صحيح ✓';
+                captchaMessage.style.color = '#10b981';
+            }
+            
+            document.getElementById('captcha').classList.toggle('valid', isCaptchaValid);
+            document.getElementById('captcha').classList.toggle('invalid', !isCaptchaValid && captchaInput.length > 0);
+            
+            checkFormValidity();
+            return isCaptchaValid;
+        }
+        
+        // تحديث واجهة المتطلب
+        function updateRequirement(element, isMet) {
+            if (isMet) {
+                element.classList.add('met');
+                element.classList.remove('unmet');
+                const icon = element.querySelector('.requirement-icon');
+                if (icon) icon.textContent = '✓';
+            } else {
+                element.classList.add('unmet');
+                element.classList.remove('met');
+                const icon = element.querySelector('.requirement-icon');
+                if (icon) icon.textContent = '○';
+            }
+        }
+        
+        // تحديث واجهة التحقق
+        function updateValidationUI(fieldId, isValid) {
+            const input = document.getElementById(fieldId);
+            const validIcon = document.getElementById(fieldId + 'ValidIcon');
+            const invalidIcon = document.getElementById(fieldId + 'InvalidIcon');
+            
+            if (!input) return;
+            
+            if (isValid) {
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+                if (validIcon) validIcon.style.display = 'block';
+                if (invalidIcon) invalidIcon.style.display = 'none';
+            } else if (input.value.length > 0) {
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+                if (validIcon) validIcon.style.display = 'none';
+                if (invalidIcon) invalidIcon.style.display = 'block';
+            } else {
+                input.classList.remove('valid', 'invalid');
+                if (validIcon) validIcon.style.display = 'none';
+                if (invalidIcon) invalidIcon.style.display = 'none';
+            }
+        }
+        
+        // التحقق من صحة النموذج الكلي
+        function checkFormValidity() {
+            const termsChecked = document.getElementById('terms').checked;
+            
+            // التحقق من جميع الحقول
+            const fullNameValid = document.getElementById('fullName').value.trim().length >= 2;
+            const usernameValid = validateUsername();
+            const emailValid = validateEmail();
+            const passwordValid = validatePassword();
+            const confirmValid = validateConfirmPassword();
+            
+            // إظهار الكابتشا فقط بعد ملء الحقول الأساسية
+            const captchaContainer = document.getElementById('captchaContainer');
+            if (usernameValid && emailValid && passwordValid && confirmValid) {
+                captchaContainer.style.display = 'block';
+                if (!captchaCode) {
+                    generateCaptcha();
+                }
+            } else {
+                captchaContainer.style.display = 'none';
+                isCaptchaValid = false;
+            }
+            
+            // التحقق النهائي
+            isFormValid = fullNameValid && usernameValid && emailValid && 
+                         passwordValid && confirmValid && termsChecked && isCaptchaValid;
+            
+            document.getElementById('registerBtn').disabled = !isFormValid;
+        }
+        
+        // إضافة مستمعات الأحداث
+        document.getElementById('fullName').addEventListener('input', validateFullName);
+        document.getElementById('username').addEventListener('input', validateUsername);
+        document.getElementById('email').addEventListener('input', validateEmail);
+        document.getElementById('password').addEventListener('input', validatePassword);
+        document.getElementById('confirmPassword').addEventListener('input', validateConfirmPassword);
+        document.getElementById('captcha').addEventListener('input', validateCaptcha);
+        document.getElementById('terms').addEventListener('change', checkFormValidity);
+        
+        // تعطيل نسخ ولصق في حقل الكابتشا
+        document.getElementById('captcha').addEventListener('copy', (e) => e.preventDefault());
+        document.getElementById('captcha').addEventListener('paste', (e) => e.preventDefault());
+        document.getElementById('captcha').addEventListener('cut', (e) => e.preventDefault());
+        
+        // تسجيل المستخدم
         function registerUser() {
+            if (!isFormValid) {
+                alert('يرجى ملء جميع الحقول بشكل صحيح');
+                return;
+            }
+            
             const fullName = document.getElementById('fullName').value.trim();
             const username = document.getElementById('username').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
+            const registerBtn = document.getElementById('registerBtn');
             
             // إخفاء الرسائل السابقة
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             
-            // التحقق من البيانات
-            if (!username || !email || !password || !confirmPassword) {
-                errorDiv.textContent = 'جميع الحقول مطلوبة (باستثناء الاسم الكامل)';
-                errorDiv.style.display = 'block';
-                return;
-            }
+            // تعطيل زر التسجيل أثناء المعالجة
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = 'جاري إنشاء الحساب...';
             
-            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                errorDiv.textContent = 'اسم المستخدم يجب أن يكون بالإنجليزية فقط (أحرف، أرقام، _)';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            if (password.length < 6) {
-                errorDiv.textContent = 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                errorDiv.textContent = 'كلمتا السر غير متطابقتين';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            // التحقق من اسم المستخدم
-            db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
-                if (snapshot.exists()) {
-                    errorDiv.textContent = 'اسم المستخدم موجود مسبقاً';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-                
-                // إنشاء المستخدم
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        const user = userCredential.user;
-                        
-                        // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
-                        db.ref("users/" + user.uid).set({
-                            fullName: fullName || username, // استخدم الاسم الكامل أو اسم المستخدم
-                            username: username,
-                            email: email,
-                            followersCount: 0,
-                            followingCount: 0,
-                            totalProducts: 0,
-                            rating: 0,
-                            totalReviews: 0,
-                            joinDate: new Date().toLocaleDateString('ar-SA'),
-                            createdAt: firebase.database.ServerValue.TIMESTAMP,
-                            lastActive: firebase.database.ServerValue.TIMESTAMP
-                        });
-                        
-                        // ===== إنشاء مجلدات فرعية للمتابعة والتقييمات =====
-                        // مجلد المتابعين
-                        db.ref("userStats/" + user.uid).set({
-                            followers: 0,
-                            following: 0,
-                            products: 0,
-                            rating: 0
-                        });
-                        
-                        successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! سيتم تحويلك...';
-                        successDiv.style.display = 'block';
-                        
-                        // الانتقال للصفحة الرئيسية بعد 2 ثانية
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 2000);
-                    })
-                    .catch((error) => {
-                        console.error('Registration error:', error);
-                        if (error.code === 'auth/email-already-in-use') {
-                            errorDiv.textContent = 'البريد الإلكتروني مستخدم مسبقاً';
-                        } else if (error.code === 'auth/invalid-email') {
-                            errorDiv.textContent = 'البريد الإلكتروني غير صالح';
-                        } else if (error.code === 'auth/weak-password') {
-                            errorDiv.textContent = 'كلمة السر ضعيفة جداً';
-                        } else {
-                            errorDiv.textContent = 'حدث خطأ أثناء إنشاء الحساب';
-                        }
-                        errorDiv.style.display = 'block';
-                    });
+            // تسجيل التحليلات
+            analytics.logEvent('sign_up', {
+                method: 'email',
+                username: username
             });
+            
+            // إنشاء المستخدم
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // تسجيل وقت التسجيل
+                    const registrationTime = new Date().toISOString();
+                    const ipAddress = 'unknown'; // في الواقع، يمكن الحصول على الـ IP من السيرفر
+                    
+                    // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
+                    db.ref("users/" + user.uid).set({
+                        fullName: fullName || username,
+                        username: username,
+                        email: email,
+                        followersCount: 0,
+                        followingCount: 0,
+                        totalProducts: 0,
+                        rating: 0,
+                        totalReviews: 0,
+                        joinDate: new Date().toLocaleDateString('ar-SA'),
+                        registrationTime: registrationTime,
+                        lastLogin: firebase.database.ServerValue.TIMESTAMP,
+                        lastActive: firebase.database.ServerValue.TIMESTAMP,
+                        accountStatus: 'active',
+                        emailVerified: false,
+                        profileComplete: fullName ? true : false,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    // ===== إنشاء مجلدات فرعية للمتابعة والتقييمات =====
+                    // مجلد المتابعين
+                    db.ref("userStats/" + user.uid).set({
+                        followers: 0,
+                        following: 0,
+                        products: 0,
+                        rating: 0
+                    });
+                    
+                    // ===== إنشاء سجل للنشاط =====
+                    db.ref("userActivity/" + user.uid).push().set({
+                        type: 'account_created',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        details: 'تم إنشاء الحساب بنجاح'
+                    });
+                    
+                    // إرسال بريد التحقق (يمكن تفعيله لاحقاً)
+                    user.sendEmailVerification().then(() => {
+                        console.log('تم إرسال بريد التحقق');
+                    }).catch(error => {
+                        console.error('خطأ في إرسال بريد التحقق:', error);
+                    });
+                    
+                    successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! جاري تحويلك...';
+                    successDiv.style.display = 'block';
+                    
+                    // تسجيل الدخول تلقائياً
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then(() => {
+                            // الانتقال للصفحة الرئيسية بعد 2 ثانية
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 2000);
+                        })
+                        .catch(error => {
+                            console.error('Auto login error:', error);
+                            window.location.href = 'login.html';
+                        });
+                    
+                })
+                .catch((error) => {
+                    console.error('Registration error:', error);
+                    
+                    let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = 'البريد الإلكتروني مستخدم مسبقاً';
+                        document.getElementById('email').classList.add('invalid');
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                        document.getElementById('email').classList.add('invalid');
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = 'كلمة السر ضعيفة جداً';
+                        document.getElementById('password').classList.add('invalid');
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = 'عملية التسجيل غير مسموحة حالياً';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
+                    }
+                    
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.style.display = 'block';
+                    
+                    // إعادة تمكين زر التسجيل
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = 'إنشاء حساب';
+                    
+                    // تحديث الكابتشا
+                    refreshCaptcha();
+                });
         }
+        
+        // تهيئة التحقق الأولي
+        document.addEventListener('DOMContentLoaded', function() {
+            checkFormValidity();
+            
+            // إضافة مؤشر قوة كلمة السر الافتراضي
+            const strengthFill = document.getElementById('passwordStrengthFill');
+            strengthFill.style.width = '0%';
+            strengthFill.className = 'password-strength-fill';
+        });
     </script>
 </body>
 </html>
