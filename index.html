@@ -91,7 +91,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   margin: 0; 
   color: #38bdf8; 
   font-weight: bold; 
-  margin-bottom: 10px; 
+  margin-bottom: 5px; 
 }
 .logout-btn { 
   width: 100%; 
@@ -269,10 +269,11 @@ function loadProducts(){
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
         if(budget && price > budget) return;
         
-        // ===== إضافة زر الملف الشخصي للبائع =====
+        // ===== إضافة زر الملف الشخصي للبائع مع جلب الاسم الحقيقي =====
         const sellerSection = userDisplayName ? 
           `<div class="seller">
             👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+            <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
           `<div class="seller">
             👤 ${p.seller} | ☎ ${p.phone}
@@ -341,7 +342,36 @@ function goPage(p){
 }
 
 // حذف / تعديل / نشر
-function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
+function deleteProduct(k){ 
+  if(confirm("حذف الإعلان؟")) {
+    // الحصول على بيانات المنتج أولاً
+    db.ref("products/" + k).once('value', (snapshot) => {
+      const product = snapshot.val();
+      if (product) {
+        // تقليل عداد منتجات المستخدم
+        if (product.uid) {
+          db.ref('users/' + product.uid).once('value', (userSnapshot) => {
+            const userData = userSnapshot.val();
+            if (userData) {
+              const currentCount = userData.totalProducts || 0;
+              if (currentCount > 0) {
+                db.ref('users/' + product.uid).update({
+                  totalProducts: currentCount - 1
+                });
+              }
+            }
+          });
+        }
+        
+        // حذف المنتج
+        db.ref("products/"+k).remove().then(() => {
+          loadProducts();
+        });
+      }
+    });
+  } 
+}
+
 function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
 
 // ===== تعديل دالة showPublish لدعم المصادقة =====
@@ -392,10 +422,37 @@ function save(k){
     phone: phone,
     province: document.getElementById("province").value,
     delivery: document.getElementById("delivery").value,
-    uid: userUID
+    uid: userUID,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
   };
-  const ref = k?db.ref("products/"+k):db.ref("products").push();
-  ref.set(data).then(showHome);
+  
+  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+  
+  ref.set(data).then(() => {
+    // ===== تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط) =====
+    if (!k && userUID) {
+      db.ref('users/' + userUID).once('value', (snapshot) => {
+        const userData = snapshot.val();
+        if (userData) {
+          const currentCount = userData.totalProducts || 0;
+          db.ref('users/' + userUID).update({
+            totalProducts: currentCount + 1,
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        } else {
+          // إذا لم يكن للمستخدم بيانات، إنشاءها
+          db.ref('users/' + userUID).update({
+            totalProducts: 1,
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      });
+    }
+    showHome();
+  }).catch(error => {
+    console.error("Error saving product:", error);
+    alert("حدث خطأ أثناء حفظ الإعلان");
+  });
 }
 
 // Product Details
@@ -404,9 +461,10 @@ function showDetails(k){
     const p = snap.val();
     if(!p) return;
     
-    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل =====
+    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل مع معلومات إضافية =====
     const sellerWithLink = userDisplayName ? 
-      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span></p>` :
+      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
+       <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
       `<p><strong>البائع:</strong> ${p.seller}</p>`;
     
     document.getElementById("detailsContent").innerHTML = `
@@ -417,6 +475,7 @@ function showDetails(k){
       <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
       <p><strong>المحافظة:</strong> ${p.province}</p>
       <p><strong>التوصيل:</strong> ${p.delivery}</p>
+      ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
     `;
     document.getElementById("detailsDialog").style.display="block";
   });
@@ -432,13 +491,20 @@ function updateAuthUI() {
   if (!authSection) return;
   
   if (currentUser && userDisplayName) {
-    // المستخدم مسجل الدخول
-    authSection.innerHTML = `
-      <div class="user-info">
-        <p class="profile-link" onclick="viewMyProfile()">👤 ${userDisplayName}</p>
-        <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
-      </div>
-    `;
+    // جلب بيانات المستخدم الكاملة لعرض الاسم الكامل
+    db.ref("users/" + currentUser.uid).once("value", snapshot => {
+      const userData = snapshot.val();
+      const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
+      
+      // المستخدم مسجل الدخول
+      authSection.innerHTML = `
+        <div class="user-info">
+          <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
+          <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+          <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+        </div>
+      `;
+    });
   } else {
     // المستخدم غير مسجل
     authSection.innerHTML = `
@@ -465,7 +531,9 @@ function logoutUser() {
 // ===== إضافة دوال نظام الملف الشخصي =====
 function viewProfile(userId, sellerName) {
   // حفظ اسم البائع للاستخدام لاحقاً
-  localStorage.setItem('profileSellerName', sellerName);
+  if (sellerName) {
+    localStorage.setItem('profileSellerName', sellerName);
+  }
   
   // الانتقال لصفحة الملف الشخصي
   window.location.href = `profile.html?id=${userId}`;
@@ -492,6 +560,11 @@ firebase.auth().onAuthStateChanged((user) => {
       if (userData) {
         userDisplayName = userData.username;
         updateAuthUI();
+        
+        // تحديث وقت آخر نشاط
+        db.ref("users/" + user.uid).update({
+          lastActive: firebase.database.ServerValue.TIMESTAMP
+        });
       }
     });
   } else {
