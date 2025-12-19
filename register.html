@@ -333,32 +333,6 @@
                 </label>
             </div>
             
-            <!-- ===== إضافة كابتشا بسيطة ===== -->
-            <div class="form-group" id="captchaContainer" style="display: none;">
-                <label for="captcha">التحقق من أنك لست روبوت</label>
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <div id="captchaText" style="
-                        background: #374151;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        font-family: monospace;
-                        font-size: 20px;
-                        letter-spacing: 5px;
-                        color: #38bdf8;
-                        user-select: none;
-                    ">A3LEN</div>
-                    <button type="button" onclick="refreshCaptcha()" style="
-                        background: none;
-                        border: none;
-                        color: #38bdf8;
-                        cursor: pointer;
-                        font-size: 18px;
-                    ">↻</button>
-                </div>
-                <input type="text" id="captcha" placeholder="أعد كتابة النص أعلاه">
-                <div id="captchaMessage" style="color: #9ca3af; font-size: 12px; margin-top: 5px;"></div>
-            </div>
-            
             <button type="submit" class="register-btn" id="registerBtn" disabled>إنشاء حساب</button>
         </form>
         
@@ -372,47 +346,29 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
     <script>
         // إعداد Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
-            authDomain: "a3len-3ad54.firebaseapp.com",
+            authDomain: "a3len-3ad54.firebasestorage.app",
             databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
             projectId: "a3len-3ad54",
             storageBucket: "a3len-3ad54.firebasestorage.app",
             messagingSenderId: "767338034080",
             appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        // التحقق من عدم تكرار التهيئة
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         
         const auth = firebase.auth();
         const db = firebase.database();
-        const analytics = firebase.analytics();
         
         // متغيرات التحقق
-        let captchaCode = '';
-        let isCaptchaValid = false;
         let isFormValid = false;
-        
-        // توليد كابتشا عشوائي
-        function generateCaptcha() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 5; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            captchaCode = result;
-            document.getElementById('captchaText').textContent = result;
-        }
-        
-        function refreshCaptcha() {
-            generateCaptcha();
-            document.getElementById('captcha').value = '';
-            document.getElementById('captchaMessage').textContent = '';
-            document.getElementById('captcha').classList.remove('valid', 'invalid');
-        }
         
         // عرض شروط الاستخدام
         function showTerms() {
@@ -453,6 +409,7 @@
             const isValid = fullName.length >= 2 && fullName.length <= 50;
             updateValidationUI('fullName', isValid);
             checkFormValidity();
+            return isValid;
         }
         
         // التحقق من اسم المستخدم
@@ -589,31 +546,6 @@
             return isValid;
         }
         
-        // التحقق من الكابتشا
-        function validateCaptcha() {
-            const captchaInput = document.getElementById('captcha').value.toUpperCase();
-            const captchaMessage = document.getElementById('captchaMessage');
-            
-            isCaptchaValid = captchaInput === captchaCode;
-            
-            if (captchaInput.length === 0) {
-                captchaMessage.textContent = 'أدخل رمز التحقق';
-                captchaMessage.style.color = '#9ca3af';
-            } else if (!isCaptchaValid) {
-                captchaMessage.textContent = 'رمز التحقق غير صحيح';
-                captchaMessage.style.color = '#ef4444';
-            } else {
-                captchaMessage.textContent = 'رمز التحقق صحيح ✓';
-                captchaMessage.style.color = '#10b981';
-            }
-            
-            document.getElementById('captcha').classList.toggle('valid', isCaptchaValid);
-            document.getElementById('captcha').classList.toggle('invalid', !isCaptchaValid && captchaInput.length > 0);
-            
-            checkFormValidity();
-            return isCaptchaValid;
-        }
-        
         // تحديث واجهة المتطلب
         function updateRequirement(element, isMet) {
             if (isMet) {
@@ -665,21 +597,9 @@
             const passwordValid = validatePassword();
             const confirmValid = validateConfirmPassword();
             
-            // إظهار الكابتشا فقط بعد ملء الحقول الأساسية
-            const captchaContainer = document.getElementById('captchaContainer');
-            if (usernameValid && emailValid && passwordValid && confirmValid) {
-                captchaContainer.style.display = 'block';
-                if (!captchaCode) {
-                    generateCaptcha();
-                }
-            } else {
-                captchaContainer.style.display = 'none';
-                isCaptchaValid = false;
-            }
-            
             // التحقق النهائي
             isFormValid = fullNameValid && usernameValid && emailValid && 
-                         passwordValid && confirmValid && termsChecked && isCaptchaValid;
+                         passwordValid && confirmValid && termsChecked;
             
             document.getElementById('registerBtn').disabled = !isFormValid;
         }
@@ -690,13 +610,7 @@
         document.getElementById('email').addEventListener('input', validateEmail);
         document.getElementById('password').addEventListener('input', validatePassword);
         document.getElementById('confirmPassword').addEventListener('input', validateConfirmPassword);
-        document.getElementById('captcha').addEventListener('input', validateCaptcha);
         document.getElementById('terms').addEventListener('change', checkFormValidity);
-        
-        // تعطيل نسخ ولصق في حقل الكابتشا
-        document.getElementById('captcha').addEventListener('copy', (e) => e.preventDefault());
-        document.getElementById('captcha').addEventListener('paste', (e) => e.preventDefault());
-        document.getElementById('captcha').addEventListener('cut', (e) => e.preventDefault());
         
         // تسجيل المستخدم
         function registerUser() {
@@ -721,12 +635,6 @@
             registerBtn.disabled = true;
             registerBtn.innerHTML = 'جاري إنشاء الحساب...';
             
-            // تسجيل التحليلات
-            analytics.logEvent('sign_up', {
-                method: 'email',
-                username: username
-            });
-            
             // إنشاء المستخدم
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
@@ -734,7 +642,6 @@
                     
                     // تسجيل وقت التسجيل
                     const registrationTime = new Date().toISOString();
-                    const ipAddress = 'unknown'; // في الواقع، يمكن الحصول على الـ IP من السيرفر
                     
                     // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
                     db.ref("users/" + user.uid).set({
@@ -821,9 +728,6 @@
                     // إعادة تمكين زر التسجيل
                     registerBtn.disabled = false;
                     registerBtn.innerHTML = 'إنشاء حساب';
-                    
-                    // تحديث الكابتشا
-                    refreshCaptcha();
                 });
         }
         
