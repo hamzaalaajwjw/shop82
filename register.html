@@ -387,6 +387,8 @@
         let emailCheckTimeout = null;
         let lastUsernameCheck = '';
         let lastEmailCheck = '';
+        let isUsernameAvailable = false;
+        let isEmailAvailable = false;
         
         // عرض شروط الاستخدام
         function showTerms() {
@@ -453,19 +455,20 @@
             // إعادة تعيين حالة التوفر
             reqAvailable.innerHTML = '<span class="requirement-icon">○</span><span>اسم المستخدم متاح</span>';
             reqAvailable.classList.remove('met', 'unmet');
+            isUsernameAvailable = false;
             
-            const isValid = isLengthValid && isCharsValid;
-            updateValidationUI('username', isValid);
+            const isValidBasic = isLengthValid && isCharsValid;
+            updateValidationUI('username', isValidBasic);
             
             // التحقق من توفر اسم المستخدم بعد تأخير
-            if (isValid && username.length >= 3 && username !== lastUsernameCheck) {
+            if (isValidBasic && username.length >= 3 && username !== lastUsernameCheck) {
                 usernameCheckTimeout = setTimeout(() => {
                     checkUsernameAvailability(username);
                 }, 500); // تأخير 500 مللي ثانية
             }
             
             checkFormValidity();
-            return isValid;
+            return isValidBasic;
         }
         
         // التحقق من توفر اسم المستخدم
@@ -483,11 +486,15 @@
                     reqAvailable.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">اسم المستخدم موجود مسبقاً</span>';
                     reqAvailable.classList.add('unmet');
                     reqAvailable.classList.remove('met');
+                    isUsernameAvailable = false;
+                    // تحديث واجهة التحقق لاسم المستخدم
                     updateValidationUI('username', false);
                 } else {
                     reqAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">اسم المستخدم متاح</span>';
                     reqAvailable.classList.add('met');
                     reqAvailable.classList.remove('unmet');
+                    isUsernameAvailable = true;
+                    // تحديث واجهة التحقق لاسم المستخدم
                     updateValidationUI('username', true);
                 }
                 checkFormValidity();
@@ -496,6 +503,9 @@
                 reqAvailable.innerHTML = '<span class="requirement-icon">!</span><span style="color:#f59e0b">تعذر التحقق</span>';
                 reqAvailable.classList.add('unmet');
                 reqAvailable.classList.remove('met');
+                isUsernameAvailable = false;
+                updateValidationUI('username', false);
+                checkFormValidity();
             });
         }
         
@@ -518,19 +528,20 @@
             // إعادة تعيين حالة التوفر
             reqEmailAvailable.innerHTML = '<span class="requirement-icon">○</span><span>البريد الإلكتروني متاح</span>';
             reqEmailAvailable.classList.remove('met', 'unmet');
+            isEmailAvailable = false;
             
-            const isValid = isFormatValid;
-            updateValidationUI('email', isValid);
+            const isValidBasic = isFormatValid;
+            updateValidationUI('email', isValidBasic);
             
             // التحقق من توفر البريد بعد تأخير
-            if (isValid && email !== lastEmailCheck) {
+            if (isValidBasic && email !== lastEmailCheck) {
                 emailCheckTimeout = setTimeout(() => {
                     checkEmailAvailability(email);
                 }, 500); // تأخير 500 مللي ثانية
             }
             
             checkFormValidity();
-            return isValid;
+            return isValidBasic;
         }
         
         // التحقق من توفر البريد الإلكتروني
@@ -550,12 +561,14 @@
                     reqEmailAvailable.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">البريد الإلكتروني مستخدم</span>';
                     reqEmailAvailable.classList.add('unmet');
                     reqEmailAvailable.classList.remove('met');
+                    isEmailAvailable = false;
                     updateValidationUI('email', false);
                 } else {
                     // التحقق من Firebase Auth (إذا أردنا التحقق من التسجيلات السابقة)
                     reqEmailAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">البريد الإلكتروني متاح</span>';
                     reqEmailAvailable.classList.add('met');
-                    reqEmailAvailable.classList.remove('met');
+                    reqEmailAvailable.classList.remove('unmet');
+                    isEmailAvailable = true;
                     updateValidationUI('email', true);
                 }
                 checkFormValidity();
@@ -564,6 +577,9 @@
                 reqEmailAvailable.innerHTML = '<span class="requirement-icon">!</span><span style="color:#f59e0b">تعذر التحقق</span>';
                 reqEmailAvailable.classList.add('unmet');
                 reqEmailAvailable.classList.remove('met');
+                isEmailAvailable = false;
+                updateValidationUI('email', false);
+                checkFormValidity();
             });
         }
         
@@ -688,12 +704,12 @@
         function checkFormValidity() {
             const termsChecked = document.getElementById('terms').checked;
             
-            // التحقق من جميع الحقول
+            // التحقق من جميع الحقول الأساسية
             const fullNameValid = document.getElementById('fullName').value.trim().length >= 2;
-            const usernameValid = validateUsername();
-            const emailValid = validateEmail();
-            const passwordValid = validatePassword();
-            const confirmValid = validateConfirmPassword();
+            const usernameValid = document.getElementById('username').classList.contains('valid');
+            const emailValid = document.getElementById('email').classList.contains('valid');
+            const passwordValid = document.getElementById('password').classList.contains('valid');
+            const confirmValid = document.getElementById('confirmPassword').classList.contains('valid');
             
             // الحصول على حالة التوفر
             const usernameAvailable = document.getElementById('reqAvailable').classList.contains('met');
@@ -712,11 +728,13 @@
         document.getElementById('username').addEventListener('input', function() {
             // إعادة تعيين آخر فحص
             lastUsernameCheck = '';
+            isUsernameAvailable = false;
             validateUsername();
         });
         document.getElementById('email').addEventListener('input', function() {
             // إعادة تعيين آخر فحص
             lastEmailCheck = '';
+            isEmailAvailable = false;
             validateEmail();
         });
         document.getElementById('password').addEventListener('input', validatePassword);
