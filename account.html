@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحساب | a3len</title>
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('font.ttf') format('truetype');
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'CustomFont', sans-serif;
+            background: #0f1115;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .account-header {
+            background: #0b0d12;
+            padding: 20px;
+            border-bottom: 1px solid #1f2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-btn {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+        
+        /* Main Container */
+        .account-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .account-container {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+        
+        /* Sidebar */
+        .account-sidebar {
+            background: #1c1f27;
+            border-radius: 10px;
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .account-sidebar h3 {
+            color: #38bdf8;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .account-nav {
+            list-style: none;
+        }
+        
+        .account-nav li {
+            margin-bottom: 10px;
+        }
+        
+        .account-nav a {
+            display: block;
+            padding: 12px 15px;
+            color: #e5e7eb;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .account-nav a:hover,
+        .account-nav a.active {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+        }
+        
+        /* Content */
+        .account-content {
+            background: #1c1f27;
+            border-radius: 10px;
+            padding: 30px;
+        }
+        
+        .account-section {
+            display: none;
+        }
+        
+        .account-section.active {
+            display: block;
+        }
+        
+        .account-section h2 {
+            color: #38bdf8;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        /* Form Styles */
+        .account-form {
+            max-width: 500px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d1d5db;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            background: #111318;
+            color: #e5e7eb;
+            font-size: 16px;
+        }
+        
+        .form-group input:disabled {
+            background: #374151;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #38bdf8;
+            color: #000;
+        }
+        
+        .btn-primary:hover {
+            background: #0ea5e9;
+        }
+        
+        .btn-secondary {
+            background: #374151;
+            color: #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        /* Security Items */
+        .security-item {
+            background: #111318;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .security-info h4 {
+            color: #38bdf8;
+            margin-bottom: 5px;
+        }
+        
+        .security-info p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .security-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        /* Devices List */
+        .device-item {
+            background: #111318;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .device-icon {
+            font-size: 24px;
+            color: #38bdf8;
+        }
+        
+        .device-info {
+            flex: 1;
+        }
+        
+        .device-info h4 {
+            color: #38bdf8;
+            margin-bottom: 5px;
+        }
+        
+        .device-info p {
+            color: #9ca3af;
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        
+        .device-current {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid #38bdf8;
+        }
+        
+        /* Activity Log */
+        .activity-item {
+            background: #111318;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #38bdf8;
+        }
+        
+        .activity-item.suspicious {
+            border-left-color: #ef4444;
+        }
+        
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .activity-name {
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        
+        .activity-time {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        
+        .activity-details {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+        }
+        
+        @media (max-width: 767px) {
+            .account-container {
+                padding: 0 10px;
+            }
+            
+            .account-content {
+                padding: 20px;
+            }
+            
+            .security-item,
+            .device-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="account-header">
+        <a href="index.html" class="back-btn">← رجوع</a>
+        <div class="logo">a3len</div>
+        <div style="width: 70px;"></div>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="account-container">
+        <!-- Sidebar -->
+        <aside class="account-sidebar">
+            <h3>إدارة الحساب</h3>
+            <ul class="account-nav">
+                <li><a href="#profile" class="active" onclick="showSection('profile')">👤 الملف الشخصي</a></li>
+                <li><a href="#security" onclick="showSection('security')">🔒 الأمان</a></li>
+                <li><a href="#devices" onclick="showSection('devices')">📱 الأجهزة</a></li>
+                <li><a href="#activity" onclick="showSection('activity')">📊 سجل النشاط</a></li>
+                <li><a href="#delete" onclick="showSection('delete')">🗑️ حذف الحساب</a></li>
+            </ul>
+        </aside>
+        
+        <!-- Content -->
+        <main class="account-content">
+            <!-- Profile Section -->
+            <section id="profile-section" class="account-section active">
+                <h2>الملف الشخصي</h2>
+                <div id="profileMessage" class="message"></div>
+                <form id="profileForm" class="account-form">
+                    <div class="form-group">
+                        <label for="editFullName">الاسم الكامل</label>
+                        <input type="text" id="editFullName" placeholder="الاسم الكامل">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editUsername">اسم المستخدم</label>
+                        <input type="text" id="editUsername" placeholder="اسم المستخدم" disabled>
+                        <small style="color:#9ca3af; display:block; margin-top:5px;">لا يمكن تغيير اسم المستخدم</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEmail">البريد الإلكتروني</label>
+                        <input type="email" id="editEmail" placeholder="البريد الإلكتروني">
+                        <small style="color:#9ca3af; display:block; margin-top:5px;">سيتم إرسال رابط تأكيد عند التغيير</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPhone">رقم الهاتف (اختياري)</label>
+                        <input type="tel" id="editPhone" placeholder="0770XXXXXXX">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="updateProfile()">💾 حفظ التغييرات</button>
+                </form>
+            </section>
+            
+            <!-- Security Section -->
+            <section id="security-section" class="account-section">
+                <h2>الأمان</h2>
+                <div id="securityMessage" class="message"></div>
+                
+                <div class="security-item">
+                    <div class="security-info">
+                        <h4>تغيير كلمة المرور</h4>
+                        <p>قم بتغيير كلمة المرور بشكل دوري لأمان أفضل</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="showChangePassword()">تغيير</button>
+                </div>
+                
+                <div class="security-item">
+                    <div class="security-info">
+                        <h4>المصادقة الثنائية</h4>
+                        <p>طبقة حماية إضافية عند تسجيل الدخول</p>
+                    </div>
+                    <span class="security-status status-inactive">غير مفعل</span>
+                </div>
+                
+                <div class="security-item">
+                    <div class="security-info">
+                        <h4>تسجيل الدخول عبر Google</h4>
+                        <p>سجل الدخول باستخدام حساب Google</p>
+                    </div>
+                    <button class="btn btn-secondary">ربط</button>
+                </div>
+                
+                <!-- Change Password Form (Hidden by default) -->
+                <div id="changePasswordForm" style="display: none; margin-top: 30px;">
+                    <h3>تغيير كلمة المرور</h3>
+                    <form class="account-form">
+                        <div class="form-group">
+                            <label for="currentPassword">كلمة المرور الحالية</label>
+                            <input type="password" id="currentPassword" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newPassword">كلمة المرور الجديدة</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmNewPassword">تأكيد كلمة المرور الجديدة</label>
+                            <input type="password" id="confirmNewPassword" required>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn btn-primary" onclick="changePassword()">تغيير</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideChangePassword()">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            
+            <!-- Devices Section -->
+            <section id="devices-section" class="account-section">
+                <h2>الأجهزة المتصلة</h2>
+                <p style="color:#9ca3af; margin-bottom:20px;">الأجهزة التي تم تسجيل الدخول منها إلى حسابك</p>
+                
+                <div id="devicesList">
+                    <div class="loading">جاري تحميل الأجهزة...</div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-danger" onclick="logoutAllDevices()">
+                        🚪 تسجيل خروج من جميع الأجهزة
+                    </button>
+                    <small style="color:#9ca3af; display:block; margin-top:10px;">
+                        سيتم تسجيل خروجك من جميع الأجهزة باستثناء هذا الجهاز
+                    </small>
+                </div>
+            </section>
+            
+            <!-- Activity Log Section -->
+            <section id="activity-section" class="account-section">
+                <h2>سجل النشاط</h2>
+                <p style="color:#9ca3af; margin-bottom:20px;">آخر 50 نشاط على حسابك</p>
+                
+                <div id="activityList">
+                    <div class="loading">جاري تحميل سجل النشاط...</div>
+                </div>
+            </section>
+            
+            <!-- Delete Account Section -->
+            <section id="delete-section" class="account-section">
+                <h2>حذف الحساب</h2>
+                
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color:#ef4444; margin-bottom:15px;">⚠️ تحذير</h3>
+                    <p style="color:#e5e7eb; margin-bottom:10px;">
+                        حذف الحساب هو عملية لا يمكن التراجع عنها. عند حذف حسابك:
+                    </p>
+                    <ul style="color:#e5e7eb; margin-right:20px; margin-bottom:15px;">
+                        <li>سيتم حذف جميع بياناتك الشخصية</li>
+                        <li>سيتم إزالة جميع إعلاناتك</li>
+                        <li>سيتم حذف جميع التقييمات والمراجعات</li>
+                        <li>لن تتمكن من استعادة حسابك بعد الحذف</li>
+                    </ul>
+                    <p style="color:#fbbf24; font-weight:bold;">
+                        ننصحك بتصدير بياناتك قبل المتابعة
+                    </p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deleteConfirm">اكتب "حذف حسابي" للتأكيد</label>
+                    <input type="text" id="deleteConfirm" placeholder="حذف حسابي">
+                </div>
+                
+                <div class="form-group">
+                    <label for="deleteReason">سبب الحذف (اختياري)</label>
+                    <textarea id="deleteReason" rows="4" placeholder="أخبرنا عن سبب حذفك للحساب..."></textarea>
+                </div>
+                
+                <button class="btn btn-danger" onclick="confirmDeleteAccount()" style="width:100%;">
+                    🗑️ حذف الحساب نهائياً
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+            authDomain: "a3len-3ad54.firebaseapp.com",
+            databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+            projectId: "a3len-3ad54",
+            storageBucket: "a3len-3ad54.firebasestorage.app",
+            messagingSenderId: "767338034080",
+            appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let currentUser = null;
+        
+        // تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    loadUserData();
+                    loadDevices();
+                    loadActivityLog();
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+        
+        // تحميل بيانات المستخدم
+        function loadUserData() {
+            db.ref('users/' + currentUser.uid).once('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    document.getElementById('editFullName').value = userData.fullName || '';
+                    document.getElementById('editUsername').value = userData.username || '';
+                    document.getElementById('editEmail').value = userData.email || '';
+                    document.getElementById('editPhone').value = userData.phone || '';
+                }
+            });
+        }
+        
+        // تحميل الأجهزة
+        function loadDevices() {
+            db.ref('users/' + currentUser.uid + '/security/devices').once('value', (snapshot) => {
+                const devices = snapshot.val();
+                const devicesList = document.getElementById('devicesList');
+                devicesList.innerHTML = '';
+                
+                if (!devices || Object.keys(devices).length === 0) {
+                    devicesList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا توجد أجهزة مسجلة</p>';
+                    return;
+                }
+                
+                const currentDeviceId = localStorage.getItem('a3len_device_id');
+                
+                Object.keys(devices).forEach(deviceId => {
+                    const device = devices[deviceId];
+                    const isCurrent = deviceId === currentDeviceId;
+                    
+                    const deviceItem = document.createElement('div');
+                    deviceItem.className = `device-item ${isCurrent ? 'device-current' : ''}`;
+                    
+                    const deviceType = getDeviceType(device.userAgent);
+                    
+                    deviceItem.innerHTML = `
+                        <div class="device-icon">${deviceType.icon}</div>
+                        <div class="device-info">
+                            <h4>${deviceType.name} ${isCurrent ? '(هذا الجهاز)' : ''}</h4>
+                            <p>${formatDate(device.lastLogin)}</p>
+                            <p>${device.userAgent.substring(0, 50)}...</p>
+                            <p>${device.location || 'موقع غير معروف'}</p>
+                        </div>
+                        ${!isCurrent ? `<button class="btn btn-secondary" onclick="logoutDevice('${deviceId}')">تسجيل خروج</button>` : ''}
+                    `;
+                    
+                    devicesList.appendChild(deviceItem);
+                });
+            });
+        }
+        
+        // تحميل سجل النشاط
+        function loadActivityLog() {
+            db.ref('users/' + currentUser.uid + '/security/activityLog')
+                .orderByChild('timestamp')
+                .limitToLast(50)
+                .once('value', (snapshot) => {
+                    const activities = snapshot.val();
+                    const activityList = document.getElementById('activityList');
+                    activityList.innerHTML = '';
+                    
+                    if (!activities || Object.keys(activities).length === 0) {
+                        activityList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا توجد أنشطة مسجلة</p>';
+                        return;
+                    }
+                    
+                    // تحويل إلى مصفوفة وترتيب تنازلي
+                    const activitiesArray = Object.entries(activities)
+                        .map(([key, value]) => ({ id: key, ...value }))
+                        .sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    activitiesArray.forEach(activity => {
+                        const isSuspicious = isSuspiciousActivity(activity);
+                        const activityItem = document.createElement('div');
+                        activityItem.className = `activity-item ${isSuspicious ? 'suspicious' : ''}`;
+                        
+                        activityItem.innerHTML = `
+                            <div class="activity-header">
+                                <div class="activity-name">${getActivityName(activity.activity)}</div>
+                                <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+                            </div>
+                            <div class="activity-details">
+                                ${activity.userAgent ? activity.userAgent.substring(0, 60) + '...' : 'غير معروف'}
+                            </div>
+                        `;
+                        
+                        activityList.appendChild(activityItem);
+                    });
+                });
+        }
+        
+        // تحديد نوع الجهاز
+        function getDeviceType(userAgent) {
+            if (!userAgent) return { icon: '📱', name: 'جهاز غير معروف' };
+            
+            if (userAgent.includes('Mobile')) {
+                return { icon: '📱', name: 'هاتف محمول' };
+            } else if (userAgent.includes('Tablet')) {
+                return { icon: '📟', name: 'تابلت' };
+            } else if (userAgent.includes('Windows')) {
+                return { icon: '💻', name: 'كمبيوتر ويندوز' };
+            } else if (userAgent.includes('Mac')) {
+                return { icon: '🍎', name: 'ماك' };
+            } else if (userAgent.includes('Linux')) {
+                return { icon: '🐧', name: 'لينكس' };
+            } else {
+                return { icon: '💻', name: 'كمبيوتر' };
+            }
+        }
+        
+        // تحديد اسم النشاط
+        function getActivityName(activityCode) {
+            const activities = {
+                'user_login': 'تسجيل دخول',
+                'user_logout': 'تسجيل خروج',
+                'page_visit': 'زيارة صفحة',
+                'session_active': 'نشاط الجلسة',
+                'profile_update': 'تحديث الملف',
+                'password_change': 'تغيير كلمة المرور'
+            };
+            
+            return activities[activityCode] || activityCode;
+        }
+        
+        // تحديد إذا كان النشاط مشبوهاً
+        function isSuspiciousActivity(activity) {
+            // يمكن إضافة شروط للأنشطة المشبوهة
+            return false;
+        }
+        
+        // تبديل الأقسام
+        function showSection(sectionId) {
+            // تحديث القائمة الجانبية
+            document.querySelectorAll('.account-nav a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${sectionId}`) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // إظهار القسم المحدد
+            document.querySelectorAll('.account-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.getElementById(`${sectionId}-section`).classList.add('active');
+        }
+        
+        // تحديث الملف الشخصي
+        async function updateProfile() {
+            const fullName = document.getElementById('editFullName').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            const messageDiv = document.getElementById('profileMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            try {
+                const updates = {};
+                if (fullName) updates.fullName = fullName;
+                if (phone) updates.phone = phone;
+                
+                // تحديث البريد الإلكتروني إذا تغير
+                if (email && email !== currentUser.email) {
+                    await currentUser.updateEmail(email);
+                    updates.email = email;
+                    updates.emailVerified = false;
+                    
+                    // إرسال رسالة تأكيد
+                    await currentUser.sendEmailVerification();
+                    alert('تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد');
+                }
+                
+                // تحديث البيانات في قاعدة البيانات
+                await db.ref('users/' + currentUser.uid).update(updates);
+                
+                // تسجيل النشاط
+                await db.ref('users/' + currentUser.uid + '/security/activityLog').push().set({
+                    activity: 'profile_update',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    userAgent: navigator.userAgent
+                });
+                
+                messageDiv.className = 'message success';
+                messageDiv.textContent = '✅ تم تحديث الملف الشخصي بنجاح';
+                messageDiv.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Update profile error:', error);
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '❌ حدث خطأ أثناء التحديث: ' + error.message;
+                messageDiv.style.display = 'block';
+            }
+        }
+        
+        // إظهار نموذج تغيير كلمة المرور
+        function showChangePassword() {
+            document.getElementById('changePasswordForm').style.display = 'block';
+        }
+        
+        function hideChangePassword() {
+            document.getElementById('changePasswordForm').style.display = 'none';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+        
+        // تغيير كلمة المرور
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            const messageDiv = document.getElementById('securityMessage');
+            
+            messageDiv.style.display = 'none';
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '❌ كلمتا السر غير متطابقتين';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '❌ كلمة السر يجب أن تكون 8 أحرف على الأقل';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // إعادة المصادقة لتغيير كلمة المرور
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    currentPassword
+                );
+                
+                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser.updatePassword(newPassword);
+                
+                // تحديث وقت آخر تغيير لكلمة المرور
+                await db.ref('users/' + currentUser.uid + '/security').update({
+                    lastPasswordChange: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // تسجيل النشاط
+                await db.ref('users/' + currentUser.uid + '/security/activityLog').push().set({
+                    activity: 'password_change',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    userAgent: navigator.userAgent
+                });
+                
+                messageDiv.className = 'message success';
+                messageDiv.textContent = '✅ تم تغيير كلمة المرور بنجاح';
+                messageDiv.style.display = 'block';
+                
+                hideChangePassword();
+                
+            } catch (error) {
+                console.error('Change password error:', error);
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '❌ حدث خطأ: ' + error.message;
+                messageDiv.style.display = 'block';
+            }
+        }
+        
+        // تسجيل خروج جهاز معين
+        async function logoutDevice(deviceId) {
+            if (confirm('هل تريد تسجيل خروج هذا الجهاز؟')) {
+                try {
+                    await db.ref('users/' + currentUser.uid + '/security/devices/' + deviceId).remove();
+                    loadDevices();
+                } catch (error) {
+                    console.error('Logout device error:', error);
+                    alert('حدث خطأ أثناء تسجيل خروج الجهاز');
+                }
+            }
+        }
+        
+        // تسجيل خروج من جميع الأجهزة
+        async function logoutAllDevices() {
+            if (confirm('هل تريد تسجيل الخروج من جميع الأجهزة؟ (سيتم تسجيل خروجك من هذا الجهاز أيضاً)')) {
+                try {
+                    // إنشاء رمز جلسة جديد
+                    const newSessionToken = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 12);
+                    
+                    // تحديث في قاعدة البيانات
+                    await db.ref('users/' + currentUser.uid + '/security').update({
+                        sessionToken: newSessionToken,
+                        lastLogoutAll: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    // تسجيل الخروج محلياً
+                    await auth.signOut();
+                    localStorage.removeItem('a3len_device_id');
+                    localStorage.removeItem('a3len_remember_me');
+                    
+                    window.location.href = 'login.html';
+                    
+                } catch (error) {
+                    console.error('Logout all error:', error);
+                    alert('حدث خطأ أثناء تسجيل الخروج من جميع الأجهزة');
+                }
+            }
+        }
+        
+        // تأكيد حذف الحساب
+        async function confirmDeleteAccount() {
+            const confirmText = document.getElementById('deleteConfirm').value;
+            const reason = document.getElementById('deleteReason').value;
+            
+            if (confirmText !== 'حذف حسابي') {
+                alert('يرجى كتابة "حذف حسابي" للتأكيد');
+                return;
+            }
+            
+            if (!confirm('هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذه العملية.')) {
+                return;
+            }
+            
+            if (!confirm('⚠️ تحذير نهائي: سيتم حذف جميع بياناتك نهائياً. هل أنت متأكد؟')) {
+                return;
+            }
+            
+            try {
+                // أولاً: حذف جميع بيانات المستخدم من قاعدة البيانات
+                
+                // 1. حذف بيانات المستخدم الرئيسية
+                await db.ref('users/' + currentUser.uid).remove();
+                
+                // 2. حذف إعلانات المستخدم
+                const productsSnapshot = await db.ref('products')
+                    .orderByChild('uid')
+                    .equalTo(currentUser.uid)
+                    .once('value');
+                
+                if (productsSnapshot.exists()) {
+                    const updates = {};
+                    productsSnapshot.forEach((childSnapshot) => {
+                        updates[childSnapshot.key] = null;
+                    });
+                    await db.ref('products').update(updates);
+                }
+                
+                // 3. حذف التقييمات التي قدمها المستخدم
+                await db.ref('ratings/' + currentUser.uid).remove();
+                
+                // 4. حذف المراجعات التي قدمها المستخدم
+                const reviewsSnapshot = await db.ref('reviews')
+                    .orderByChild('reviewerId')
+                    .equalTo(currentUser.uid)
+                    .once('value');
+                
+                if (reviewsSnapshot.exists()) {
+                    const updates = {};
+                    reviewsSnapshot.forEach((childSnapshot) => {
+                        updates[childSnapshot.key] = null;
+                    });
+                    await db.ref('reviews').update(updates);
+                }
+                
+                // 5. حذف المستخدم من قائمة متابعين الآخرين
+                // هذه عملية معقدة وتحتاج لمسح جميع المستخدمين
+                
+                // 6. حذف الحساب من Firebase Authentication
+                await currentUser.delete();
+                
+                // 7. مسح البيانات المحلية
+                localStorage.clear();
+                
+                alert('✅ تم حذف حسابك بنجاح. نأسف لرحيلك!');
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('Delete account error:', error);
+                
+                if (error.code === 'auth/requires-recent-login') {
+                    alert('لحذف الحساب، يرجى تسجيل الدخول مرة أخرى للمصادقة الأخيرة');
+                    // يمكن إعادة توجيهه لصفحة إعادة المصادقة
+                } else {
+                    alert('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                }
+            }
+        }
+        
+        // دوال مساعدة للتاريخ والوقت
+        function formatDate(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-SA') + ' ' + date.toLocaleTimeString('ar-SA');
+        }
+        
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            
+            const now = new Date();
+            const past = new Date(timestamp);
+            const diffMs = now - past;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'الآن';
+            if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+            if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+            if (diffDays < 7) return `منذ ${diffDays} يوم`;
+            return formatDate(timestamp);
+        }
+    </script>
+</body>
+</html>
