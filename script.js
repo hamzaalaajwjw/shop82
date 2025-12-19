@@ -69,6 +69,16 @@ function loadProducts(){
       const price=parseFloat(p.price)||0;
       if((!c||p.category===c)&&p.name.toLowerCase().includes(s)){
         if(budget&&price>budget) return;
+        
+        // ===== إضافة زر الملف الشخصي للبائع =====
+        const sellerSection = userDisplayName ? 
+          `<div class="seller">
+            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+          </div>` :
+          `<div class="seller">
+            👤 ${p.seller} | ☎ ${p.phone}
+          </div>`;
+        
         htmlCards.push({uid:p.uid,key:k,html:`
           <div class="card">
             <h3>${p.name}</h3>
@@ -78,9 +88,7 @@ function loadProducts(){
               <span>${p.province}</span>
               <span>توصيل: ${p.delivery}</span>
             </div>
-            <div class="seller">
-              👤 ${p.seller} | ☎ ${p.phone}
-            </div>
+            ${sellerSection}
             <div class="actions">
               ${p.uid===userUID?`<button class="edit" onclick="editProduct('${k}')">تعديل</button>
               <button class="del" onclick="deleteProduct('${k}')">حذف</button>`:""}
@@ -188,7 +196,7 @@ function updateAuthUI() {
     // المستخدم مسجل الدخول
     authSection.innerHTML = `
       <div class="user-info">
-        <p>👤 ${userDisplayName}</p>
+        <p style="cursor:pointer; color:#38bdf8;" onclick="viewMyProfile()">👤 ${userDisplayName}</p>
         <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
       </div>
     `;
@@ -213,6 +221,24 @@ function logoutUser() {
       console.error("Logout error:", error);
       alert("حدث خطأ أثناء تسجيل الخروج");
     });
+}
+
+// ===== إضافة دوال نظام الملف الشخصي =====
+function viewProfile(userId, sellerName) {
+  // حفظ اسم البائع للاستخدام لاحقاً
+  localStorage.setItem('profileSellerName', sellerName);
+  
+  // الانتقال لصفحة الملف الشخصي
+  window.location.href = `profile.html?id=${userId}`;
+}
+
+function viewMyProfile() {
+  if (currentUser && currentUser.uid) {
+    window.location.href = `profile.html?id=${currentUser.uid}`;
+  } else {
+    alert('يرجى تسجيل الدخول أولاً');
+    window.location.href = 'login.html';
+  }
 }
 
 // متابعة حالة المصادقة
@@ -241,4 +267,20 @@ firebase.auth().onAuthStateChanged((user) => {
 document.addEventListener("DOMContentLoaded",function(){
   showHome();
   updateAuthUI();
+  
+  // إضافة أنماط إضافية لروابط البائعين
+  const style = document.createElement('style');
+  style.textContent = `
+    .seller-link {
+      color: #38bdf8;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .seller-link:hover {
+      color: #0ea5e9;
+      text-decoration: none;
+    }
+  `;
+  document.head.appendChild(style);
 });
