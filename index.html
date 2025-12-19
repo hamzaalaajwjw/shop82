@@ -55,6 +55,23 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   cursor:pointer;
 }
 .budget-dialog .close-btn { background:#ef4444; margin-left:10px; }
+
+/* ===== Product Details Dialog ===== */
+.details-dialog {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#0f1115;
+  color:#e5e7eb;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px #000;
+  z-index:1001;
+  display:none;
+}
+.details-dialog h2 { margin-top:0; }
+.details-dialog button { margin-top:10px; padding:5px 10px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -86,6 +103,12 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   </div>
 </div>
 
+<!-- Product Details Dialog -->
+<div class="details-dialog" id="detailsDialog">
+  <div id="detailsContent"></div>
+  <button onclick="closeDetails()">رجوع للصفحة الرئيسية</button>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -109,8 +132,9 @@ const db = firebase.database();
 let userUID = null;
 firebase.auth().onAuthStateChanged(u => { if(u) userUID = u.uid; });
 
-// الأقسام
+// الأقسام والمحافظات
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
+const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
 let budget = null;
 
 /* ===== Pagination Variables ===== */
@@ -170,7 +194,7 @@ function loadProducts(){
       if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
         if(budget && price > budget) return;
         htmlCards.push({uid:p.uid,key:k,html:`
-          <div class="card">
+          <div class="card" onclick="showDetails('${k}')">
             <h3>${p.name}</h3>
             <span class="price">${p.price} د.ع</span>
             <div class="meta">
@@ -183,20 +207,18 @@ function loadProducts(){
             </div>
             <div class="actions">
               ${p.uid===userUID?`
-              <button class="edit" onclick="editProduct('${k}')">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}')">حذف</button>` : ""}
+              <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
+              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
             </div>
           </div>
         `});
       }
     });
 
-    // ترتيب منشورات المستخدم أولاً
     if(userUID){
       htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
     }
 
-    // Pagination
     const totalPages = Math.ceil(htmlCards.length / postsPerPage);
     if(currentPage > totalPages) currentPage = 1;
     const start = (currentPage-1)*postsPerPage;
@@ -238,6 +260,7 @@ function goPage(p){
 // حذف / تعديل / نشر
 function deleteProduct(k){ if(confirm("حذف الإعلان؟")) db.ref("products/"+k).remove().then(loadProducts); }
 function editProduct(k){ db.ref("products/"+k).once("value",s=>showPublish(s.val(),k)); }
+
 function showPublish(p=null,k=null){
   closeSidebar();
   document.getElementById("content").innerHTML = `
@@ -248,7 +271,9 @@ function showPublish(p=null,k=null){
       <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
       <input id="seller" placeholder="اسم البائع" value="${p?p.seller:""}">
       <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
-      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
+      <select id="province">
+        ${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
+      </select>
       <select id="delivery">
         <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
         <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
@@ -256,19 +281,48 @@ function showPublish(p=null,k=null){
       <button onclick="save('${k||""}')">💾 حفظ</button>
     </div>`;
 }
+
 function save(k){
+  const phone = document.getElementById("phone").value.trim();
+  if(!/^[0][0-9]{10}$/.test(phone)){
+    alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر.");
+    return;
+  }
+
   const data = {
     name: document.getElementById("name").value,
     price: document.getElementById("price").value,
     category: document.getElementById("category").value,
     seller: document.getElementById("seller").value,
-    phone: document.getElementById("phone").value,
+    phone: phone,
     province: document.getElementById("province").value,
     delivery: document.getElementById("delivery").value,
     uid: userUID
   };
   const ref = k?db.ref("products/"+k):db.ref("products").push();
   ref.set(data).then(showHome);
+}
+
+// Product Details
+function showDetails(k){
+  db.ref("products/"+k).once("value",snap=>{
+    const p = snap.val();
+    if(!p) return;
+    document.getElementById("detailsContent").innerHTML = `
+      <h2>${p.name}</h2>
+      <p><strong>السعر:</strong> ${p.price} د.ع</p>
+      <p><strong>القسم:</strong> ${p.category}</p>
+      <p><strong>البائع:</strong> ${p.seller}</p>
+      <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
+      <p><strong>المحافظة:</strong> ${p.province}</p>
+      <p><strong>التوصيل:</strong> ${p.delivery}</p>
+    `;
+    document.getElementById("detailsDialog").style.display="block";
+  });
+}
+
+function closeDetails(){
+  document.getElementById("detailsDialog").style.display="none";
 }
 
 // بدء الصفحة الرئيسية
