@@ -103,6 +103,7 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   gap:8px;
   box-shadow:0 2px 6px rgba(0,0,0,0.3);
   transition: transform 0.2s;
+  cursor:pointer;
 }
 .card:hover{transform: translateY(-3px)}
 .card h3{margin:0;font-size:18px;color:#38bdf8}
@@ -214,4 +215,33 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   .sidebar{position:relative;right:0}
   main{margin-left:220px}
   .overlay{display:none !important}
-                                      }
+}
+
+/* ===== Product Details Dialog ===== */
+.details-dialog {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#1c1f27;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 15px rgba(0,0,0,0.5);
+  color:#e5e7eb;
+  z-index:104;
+  display:none;
+  max-width:400px;
+  width:90%;
+}
+.details-dialog h2 { color:#38bdf8; margin-bottom:10px; }
+.details-dialog p { margin:5px 0; font-size:14px; }
+.details-dialog button {
+  margin-top:10px;
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#38bdf8;
+  color:#000;
+  font-weight:bold;
+}
