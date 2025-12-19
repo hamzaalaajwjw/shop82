@@ -138,6 +138,32 @@
             display: none;
         }
         
+        /* ===== إضافة أنماط خيار تذكر الدخول ===== */
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            gap: 8px;
+        }
+        
+        .remember-me input {
+            width: auto;
+        }
+        
+        .remember-me label {
+            margin: 0;
+            font-size: 14px;
+            color: #d1d5db;
+            cursor: pointer;
+        }
+        
+        .remember-tooltip {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+        
         @media (max-width: 480px) {
             .login-container {
                 padding: 20px;
@@ -166,6 +192,15 @@
                 <input type="password" id="password" required autocomplete="current-password">
             </div>
             
+            <!-- ===== إضافة خيار تذكر تسجيل الدخول ===== -->
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe">تذكر تسجيل الدخول</label>
+            </div>
+            <div class="remember-tooltip">
+                (سيتم تذكرك حتى عند إغلاق المتصفح)
+            </div>
+            
             <button type="submit" class="login-btn">تسجيل الدخول</button>
         </form>
         
@@ -184,8 +219,7 @@
         // إعداد Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
-            authDomain: "a3len-3ad54.firebaseapp.com",
-            databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+            authDomain: "a3len-3ad54.firebasestorage.app",
             projectId: "a3len-3ad54",
             storageBucket: "a3len-3ad54.firebasestorage.app",
             messagingSenderId: "767338034080",
@@ -196,6 +230,27 @@
         const auth = firebase.auth();
         const db = firebase.database();
         
+        // ===== تحميل إعداد تذكر الدخول إذا كان موجوداً =====
+        window.onload = function() {
+            const savedRememberMe = localStorage.getItem('rememberMe');
+            if (savedRememberMe !== null) {
+                const rememberCheckbox = document.getElementById('rememberMe');
+                if (rememberCheckbox) {
+                    rememberCheckbox.checked = savedRememberMe === 'true';
+                }
+            }
+            
+            // محاولة إعادة التوجيه إذا كان المستخدم مسجلاً بالفعل
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    const savedRemember = localStorage.getItem('rememberMe');
+                    if (savedRemember === 'true') {
+                        window.location.href = 'index.html';
+                    }
+                }
+            });
+        };
+        
         // منع إرسال النموذج
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -205,6 +260,7 @@
         function loginUser() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
             
@@ -225,21 +281,43 @@
                 return;
             }
             
+            if (username.length < 3 || username.length > 20) {
+                errorDiv.textContent = 'اسم المستخدم يجب أن يكون بين 3 و 20 حرفاً';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorDiv.textContent = 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // إظهار رسالة التحميل
+            const loginBtn = document.querySelector('.login-btn');
+            const originalText = loginBtn.textContent;
+            loginBtn.textContent = 'جاري تسجيل الدخول...';
+            loginBtn.disabled = true;
+            
             // البحث عن المستخدم
             db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
                 if (!snapshot.exists()) {
                     errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
                     errorDiv.style.display = 'block';
+                    loginBtn.textContent = originalText;
+                    loginBtn.disabled = false;
                     return;
                 }
                 
                 // الحصول على بيانات المستخدم
                 const users = snapshot.val();
                 let userEmail = null;
+                let userUid = null;
                 
                 for (const uid in users) {
                     if (users[uid].username === username) {
                         userEmail = users[uid].email;
+                        userUid = uid;
                         break;
                     }
                 }
@@ -247,12 +325,27 @@
                 if (!userEmail) {
                     errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
                     errorDiv.style.display = 'block';
+                    loginBtn.textContent = originalText;
+                    loginBtn.disabled = false;
                     return;
                 }
                 
                 // تسجيل الدخول
                 auth.signInWithEmailAndPassword(userEmail, password)
                     .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // ===== حفظ إعداد تذكر الدخول =====
+                        localStorage.setItem('rememberMe', rememberMe);
+                        if (rememberMe && userUid) {
+                            localStorage.setItem('userUID', userUid);
+                        }
+                        
+                        // ===== تحديث وقت آخر نشاط =====
+                        db.ref("users/" + userUid).update({
+                            lastActive: firebase.database.ServerValue.TIMESTAMP
+                        });
+                        
                         successDiv.textContent = '✅ تم تسجيل الدخول بنجاح!';
                         successDiv.style.display = 'block';
                         
@@ -263,17 +356,82 @@
                     })
                     .catch((error) => {
                         console.error('Login error:', error);
+                        loginBtn.textContent = originalText;
+                        loginBtn.disabled = false;
+                        
                         if (error.code === 'auth/wrong-password') {
                             errorDiv.textContent = 'كلمة السر غير صحيحة';
                         } else if (error.code === 'auth/user-not-found') {
                             errorDiv.textContent = 'المستخدم غير موجود';
+                        } else if (error.code === 'auth/too-many-requests') {
+                            errorDiv.textContent = 'تم تجاوز عدد المحاولات المسموح بها. حاول مرة أخرى لاحقاً';
+                        } else if (error.code === 'auth/user-disabled') {
+                            errorDiv.textContent = 'هذا الحساب تم تعطيله';
+                        } else if (error.code === 'auth/network-request-failed') {
+                            errorDiv.textContent = 'خطأ في الاتصال بالإنترنت';
                         } else {
-                            errorDiv.textContent = 'حدث خطأ أثناء التسجيل';
+                            errorDiv.textContent = 'حدث خطأ أثناء تسجيل الدخول: ' + error.message;
                         }
                         errorDiv.style.display = 'block';
                     });
+            }).catch(error => {
+                console.error('Database error:', error);
+                loginBtn.textContent = originalText;
+                loginBtn.disabled = false;
+                errorDiv.textContent = 'خطأ في الاتصال بقاعدة البيانات';
+                errorDiv.style.display = 'block';
             });
         }
+        
+        // ===== إضافة تسجيل الدخول بالضغط على Enter =====
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginUser();
+            }
+        });
+        
+        // ===== إضافة وظائف مساعدة =====
+        function validateUsername(username) {
+            const regex = /^[a-zA-Z0-9_]+$/;
+            return regex.test(username) && username.length >= 3 && username.length <= 20;
+        }
+        
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+        
+        // ===== إضافة استعادة كلمة السر (ميزة مستقبلية) =====
+        function showForgotPassword() {
+            const email = prompt("الرجاء إدخال البريد الإلكتروني المرتبط بحسابك:");
+            if (email) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert("تم إرسال رابط استعادة كلمة السر إلى بريدك الإلكتروني");
+                    })
+                    .catch((error) => {
+                        if (error.code === 'auth/user-not-found') {
+                            alert("البريد الإلكتروني غير مسجل في النظام");
+                        } else {
+                            alert("حدث خطأ أثناء إرسال رابط الاستعادة");
+                        }
+                    });
+            }
+        }
+        
+        // ===== إضافة رابط استعادة كلمة السر ديناميكياً =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const linksDiv = document.querySelector('.links');
+            if (linksDiv) {
+                const forgotLink = document.createElement('a');
+                forgotLink.href = '#';
+                forgotLink.textContent = 'نسيت كلمة السر؟';
+                forgotLink.onclick = function(e) {
+                    e.preventDefault();
+                    showForgotPassword();
+                };
+                linksDiv.insertBefore(forgotLink, linksDiv.firstChild);
+            }
+        });
     </script>
 </body>
 </html>
