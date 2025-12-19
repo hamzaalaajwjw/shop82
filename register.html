@@ -1,3 +1,5 @@
+[file name]: register.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -267,7 +269,7 @@
             
             <div class="form-group">
                 <label for="username">اسم المستخدم (بالإنجليزية فقط)</label>
-                <input type="text" id="username" required autocomplete="username">
+                <input type="text" id="username" required autocomplete="username" maxlength="20">
                 <div class="password-requirements">
                     <div class="requirement unmet" id="reqLength">
                         <span class="requirement-icon">○</span>
@@ -277,6 +279,10 @@
                         <span class="requirement-icon">○</span>
                         <span>أحرف إنجليزية وأرقام و _ فقط</span>
                     </div>
+                    <div class="requirement unmet" id="reqAvailable">
+                        <span class="requirement-icon">○</span>
+                        <span>اسم المستخدم متاح</span>
+                    </div>
                 </div>
                 <span id="usernameValidIcon" class="validation-icon valid-icon">✓</span>
                 <span id="usernameInvalidIcon" class="validation-icon invalid-icon">✗</span>
@@ -284,14 +290,24 @@
             
             <div class="form-group">
                 <label for="email">البريد الإلكتروني</label>
-                <input type="email" id="email" required autocomplete="email">
+                <input type="email" id="email" required autocomplete="email" maxlength="100">
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqEmailFormat">
+                        <span class="requirement-icon">○</span>
+                        <span>بريد إلكتروني صالح</span>
+                    </div>
+                    <div class="requirement unmet" id="reqEmailAvailable">
+                        <span class="requirement-icon">○</span>
+                        <span>البريد الإلكتروني متاح</span>
+                    </div>
+                </div>
                 <span id="emailValidIcon" class="validation-icon valid-icon">✓</span>
                 <span id="emailInvalidIcon" class="validation-icon invalid-icon">✗</span>
             </div>
             
             <div class="form-group">
                 <label for="password">كلمة السر</label>
-                <input type="password" id="password" required autocomplete="new-password">
+                <input type="password" id="password" required autocomplete="new-password" maxlength="50">
                 <div class="password-strength">
                     <div class="password-strength-fill" id="passwordStrengthFill"></div>
                 </div>
@@ -319,7 +335,7 @@
             
             <div class="form-group">
                 <label for="confirmPassword">تأكيد كلمة السر</label>
-                <input type="password" id="confirmPassword" required autocomplete="new-password">
+                <input type="password" id="confirmPassword" required autocomplete="new-password" maxlength="50">
                 <div class="password-requirements" id="confirmMessage"></div>
                 <span id="confirmValidIcon" class="validation-icon valid-icon">✓</span>
                 <span id="confirmInvalidIcon" class="validation-icon invalid-icon">✗</span>
@@ -369,6 +385,10 @@
         
         // متغيرات التحقق
         let isFormValid = false;
+        let usernameCheckTimeout = null;
+        let emailCheckTimeout = null;
+        let lastUsernameCheck = '';
+        let lastEmailCheck = '';
         
         // عرض شروط الاستخدام
         function showTerms() {
@@ -416,6 +436,11 @@
         function validateUsername() {
             const username = document.getElementById('username').value.trim();
             
+            // إلغاء الوقت السابق
+            if (usernameCheckTimeout) {
+                clearTimeout(usernameCheckTimeout);
+            }
+            
             // التحقق من الطول
             const reqLength = document.getElementById('reqLength');
             const isLengthValid = username.length >= 3 && username.length <= 20;
@@ -423,15 +448,22 @@
             
             // التحقق من الأحرف المسموحة
             const reqChars = document.getElementById('reqChars');
+            const reqAvailable = document.getElementById('reqAvailable');
             const isCharsValid = /^[a-zA-Z0-9_]+$/.test(username);
             updateRequirement(reqChars, isCharsValid);
+            
+            // إعادة تعيين حالة التوفر
+            reqAvailable.innerHTML = '<span class="requirement-icon">○</span><span>اسم المستخدم متاح</span>';
+            reqAvailable.classList.remove('met', 'unmet');
             
             const isValid = isLengthValid && isCharsValid;
             updateValidationUI('username', isValid);
             
-            // التحقق من عدم تكرار اسم المستخدم (غير متزامن)
-            if (isValid && username.length >= 3) {
-                checkUsernameAvailability(username);
+            // التحقق من توفر اسم المستخدم بعد تأخير
+            if (isValid && username.length >= 3 && username !== lastUsernameCheck) {
+                usernameCheckTimeout = setTimeout(() => {
+                    checkUsernameAvailability(username);
+                }, 500); // تأخير 500 مللي ثانية
             }
             
             checkFormValidity();
@@ -440,33 +472,101 @@
         
         // التحقق من توفر اسم المستخدم
         function checkUsernameAvailability(username) {
+            if (username === lastUsernameCheck) return;
+            lastUsernameCheck = username;
+            
+            const reqAvailable = document.getElementById('reqAvailable');
+            reqAvailable.innerHTML = '<span class="requirement-icon">⟳</span><span>جاري التحقق...</span>';
+            
             db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
                 const exists = snapshot.exists();
-                const usernameInput = document.getElementById('username');
-                const reqChars = document.getElementById('reqChars');
                 
                 if (exists) {
-                    usernameInput.classList.add('invalid');
-                    usernameInput.classList.remove('valid');
-                    reqChars.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">اسم المستخدم موجود مسبقاً</span>';
+                    reqAvailable.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">اسم المستخدم موجود مسبقاً</span>';
+                    reqAvailable.classList.add('unmet');
+                    reqAvailable.classList.remove('met');
                     updateValidationUI('username', false);
-                } else if (/^[a-zA-Z0-9_]+$/.test(username)) {
-                    reqChars.innerHTML = '<span class="requirement-icon">✓</span><span>أحرف إنجليزية وأرقام و _ فقط</span>';
-                    reqChars.classList.add('met');
-                    reqChars.classList.remove('unmet');
+                } else {
+                    reqAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">اسم المستخدم متاح</span>';
+                    reqAvailable.classList.add('met');
+                    reqAvailable.classList.remove('unmet');
+                    updateValidationUI('username', true);
                 }
                 checkFormValidity();
+            }).catch(error => {
+                console.error("Error checking username:", error);
+                reqAvailable.innerHTML = '<span class="requirement-icon">!</span><span style="color:#f59e0b">تعذر التحقق</span>';
+                reqAvailable.classList.add('unmet');
+                reqAvailable.classList.remove('met');
             });
         }
         
         // التحقق من البريد الإلكتروني
         function validateEmail() {
             const email = document.getElementById('email').value.trim();
+            
+            // إلغاء الوقت السابق
+            if (emailCheckTimeout) {
+                clearTimeout(emailCheckTimeout);
+            }
+            
+            // التحقق من صيغة البريد
+            const reqEmailFormat = document.getElementById('reqEmailFormat');
+            const reqEmailAvailable = document.getElementById('reqEmailAvailable');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const isValid = emailRegex.test(email);
+            const isFormatValid = emailRegex.test(email);
+            updateRequirement(reqEmailFormat, isFormatValid);
+            
+            // إعادة تعيين حالة التوفر
+            reqEmailAvailable.innerHTML = '<span class="requirement-icon">○</span><span>البريد الإلكتروني متاح</span>';
+            reqEmailAvailable.classList.remove('met', 'unmet');
+            
+            const isValid = isFormatValid;
             updateValidationUI('email', isValid);
+            
+            // التحقق من توفر البريد بعد تأخير
+            if (isValid && email !== lastEmailCheck) {
+                emailCheckTimeout = setTimeout(() => {
+                    checkEmailAvailability(email);
+                }, 500); // تأخير 500 مللي ثانية
+            }
+            
             checkFormValidity();
             return isValid;
+        }
+        
+        // التحقق من توفر البريد الإلكتروني
+        function checkEmailAvailability(email) {
+            if (email === lastEmailCheck) return;
+            lastEmailCheck = email;
+            
+            const reqEmailAvailable = document.getElementById('reqEmailAvailable');
+            reqEmailAvailable.innerHTML = '<span class="requirement-icon">⟳</span><span>جاري التحقق...</span>';
+            
+            // في Firebase، نحتاج للتحقق من البريد بشكل مختلف
+            // سنتحقق عبر قاعدة البيانات أولاً
+            db.ref("users").orderByChild("email").equalTo(email).once("value", snapshot => {
+                const exists = snapshot.exists();
+                
+                if (exists) {
+                    reqEmailAvailable.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">البريد الإلكتروني مستخدم</span>';
+                    reqEmailAvailable.classList.add('unmet');
+                    reqEmailAvailable.classList.remove('met');
+                    updateValidationUI('email', false);
+                } else {
+                    // التحقق من Firebase Auth (إذا أردنا التحقق من التسجيلات السابقة)
+                    reqEmailAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">البريد الإلكتروني متاح</span>';
+                    reqEmailAvailable.classList.add('met');
+                    reqEmailAvailable.classList.remove('met');
+                    updateValidationUI('email', true);
+                }
+                checkFormValidity();
+            }).catch(error => {
+                console.error("Error checking email:", error);
+                reqEmailAvailable.innerHTML = '<span class="requirement-icon">!</span><span style="color:#f59e0b">تعذر التحقق</span>';
+                reqEmailAvailable.classList.add('unmet');
+                reqEmailAvailable.classList.remove('met');
+            });
         }
         
         // التحقق من قوة كلمة السر
@@ -500,11 +600,11 @@
             strengthFill.style.width = percent + '%';
             
             let strengthClass = '';
-            if (strength === 1) {
+            if (strength <= 1) {
                 strengthClass = 'strength-weak';
-            } else if (strength === 2 || strength === 3) {
+            } else if (strength === 2) {
                 strengthClass = 'strength-medium';
-            } else if (strength === 4) {
+            } else {
                 strengthClass = 'strength-strong';
             }
             
@@ -597,17 +697,30 @@
             const passwordValid = validatePassword();
             const confirmValid = validateConfirmPassword();
             
+            // الحصول على حالة التوفر
+            const usernameAvailable = document.getElementById('reqAvailable').classList.contains('met');
+            const emailAvailable = document.getElementById('reqEmailAvailable').classList.contains('met');
+            
             // التحقق النهائي
-            isFormValid = fullNameValid && usernameValid && emailValid && 
-                         passwordValid && confirmValid && termsChecked;
+            isFormValid = fullNameValid && usernameValid && usernameAvailable && 
+                         emailValid && emailAvailable && passwordValid && 
+                         confirmValid && termsChecked;
             
             document.getElementById('registerBtn').disabled = !isFormValid;
         }
         
         // إضافة مستمعات الأحداث
         document.getElementById('fullName').addEventListener('input', validateFullName);
-        document.getElementById('username').addEventListener('input', validateUsername);
-        document.getElementById('email').addEventListener('input', validateEmail);
+        document.getElementById('username').addEventListener('input', function() {
+            // إعادة تعيين آخر فحص
+            lastUsernameCheck = '';
+            validateUsername();
+        });
+        document.getElementById('email').addEventListener('input', function() {
+            // إعادة تعيين آخر فحص
+            lastEmailCheck = '';
+            validateEmail();
+        });
         document.getElementById('password').addEventListener('input', validatePassword);
         document.getElementById('confirmPassword').addEventListener('input', validateConfirmPassword);
         document.getElementById('terms').addEventListener('change', checkFormValidity);
@@ -635,100 +748,113 @@
             registerBtn.disabled = true;
             registerBtn.innerHTML = 'جاري إنشاء الحساب...';
             
-            // إنشاء المستخدم
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
+            // التحقق النهائي من التوفر قبل التسجيل
+            db.ref("users").orderByChild("username").equalTo(username).once("value", usernameSnapshot => {
+                if (usernameSnapshot.exists()) {
+                    errorDiv.textContent = 'اسم المستخدم موجود مسبقاً، يرجى اختيار اسم آخر';
+                    errorDiv.style.display = 'block';
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = 'إنشاء حساب';
+                    return;
+                }
+                
+                db.ref("users").orderByChild("email").equalTo(email).once("value", emailSnapshot => {
+                    if (emailSnapshot.exists()) {
+                        errorDiv.textContent = 'البريد الإلكتروني مستخدم مسبقاً، يرجى استخدام بريد آخر';
+                        errorDiv.style.display = 'block';
+                        registerBtn.disabled = false;
+                        registerBtn.innerHTML = 'إنشاء حساب';
+                        return;
+                    }
                     
-                    // تسجيل وقت التسجيل
-                    const registrationTime = new Date().toISOString();
-                    
-                    // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
-                    db.ref("users/" + user.uid).set({
-                        fullName: fullName || username,
-                        username: username,
-                        email: email,
-                        followersCount: 0,
-                        followingCount: 0,
-                        totalProducts: 0,
-                        rating: 0,
-                        totalReviews: 0,
-                        joinDate: new Date().toLocaleDateString('ar-SA'),
-                        registrationTime: registrationTime,
-                        lastLogin: firebase.database.ServerValue.TIMESTAMP,
-                        lastActive: firebase.database.ServerValue.TIMESTAMP,
-                        accountStatus: 'active',
-                        emailVerified: false,
-                        profileComplete: fullName ? true : false,
-                        createdAt: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    
-                    // ===== إنشاء مجلدات فرعية للمتابعة والتقييمات =====
-                    // مجلد المتابعين
-                    db.ref("userStats/" + user.uid).set({
-                        followers: 0,
-                        following: 0,
-                        products: 0,
-                        rating: 0
-                    });
-                    
-                    // ===== إنشاء سجل للنشاط =====
-                    db.ref("userActivity/" + user.uid).push().set({
-                        type: 'account_created',
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        details: 'تم إنشاء الحساب بنجاح'
-                    });
-                    
-                    // إرسال بريد التحقق (يمكن تفعيله لاحقاً)
-                    user.sendEmailVerification().then(() => {
-                        console.log('تم إرسال بريد التحقق');
-                    }).catch(error => {
-                        console.error('خطأ في إرسال بريد التحقق:', error);
-                    });
-                    
-                    successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! جاري تحويلك...';
-                    successDiv.style.display = 'block';
-                    
-                    // تسجيل الدخول تلقائياً
-                    auth.signInWithEmailAndPassword(email, password)
-                        .then(() => {
-                            // الانتقال للصفحة الرئيسية بعد 2 ثانية
+                    // إنشاء المستخدم في Firebase Auth
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            const user = userCredential.user;
+                            
+                            // تسجيل وقت التسجيل
+                            const registrationTime = new Date().toISOString();
+                            
+                            // ===== حفظ بيانات المستخدم الكاملة للبروفايل =====
+                            db.ref("users/" + user.uid).set({
+                                fullName: fullName || username,
+                                username: username,
+                                email: email,
+                                followersCount: 0,
+                                followingCount: 0,
+                                totalProducts: 0,
+                                rating: 0,
+                                totalReviews: 0,
+                                joinDate: new Date().toLocaleDateString('ar-SA'),
+                                registrationTime: registrationTime,
+                                lastLogin: firebase.database.ServerValue.TIMESTAMP,
+                                lastActive: firebase.database.ServerValue.TIMESTAMP,
+                                accountStatus: 'active',
+                                emailVerified: false,
+                                profileComplete: fullName ? true : false,
+                                createdAt: firebase.database.ServerValue.TIMESTAMP
+                            });
+                            
+                            // ===== إنشاء مجلدات فرعية للمتابعة والتقييمات =====
+                            db.ref("userStats/" + user.uid).set({
+                                followers: 0,
+                                following: 0,
+                                products: 0,
+                                rating: 0
+                            });
+                            
+                            // ===== إنشاء سجل للنشاط =====
+                            db.ref("userActivity/" + user.uid).push().set({
+                                type: 'account_created',
+                                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                                details: 'تم إنشاء الحساب بنجاح'
+                            });
+                            
+                            // إرسال بريد التحقق
+                            user.sendEmailVerification().then(() => {
+                                console.log('تم إرسال بريد التحقق');
+                            }).catch(error => {
+                                console.error('خطأ في إرسال بريد التحقق:', error);
+                            });
+                            
+                            successDiv.textContent = '✅ تم إنشاء الحساب بنجاح! جاري تحويلك...';
+                            successDiv.style.display = 'block';
+                            
+                            // تسجيل الدخول تلقائياً
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 2000);
+                            
                         })
-                        .catch(error => {
-                            console.error('Auto login error:', error);
-                            window.location.href = 'login.html';
+                        .catch((error) => {
+                            console.error('Registration error:', error);
+                            
+                            let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+                            if (error.code === 'auth/email-already-in-use') {
+                                errorMessage = 'البريد الإلكتروني مستخدم مسبقاً في نظام المصادقة';
+                                document.getElementById('email').classList.add('invalid');
+                                document.getElementById('reqEmailAvailable').innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">البريد مستخدم في نظام المصادقة</span>';
+                            } else if (error.code === 'auth/invalid-email') {
+                                errorMessage = 'البريد الإلكتروني غير صالح';
+                                document.getElementById('email').classList.add('invalid');
+                            } else if (error.code === 'auth/weak-password') {
+                                errorMessage = 'كلمة السر ضعيفة جداً';
+                                document.getElementById('password').classList.add('invalid');
+                            } else if (error.code === 'auth/operation-not-allowed') {
+                                errorMessage = 'عملية التسجيل غير مسموحة حالياً';
+                            } else if (error.code === 'auth/too-many-requests') {
+                                errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
+                            }
+                            
+                            errorDiv.textContent = errorMessage;
+                            errorDiv.style.display = 'block';
+                            
+                            // إعادة تمكين زر التسجيل
+                            registerBtn.disabled = false;
+                            registerBtn.innerHTML = 'إنشاء حساب';
                         });
-                    
-                })
-                .catch((error) => {
-                    console.error('Registration error:', error);
-                    
-                    let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
-                    if (error.code === 'auth/email-already-in-use') {
-                        errorMessage = 'البريد الإلكتروني مستخدم مسبقاً';
-                        document.getElementById('email').classList.add('invalid');
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = 'البريد الإلكتروني غير صالح';
-                        document.getElementById('email').classList.add('invalid');
-                    } else if (error.code === 'auth/weak-password') {
-                        errorMessage = 'كلمة السر ضعيفة جداً';
-                        document.getElementById('password').classList.add('invalid');
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        errorMessage = 'عملية التسجيل غير مسموحة حالياً';
-                    } else if (error.code === 'auth/too-many-requests') {
-                        errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
-                    }
-                    
-                    errorDiv.textContent = errorMessage;
-                    errorDiv.style.display = 'block';
-                    
-                    // إعادة تمكين زر التسجيل
-                    registerBtn.disabled = false;
-                    registerBtn.innerHTML = 'إنشاء حساب';
                 });
+            });
         }
         
         // تهيئة التحقق الأولي
@@ -739,7 +865,15 @@
             const strengthFill = document.getElementById('passwordStrengthFill');
             strengthFill.style.width = '0%';
             strengthFill.className = 'password-strength-fill';
+            
+            // إضافة maxlength للحقول
+            document.getElementById('fullName').maxLength = 50;
+            document.getElementById('username').maxLength = 20;
+            document.getElementById('email').maxLength = 100;
+            document.getElementById('password').maxLength = 50;
+            document.getElementById('confirmPassword').maxLength = 50;
         });
     </script>
 </body>
 </html>
+[file content end]
