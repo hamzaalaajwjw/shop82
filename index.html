@@ -195,6 +195,137 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   display: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+
+/* ===== إضافة أنماط جديدة من myaccount.html ===== */
+.account-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  border: 1px solid #374151;
+  color: #e5e7eb;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: right;
+  margin: 5px 0;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.account-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateX(-5px);
+}
+
+.account-btn-icon {
+  font-size: 18px;
+  width: 24px;
+}
+
+/* ===== إضافة أنماط للبطاقات الجديدة ===== */
+.stats-card {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid #374151;
+  text-align: center;
+}
+
+.stat-number {
+  color: #38bdf8;
+  font-size: 24px;
+  font-weight: bold;
+  display: block;
+}
+
+.stat-label {
+  color: #9ca3af;
+  font-size: 12px;
+  display: block;
+}
+
+/* ===== تحسينات للرسائل ===== */
+.success-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  z-index: 2000;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: fadeIn 0.3s ease;
+  max-width: 400px;
+}
+
+.error-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  z-index: 2000;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  animation: fadeIn 0.3s ease;
+  max-width: 400px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== أنماط للإشعارات ===== */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== أنماط لتحسين UX ===== */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 17, 21, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  display: none;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(56, 189, 248, 0.3);
+  border-radius: 50%;
+  border-top-color: #38bdf8;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -211,6 +342,38 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   <aside class="sidebar">
     <button onclick="showHome()">🏠 الرئيسية</button>
     <button onclick="showPublish()">➕ نشر إعلان</button>
+    
+    <!-- ===== إضافة أزرار الحساب من myaccount.html ===== -->
+    <div id="accountSection" style="margin-top: 20px; display: none;">
+      <button class="account-btn" onclick="showAccountSection('overview')">
+        <span class="account-btn-icon">📊</span>
+        نظرة عامة
+      </button>
+      <button class="account-btn" onclick="showAccountSection('products')">
+        <span class="account-btn-icon">🛒</span>
+        إعلاناتي
+      </button>
+      <button class="account-btn" onclick="showAccountSection('stats')">
+        <span class="account-btn-icon">📈</span>
+        الإحصائيات
+      </button>
+      <button class="account-btn" onclick="showAccountSection('settings')">
+        <span class="account-btn-icon">⚙️</span>
+        الإعدادات
+      </button>
+      <button class="account-btn" onclick="showAccountSection('security')">
+        <span class="account-btn-icon">🔒</span>
+        الأمان
+      </button>
+      <button class="account-btn" onclick="showAccountSection('activity')">
+        <span class="account-btn-icon">📝</span>
+        النشاطات
+      </button>
+      <button class="account-btn" onclick="window.location.href='myaccount.html'">
+        <span class="account-btn-icon">👤</span>
+        صفحة الحساب الكاملة
+      </button>
+    </div>
     
     <!-- إضافة قسم المصادقة -->
     <div id="authSection" class="auth-section"></div>
@@ -248,6 +411,11 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     cursor: pointer;
     font-size: 12px;
   ">توسيع الوقت</button>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
 </div>
 
 <!-- Firebase -->
@@ -311,6 +479,7 @@ let currentUser = null;
 let userDisplayName = null;
 let userFullName = null;
 let isAdmin = false;
+let userData = null;
 
 // ===== متغيرات إدارة الجلسة =====
 let sessionTimeout = null;
@@ -333,6 +502,44 @@ function showSecurityWarning(message) {
             setTimeout(() => warningDiv.remove(), 500);
         }, 5000);
     }
+}
+
+// ===== دوال جديدة للرسائل =====
+function showSuccess(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'success-message';
+    messageDiv.innerHTML = `✅ ${message}`;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transition = 'opacity 0.3s';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+function showError(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'error-message';
+    messageDiv.innerHTML = `❌ ${message}`;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transition = 'opacity 0.3s';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// ===== دوال التحميل =====
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
 }
 
 // ===== إدارة الجلسة =====
@@ -414,772 +621,108 @@ function closeSidebar(){
   document.querySelector(".overlay").classList.remove("active");
 }
 
-// الصفحة الرئيسية
-function showHome(){
-  closeSidebar();
-  document.getElementById("content").innerHTML = `
-    <div class="search-bar">
-      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()" maxlength="50">
-      <select id="cat" onchange="loadProducts()">
-        <option value="">كل الأقسام</option>
-        ${categories.map(c=>`<option>${c}</option>`).join("")}
-      </select>
-      <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
-    </div>
-    <div class="cards" id="products"></div>
-    <div id="pagination" style="text-align:center;margin:20px"></div>
-  `;
-  loadProducts();
-}
-
-// Budget Dialog
-function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
-function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
-function applyBudget(){
-  const val = parseFloat(document.getElementById("maxBudget").value);
-  
-  // التحقق من المدخلات
-  if (isNaN(val) || val < 0) {
-    showSecurityWarning("يرجى إدخال قيمة ميزانية صحيحة");
-    return;
-  }
-  
-  if (val > 10000000) {
-    showSecurityWarning("القيمة المدخلة كبيرة جداً");
-    return;
-  }
-  
-  budget = val;
-  closeBudget();
-  loadProducts();
-}
-
-// تحميل المنتجات
-function loadProducts(){
-  const s = document.getElementById("search").value.toLowerCase();
-  const c = document.getElementById("cat").value;
-
-  db.ref("products").once("value", snap=>{
-    const d = snap.val() || {};
-    let htmlCards = [];
-
-    Object.keys(d).forEach(k=>{
-      const p = d[k];
-      
-      // التحقق من صحة بيانات المنتج
-      if (!p || !p.name || !p.price) {
-        return; // تخطي المنتجات غير الصالحة
-      }
-      
-      const price = parseFloat(p.price) || 0;
-      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        if(budget && price > budget) return;
-        
-        // التحقق من حالة المنتج
-        const status = p.status || 'available';
-        let statusBadge = '';
-        if (status !== 'available') {
-          statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
-        }
-        
-        // ===== إضافة زر الملف الشخصي للبائع مع جلب الاسم الحقيقي =====
-        const sellerSection = userDisplayName ? 
-          `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> 
-            ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-            | ☎ ${maskPhoneNumber(p.phone)}
-            <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
-          </div>` :
-          `<div class="seller">
-            👤 ${p.seller} | ☎ ${maskPhoneNumber(p.phone)}
-          </div>`;
-        
-        htmlCards.push({uid:p.uid,key:k,html:`
-          <div class="card" onclick="showDetails('${k}')">
-            <h3>${escapeHTML(p.name)}</h3>
-            <span class="price">${formatPrice(p.price)} د.ع</span>
-            ${statusBadge}
-            <div class="meta">
-              <span>${p.category || 'غير محدد'}</span>
-              <span>${p.province || 'غير محدد'}</span>
-              <span>توصيل: ${p.delivery || 'لا'}</span>
+// ===== إضافة قسم الحساب في الشريط الجانبي =====
+function showAccountSection(section) {
+    if (!currentUser || currentUser.isAnonymous) {
+        alert('يرجى تسجيل الدخول للوصول إلى إدارة الحساب');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    closeSidebar();
+    
+    let contentHTML = '';
+    let title = '';
+    
+    switch(section) {
+        case 'overview':
+            title = 'نظرة عامة على الحساب';
+            contentHTML = getAccountOverviewHTML();
+            break;
+        case 'products':
+            title = 'إعلاناتي';
+            contentHTML = getMyProductsHTML();
+            break;
+        case 'stats':
+            title = 'الإحصائيات';
+            contentHTML = getAccountStatsHTML();
+            break;
+        case 'settings':
+            title = 'إعدادات الحساب';
+            contentHTML = getAccountSettingsHTML();
+            break;
+        case 'security':
+            title = 'الأمان والحماية';
+            contentHTML = getAccountSecurityHTML();
+            break;
+        case 'activity':
+            title = 'سجل النشاطات';
+            contentHTML = getAccountActivityHTML();
+            break;
+    }
+    
+    document.getElementById("content").innerHTML = `
+        <div class="form-box">
+            <h2 style="color:#38bdf8; margin-bottom: 20px;">${title}</h2>
+            ${contentHTML}
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="showHome()" style="background:#6b7280; padding:10px 20px; border-radius:6px; border:none; color:white; cursor:pointer;">
+                    ← العودة للرئيسية
+                </button>
+                <button onclick="window.location.href='myaccount.html'" style="background:#38bdf8; padding:10px 20px; border-radius:6px; border:none; color:black; cursor:pointer; margin-right:10px;">
+                    👤 صفحة الحساب الكاملة
+                </button>
             </div>
-            ${sellerSection}
-            <div class="actions">
-              ${(p.uid===userUID || isAdmin)?`
-              <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
+        </div>
+    `;
+    
+    // تحميل البيانات حسب القسم
+    switch(section) {
+        case 'overview':
+            loadAccountOverview();
+            break;
+        case 'products':
+            loadAccountProducts();
+            break;
+        case 'stats':
+            loadAccountStats();
+            break;
+        case 'activity':
+            loadAccountActivity();
+            break;
+    }
+}
+
+// ===== دوال الحساب =====
+function getAccountOverviewHTML() {
+    return `
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #0ea5e9); display: inline-flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: white; margin-bottom: 15px;">
+                ${userFullName ? userFullName.charAt(0).toUpperCase() : '👤'}
             </div>
-          </div>
-        `});
-      }
-    });
-
-    if(userUID){
-      htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
-    }
-
-    const totalPages = Math.ceil(htmlCards.length / postsPerPage);
-    if(currentPage > totalPages) currentPage = 1;
-    const start = (currentPage-1)*postsPerPage;
-    const pageItems = htmlCards.slice(start, start+postsPerPage);
-
-    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
-    document.getElementById("products").innerHTML = finalHTML;
-
-    renderPagination(totalPages);
-  }).catch(error => {
-    console.error("Error loading products:", error);
-    document.getElementById("products").innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
-  });
-}
-
-// Render Pagination Buttons
-function renderPagination(total){
-  let html = "";
-  for(let i=1;i<=total;i++){
-    html += `
-      <button onclick="goPage(${i})"
-        style="
-          margin:3px;
-          padding:6px 10px;
-          border-radius:5px;
-          border:none;
-          cursor:pointer;
-          background:${i===currentPage?'#38bdf8':'#1f2937'};
-          color:${i===currentPage?'#000':'#fff'};
-        ">
-        ${i}
-      </button>`;
-  }
-  document.getElementById("pagination").innerHTML = html;
-}
-
-function goPage(p){
-  currentPage = p;
-  loadProducts();
-}
-
-// حذف / تعديل / نشر
-function deleteProduct(k){ 
-  if(!confirm("هل أنت متأكد من حذف الإعلان؟ لا يمكن التراجع عن هذا الإجراء.")) {
-    return;
-  }
-  
-  // التحقق من الصلاحيات
-  db.ref("products/" + k).once('value', (snapshot) => {
-    const product = snapshot.val();
-    if (!product) {
-      showSecurityWarning("الإعلان غير موجود");
-      return;
-    }
-    
-    if (product.uid !== userUID && !isAdmin) {
-      showSecurityWarning("ليس لديك صلاحية لحذف هذا الإعلان");
-      return;
-    }
-    
-    if (product.uid) {
-      db.ref('users/' + product.uid).once('value', (userSnapshot) => {
-        const userData = userSnapshot.val();
-        if (userData) {
-          const currentCount = userData.totalProducts || 0;
-          if (currentCount > 0) {
-            db.ref('users/' + product.uid).update({
-              totalProducts: currentCount - 1
-            });
-          }
-        }
-      });
-    }
-    
-    // حذف المنتج
-    db.ref("products/"+k).remove().then(() => {
-      showSecurityWarning("تم حذف الإعلان بنجاح");
-      loadProducts();
-      
-      // تسجيل نشاط الحذف
-      if (userUID) {
-        db.ref("userActivity/" + userUID).push().set({
-          type: 'product_deleted',
-          productId: k,
-          timestamp: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    }).catch(error => {
-      console.error("Delete error:", error);
-      showSecurityWarning("حدث خطأ أثناء حذف الإعلان");
-    });
-  });
-}
-
-function editProduct(k){ 
-  db.ref("products/"+k).once("value", s => {
-    const product = s.val();
-    if (!product) {
-      showSecurityWarning("الإعلان غير موجود");
-      return;
-    }
-    
-    // التحقق من الصلاحيات
-    if (product.uid !== userUID && !isAdmin) {
-      showSecurityWarning("ليس لديك صلاحية لتعديل هذا الإعلان");
-      return;
-    }
-    
-    showPublish(product, k);
-  });
-}
-
-// ===== تعديل دالة showPublish لدعم المصادقة =====
-function showPublish(p=null,k=null){
-  closeSidebar();
-  
-  // التحقق من المصادقة للنشر
-  if (!userUID && !currentUser) {
-    const publishAnyway = confirm("يجب تسجيل الدخول لنشر إعلانات. هل تريد المتابعة كمستخدم مجهول؟ (الإعلان سيحذف عند الخروج)");
-    if (!publishAnyway) {
-      showHome();
-      return;
-    }
-  }
-  
-  // استخدام اسم المستخدم إذا كان مسجلاً
-  const sellerName = userDisplayName || (p ? p.seller : "");
-  const sellerField = userDisplayName ? 
-    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
-     <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
-    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
-  
-  document.getElementById("content").innerHTML = `
-    <div class="form-box">
-      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
-      <input id="name" placeholder="اسم القطعة" value="${p?escapeHTML(p.name):""}" maxlength="50" required>
-      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}" min="0" max="10000000" required>
-      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      ${sellerField}
-      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}" pattern="[0][0-9]{10}" required>
-      <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
-      <select id="province">
-        <option value="">اختر المحافظة</option>
-        ${provinces.map(pr=>`<option ${p&&p.province===pr?"selected":""}>${pr}</option>`).join("")}
-      </select>
-      <select id="delivery">
-        <option value="نعم" ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
-        <option value="لا" ${p&&p.delivery==="لا"?"selected":""}>لا</option>
-      </select>
-      <select id="status" ${isAdmin || (p && p.uid === userUID) ? '' : 'disabled'}>
-        <option value="available" ${p&&p.status==="available"?"selected":""}>متاح</option>
-        <option value="sold" ${p&&p.status==="sold"?"selected":""}>مباع</option>
-        <option value="reserved" ${p&&p.status==="reserved"?"selected":""}>محجوز</option>
-      </select>
-      <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
-      <button onclick="save('${k||""}')">💾 ${p?"تحديث":"نشر"}</button>
-      ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
-    </div>`;
-}
-
-function save(k){
-  const name = document.getElementById("name").value.trim();
-  const price = document.getElementById("price").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const province = document.getElementById("province").value;
-  
-  // التحقق من البيانات
-  if (!name || !price || !phone || !province) {
-    showSecurityWarning("جميع الحقول مطلوبة");
-    return;
-  }
-  
-  if (name.length < 3 || name.length > 50) {
-    showSecurityWarning("اسم القطعة يجب أن يكون بين 3 و 50 حرف");
-    return;
-  }
-  
-  const priceNum = parseFloat(price);
-  if (isNaN(priceNum) || priceNum < 0 || priceNum > 10000000) {
-    showSecurityWarning("السعر يجب أن يكون بين 0 و 10,000,000 دينار");
-    return;
-  }
-  
-  if(!/^[0][0-9]{10}$/.test(phone)){
-    alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر.");
-    return;
-  }
-  
-  if (!province) {
-    showSecurityWarning("يرجى اختيار المحافظة");
-    return;
-  }
-
-  // استخدام اسم المستخدم المسجل إذا كان متوفراً
-  const seller = userDisplayName || document.getElementById("seller").value.trim();
-  
-  if (!seller || seller.length < 2) {
-    showSecurityWarning("اسم البائع مطلوب (2 أحرف على الأقل)");
-    return;
-  }
-
-  const data = {
-    name: name,
-    price: priceNum,
-    category: document.getElementById("category").value,
-    seller: seller,
-    phone: phone,
-    province: province,
-    delivery: document.getElementById("delivery").value,
-    status: document.getElementById("status").value || "available",
-    uid: userUID,
-    lastUpdated: firebase.database.ServerValue.TIMESTAMP
-  };
-  
-  // إضافة وقت الإنشاء للإعلانات الجديدة فقط
-  if (!k) {
-    data.createdAt = firebase.database.ServerValue.TIMESTAMP;
-    data.timestamp = firebase.database.ServerValue.TIMESTAMP;
-  }
-  
-  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
-  
-  ref.set(data).then(() => {
-    // ===== تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط) =====
-    if (!k && userUID) {
-      db.ref('users/' + userUID).once('value', (snapshot) => {
-        const userData = snapshot.val();
-        if (userData) {
-          const currentCount = userData.totalProducts || 0;
-          db.ref('users/' + userUID).update({
-            totalProducts: currentCount + 1,
-            lastActive: firebase.database.ServerValue.TIMESTAMP
-          });
-        } else {
-          // إذا لم يكن للمستخدم بيانات، إنشاءها
-          db.ref('users/' + userUID).update({
-            totalProducts: 1,
-            lastActive: firebase.database.ServerValue.TIMESTAMP
-          });
-        }
-      });
-    }
-    
-    // تسجيل النشاط
-    if (userUID) {
-      const activityType = k ? 'product_updated' : 'product_created';
-      db.ref("userActivity/" + userUID).push().set({
-        type: activityType,
-        productId: k || ref.key,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      });
-    }
-    
-    showSecurityWarning(k ? "✅ تم تحديث الإعلان بنجاح" : "✅ تم نشر الإعلان بنجاح");
-    showHome();
-  }).catch(error => {
-    console.error("Error saving product:", error);
-    showSecurityWarning("حدث خطأ أثناء حفظ الإعلان");
-  });
-}
-
-// Product Details
-function showDetails(k){
-  db.ref("products/"+k).once("value",snap=>{
-    const p = snap.val();
-    if(!p) {
-      showSecurityWarning("الإعلان غير موجود أو تم حذفه");
-      return;
-    }
-    
-    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل مع معلومات إضافية =====
-    const sellerWithLink = userDisplayName ? 
-      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span>
-       ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>
-       <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
-      `<p><strong>البائع:</strong> ${p.seller} ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>`;
-    
-    const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
-    
-    document.getElementById("detailsContent").innerHTML = `
-      <h2>${escapeHTML(p.name)}</h2>
-      <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
-      <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
-      ${statusText}
-      ${sellerWithLink}
-      <p><strong>رقم الهاتف:</strong> ${maskPhoneNumber(p.phone)}</p>
-      <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
-      <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
-      ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
-      ${isAdmin ? `<p style="color:#8b5cf6; font-size:12px; margin-top:10px;">المعرف: ${k}</p>` : ""}
-    `;
-    document.getElementById("detailsDialog").style.display="block";
-  }).catch(error => {
-    console.error("Error loading details:", error);
-    showSecurityWarning("حدث خطأ في تحميل التفاصيل");
-  });
-}
-
-function closeDetails(){
-  document.getElementById("detailsDialog").style.display="none";
-}
-
-// ===== إضافة دوال المصادقة =====
-function updateAuthUI() {
-  const authSection = document.getElementById("authSection");
-  if (!authSection) return;
-  
-  if (currentUser && userDisplayName) {
-    // جلب بيانات المستخدم الكاملة لعرض الاسم الكامل
-    db.ref("users/" + currentUser.uid).once("value", snapshot => {
-      const userData = snapshot.val();
-      const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
-      
-      // التحقق من صلاحيات المدير
-      isAdmin = userData && userData.isAdmin === true;
-      
-      // المستخدم مسجل الدخول
-      authSection.innerHTML = `
-        <div class="user-info">
-          <p class="profile-link" onclick="viewMyProfile()">
-            👤 ${displayName}
-            ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
-            ${userData && userData.isVerified ? '<span class="verified-badge">✓</span>' : ''}
-          </p>
-          <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
-          <small style="color:#9ca3af; font-size:11px; display:block; margin:5px 0;">${userData ? userData.totalProducts || 0 : 0} إعلان</small>
-          <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
-          ${isAdmin ? `
-          <button onclick="showAdminPanel()" style="
-            width: 100%;
-            padding: 8px;
-            background: #8b5cf6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 5px;
-          ">لوحة التحكم</button>` : ''}
+            <h3 id="overviewUserName">${userFullName || userDisplayName || 'مستخدم'}</h3>
+            <div style="color: #9ca3af; margin-bottom: 20px;" id="overviewUserUsername">@${userDisplayName || 'user'}</div>
+            ${isAdmin ? '<div style="background:#8b5cf6; color:white; padding:5px 15px; border-radius:20px; display:inline-block; margin-bottom:20px;">👑 مدير النظام</div>' : ''}
         </div>
-      `;
-    });
-  } else {
-    // المستخدم غير مسجل
-    authSection.innerHTML = `
-      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
-      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
-      <div style="color:#9ca3af; font-size:12px; text-align:center; padding:10px;">
-        التسجيل يتيح لك:
-        <div style="font-size:11px; margin-top:5px;">
-          ✓ متابعة إعلاناتك<br>
-          ✓ تقييم البائعين<br>
-          ✓ الملف الشخصي
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+            <div class="stats-card">
+                <div class="stat-number" id="overviewProductsCount">0</div>
+                <div class="stat-label">إعلان نشط</div>
+            </div>
+            <div class="stats-card">
+                <div class="stat-number" id="overviewFollowersCount">0</div>
+                <div class="stat-label">متابع</div>
+            </div>
+            <div class="stats-card">
+                <div class="stat-number" id="overviewRating">0.0</div>
+                <div class="stat-label">تقييم</div>
+            </div>
+            <div class="stats-card">
+                <div class="stat-number" id="overviewViews">0</div>
+                <div class="stat-label">مشاهدة</div>
+            </div>
         </div>
-      </div>
-    `;
-  }
-}
-
-function logoutUser() {
-  if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
-    auth.signOut()
-      .then(() => {
-        currentUser = null;
-        userDisplayName = null;
-        userFullName = null;
-        isAdmin = false;
-        updateAuthUI();
-        showHome();
-        showSecurityWarning("تم تسجيل الخروج بنجاح");
-      })
-      .catch((error) => {
-        console.error("Logout error:", error);
-        showSecurityWarning("حدث خطأ أثناء تسجيل الخروج");
-      });
-  }
-}
-
-// ===== لوحة تحكم المدير =====
-function showAdminPanel() {
-  if (!isAdmin) {
-    showSecurityWarning("ليس لديك صلاحية الوصول إلى لوحة التحكم");
-    return;
-  }
-  
-  closeSidebar();
-  document.getElementById("content").innerHTML = `
-    <div class="form-box">
-      <h2 style="color:#8b5cf6;">👑 لوحة تحكم المدير</h2>
-      
-      <div style="margin:20px 0;">
-        <h3 style="color:#38bdf8;">الإحصائيات</h3>
-        <div id="adminStats" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="stat-box">جاري التحميل...</div>
-        </div>
-      </div>
-      
-      <div style="margin:20px 0;">
-        <h3 style="color:#38bdf8;">المستخدمون</h3>
-        <input type="text" id="searchUsers" placeholder="🔍 بحث عن مستخدم..." style="width:100%; margin-bottom:10px;">
-        <div id="usersList" style="max-height:300px; overflow-y:auto;"></div>
-      </div>
-      
-      <div style="margin:20px 0;">
-        <h3 style="color:#38bdf8;">الإعلانات</h3>
-        <select id="filterProducts" onchange="filterAdminProducts()" style="width:100%; margin-bottom:10px;">
-          <option value="">جميع الإعلانات</option>
-          <option value="reported">الإعلانات المبلغ عنها</option>
-          <option value="recent">الإعلانات الحديثة</option>
-        </select>
-        <div id="productsList" style="max-height:300px; overflow-y:auto;"></div>
-      </div>
-      
-      <button onclick="showHome()" style="background:#6b7280;">رجوع</button>
-    </div>
-  `;
-  
-  loadAdminStats();
-  loadAdminUsers();
-  loadAdminProducts();
-}
-
-function loadAdminStats() {
-  Promise.all([
-    db.ref("users").once("value"),
-    db.ref("products").once("value"),
-    db.ref("reports").once("value")
-  ]).then(([usersSnap, productsSnap, reportsSnap]) => {
-    const usersCount = usersSnap.numChildren();
-    const productsCount = productsSnap.numChildren();
-    const reportsCount = reportsSnap.numChildren();
-    
-    document.getElementById("adminStats").innerHTML = `
-      <div class="stat-box">
-        <div class="stat-number">${usersCount}</div>
-        <div class="stat-label">مستخدم</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${productsCount}</div>
-        <div class="stat-label">إعلان</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${reportsCount}</div>
-        <div class="stat-label">تبليغ</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${new Date().toLocaleDateString('ar-SA')}</div>
-        <div class="stat-label">التاريخ</div>
-      </div>
-    `;
-  });
-}
-
-function loadAdminUsers() {
-  db.ref("users").limitToLast(50).once("value", snapshot => {
-    const users = snapshot.val();
-    const usersList = document.getElementById("usersList");
-    usersList.innerHTML = '';
-    
-    if (!users) {
-      usersList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا يوجد مستخدمين</p>';
-      return;
-    }
-    
-    Object.keys(users).forEach(uid => {
-      const user = users[uid];
-      const userCard = `
-        <div style="
-          background:#111318;
-          padding:10px;
-          margin:5px 0;
-          border-radius:6px;
-          border-left:3px solid ${user.isAdmin ? '#8b5cf6' : user.isVerified ? '#10b981' : '#38bdf8'};
-        ">
-          <div style="font-weight:bold;">${user.fullName || user.username}</div>
-          <div style="font-size:12px; color:#9ca3af;">@${user.username}</div>
-          <div style="font-size:11px; color:#6b7280;">${user.totalProducts || 0} إعلان</div>
-          <button onclick="adminViewUser('${uid}')" style="
-            background:#374151;
-            color:#e5e7eb;
-            border:none;
-            padding:3px 8px;
-            border-radius:4px;
-            font-size:11px;
-            margin-top:5px;
-            cursor:pointer;
-          ">عرض</button>
-        </div>
-      `;
-      usersList.innerHTML += userCard;
-    });
-  });
-}
-
-function loadAdminProducts() {
-  db.ref("products").orderByChild("createdAt").limitToLast(50).once("value", snapshot => {
-    const products = snapshot.val();
-    const productsList = document.getElementById("productsList");
-    productsList.innerHTML = '';
-    
-    if (!products) {
-      productsList.innerHTML = '<p style="color:#9ca3af; text-align:center;">لا يوجد إعلانات</p>';
-      return;
-    }
-    
-    Object.keys(products).forEach(key => {
-      const product = products[key];
-      const productCard = `
-        <div style="
-          background:#111318;
-          padding:10px;
-          margin:5px 0;
-          border-radius:6px;
-          border-left:3px solid ${product.status === 'sold' ? '#ef4444' : product.status === 'reserved' ? '#f59e0b' : '#10b981'};
-        ">
-          <div style="font-weight:bold;">${product.name}</div>
-          <div style="font-size:12px; color:#9ca3af;">${product.price} د.ع | ${product.category}</div>
-          <div style="font-size:11px; color:#6b7280;">${product.seller}</div>
-          <div style="display:flex; gap:5px; margin-top:5px;">
-            <button onclick="adminEditProduct('${key}')" style="
-              background:#38bdf8;
-              color:#000;
-              border:none;
-              padding:3px 8px;
-              border-radius:4px;
-              font-size:11px;
-              cursor:pointer;
-            ">تعديل</button>
-            <button onclick="adminDeleteProduct('${key}')" style="
-              background:#ef4444;
-              color:white;
-              border:none;
-              padding:3px 8px;
-              border-radius:4px;
-              font-size:11px;
-              cursor:pointer;
-            ">حذف</button>
-          </div>
-        </div>
-      `;
-      productsList.innerHTML += productCard;
-    });
-  });
-}
-
-function adminViewUser(uid) {
-  window.location.href = `profile.html?id=${uid}`;
-}
-
-function adminEditProduct(key) {
-  editProduct(key);
-}
-
-function adminDeleteProduct(key) {
-  deleteProduct(key);
-}
-
-// ===== إضافة دوال نظام الملف الشخصي =====
-function viewProfile(userId, sellerName) {
-  // حفظ اسم البائع للاستخدام لاحقاً
-  if (sellerName) {
-    localStorage.setItem('profileSellerName', sellerName);
-  }
-  
-  // الانتقال لصفحة الملف الشخصي
-  window.location.href = `profile.html?id=${userId}`;
-}
-
-function viewMyProfile() {
-  if (currentUser && currentUser.uid) {
-    window.location.href = `profile.html?id=${currentUser.uid}`;
-  } else {
-    alert('يرجى تسجيل الدخول أولاً');
-    window.location.href = 'login.html';
-  }
-}
-
-// ===== دوال مساعدة =====
-function escapeHTML(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function maskPhoneNumber(phone) {
-  if (!phone || phone.length !== 11) return phone;
-  return phone.substring(0, 4) + '****' + phone.substring(8);
-}
-
-function formatPrice(price) {
-  return parseInt(price).toLocaleString('ar-SA');
-}
-
-function getStatusText(status) {
-  const statuses = {
-    'available': 'متاح',
-    'sold': 'مباع',
-    'reserved': 'محجوز'
-  };
-  return statuses[status] || status;
-}
-
-// متابعة حالة المصادقة
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    currentUser = user;
-    userUID = user.uid;
-    
-    // التحقق إذا كان المستخدم مسجلاً أم مجهول
-    if (user.email) {
-      // الحصول على اسم المستخدم من قاعدة البيانات
-      db.ref("users/" + user.uid).once("value", snapshot => {
-        const userData = snapshot.val();
-        if (userData) {
-          userDisplayName = userData.username;
-          userFullName = userData.fullName;
-          isAdmin = userData.isAdmin === true;
-          updateAuthUI();
-          
-          // تحديث وقت آخر نشاط
-          db.ref("users/" + user.uid).update({
-            lastActive: firebase.database.ServerValue.TIMESTAMP
-          });
-        }
-      });
-    } else {
-      // مستخدم مجهول
-      userDisplayName = "زائر";
-      updateAuthUI();
-    }
-  } else {
-    // المستخدم غير مسجل
-    currentUser = null;
-    userDisplayName = null;
-    userFullName = null;
-    isAdmin = false;
-    updateAuthUI();
-  }
-});
-
-// بدء الصفحة الرئيسية
-document.addEventListener("DOMContentLoaded", function() {
-  showHome();
-  updateAuthUI();
-  initSessionManagement();
-  
-  // حماية ضد هجمات البرمجيات النصية
-  document.addEventListener('contextmenu', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-      return;
-    }
-    e.preventDefault();
-  });
-  
-  // منع فحص الكود
-  document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-      e.preventDefault();
-    }
-  });
-});
-</script>
-</body>
-</html>
+        
+        <div style="background: #111827; padding: 20px; border-radius: 10px; border: 1px solid #374151; margin-bottom: 20px;">
+            <h4 style="color: #38bdf8; margin-bottom: 15px;">🚀 نصائح سريعة</h
