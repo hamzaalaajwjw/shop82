@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول / إنشاء حساب</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>مرحباً في تطبيق الدردشة</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">تسجيل الدخول</button>
+                <button class="tab-btn" data-tab="register">إنشاء حساب</button>
+            </div>
+
+            <!-- نموذج تسجيل الدخول -->
+            <form id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="اسم المستخدم" required>
+                <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+                <button type="submit">دخول</button>
+                <p class="error" id="loginError"></p>
+            </form>
+
+            <!-- نموذج إنشاء حساب -->
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="registerUsername" placeholder="اسم المستخدم (سيكون علنياً)" required>
+                <input type="email" id="registerEmail" placeholder="البريد الإلكتروني" required>
+                <input type="password" id="registerPassword" placeholder="كلمة المرور (6 أحرف على الأقل)" required>
+                <button type="submit">إنشاء حساب</button>
+                <p class="error" id="registerError"></p>
+            </form>
+
+            <p class="info">بإنشاء حساب، فإنك توافق على شروط استخدام التطبيق</p>
+        </div>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
