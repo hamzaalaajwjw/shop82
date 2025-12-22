@@ -12,9 +12,16 @@ const firebaseConfig = {
     appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
 
-// Initialize Firebase
+// تهيئة Firebase
+console.log('🔥 تهيئة Firebase...');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
+
+console.log('✅ Firebase جاهز:', {
+    app: app.name,
+    auth: auth.currentUser ? 'مستخدم مسجل' : 'لا يوجد مستخدم',
+    database: database
+});
 
 export { app, auth, database };
