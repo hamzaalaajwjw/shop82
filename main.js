@@ -1,501 +1,181 @@
-// 📄 main.js - الصفحة الرئيسية المحسنة
+// main.js - الملف الرئيسي لتطبيق الدردشة
 
-import { auth, database } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { ref, get, set, push, child, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import ChatService from './chat-service.js';
-import { searchUsers, formatDate, generateColorCode, getInitials, truncateText } from './functions.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { getDatabase, ref, set, push, onValue, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-// متغيرات عامة
+// استيراد إعدادات Firebase من ملف الإعدادات
+import { firebaseConfig } from './firebase-config.js';
+
+// تهيئة Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+
+// حالة التطبيق
 let currentUser = null;
-let currentChatId = null;
-let chatService = null;
-let activeListeners = [];
+let currentChat = null;
+let chats = [];
+let users = [];
 
-// عناصر DOM
+// DOM Elements
 const elements = {
-    chatsList: document.getElementById('chatsList'),
-    messagesContainer: document.getElementById('messagesContainer'),
-    chatInfo: document.getElementById('chatInfo'),
-    messageInput: document.getElementById('messageInput'),
-    sendBtn: document.getElementById('sendBtn'),
-    searchUser: document.getElementById('searchUser'),
+    // الشاشات
+    authScreen: document.getElementById('authScreen'),
+    mainScreen: document.getElementById('mainScreen'),
+    loadingScreen: document.getElementById('loadingScreen'),
+    
+    // عناصر المصادقة
+    loginTab: document.getElementById('loginTab'),
+    registerTab: document.getElementById('registerTab'),
+    loginForm: document.getElementById('loginForm'),
+    registerForm: document.getElementById('registerForm'),
+    loginEmail: document.getElementById('loginEmail'),
+    loginPassword: document.getElementById('loginPassword'),
+    registerName: document.getElementById('registerName'),
+    registerEmail: document.getElementById('registerEmail'),
+    registerPassword: document.getElementById('registerPassword'),
+    registerConfirmPassword: document.getElementById('registerConfirmPassword'),
+    
+    // عناصر التطبيق الرئيسي
+    menuBtn: document.getElementById('menuBtn'),
+    sidebar: document.getElementById('sidebar'),
     newChatBtn: document.getElementById('newChatBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
+    searchUser: document.getElementById('searchUser'),
+    chatsList: document.getElementById('chatsList'),
+    chatHeader: document.getElementById('chatHeader'),
+    messagesContainer: document.getElementById('messagesContainer'),
+    messageInput: document.getElementById('messageInput'),
+    sendBtn: document.getElementById('sendBtn'),
+    startNewChatBtn: document.getElementById('startNewChatBtn'),
+    
+    // النماذج المنبثقة
     searchModal: document.getElementById('searchModal'),
     usernameSearch: document.getElementById('usernameSearch'),
     searchResults: document.getElementById('searchResults'),
-    closeSearchBtn: document.getElementById('closeSearchBtn')
+    closeSearchBtn: document.getElementById('closeSearchBtn'),
+    cancelSearchBtn: document.getElementById('cancelSearchBtn')
 };
 
-// ===== التهيئة الرئيسية =====
-async function initializeApp() {
-    console.log('🚀 بدء تهيئة التطبيق...');
+// ===== الدوال المساعدة =====
+
+// إظهار/إخفاء الشاشات
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+    document.getElementById(screenId).classList.add('active');
+}
+
+// إظهار/إخفاء التحميل
+function showLoading() {
+    elements.loadingScreen.style.display = 'flex';
+}
+
+function hideLoading() {
+    elements.loadingScreen.style.display = 'none';
+}
+
+// إظهار إشعار
+function showNotification(type, title, message) {
+    const container = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
     
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' : 'info-circle';
+    
+    notification.innerHTML = `
+        <div class="notification-icon">
+            <i class="fas fa-${icon}"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+    `;
+    
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'notificationSlide 0.3s ease reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// تحقق من صحة البريد الإلكتروني
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// تحقق من قوة كلمة المرور
+function isStrongPassword(password) {
+    return password.length >= 6;
+}
+
+// توليد لون عشوائي للمستخدم
+function generateUserColor(name) {
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+}
+
+// تهيئة تطبيق الدردشة
+async function initializeChatApp() {
     try {
-        // التحقق من تسجيل الدخول
-        onAuthStateChanged(auth, handleAuthStateChange);
+        showLoading();
         
-        // إعداد مستمعي الأحداث
+        // مراقبة حالة المصادقة
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || user.email.split('@')[0]
+                };
+                showScreen('mainScreen');
+                loadUserChats();
+                updateUserOnlineStatus(true);
+            } else {
+                currentUser = null;
+                showScreen('authScreen');
+            }
+            hideLoading();
+        });
+        
+        // إعداد مستمعات الأحداث
         setupEventListeners();
         
     } catch (error) {
-        console.error('❌ خطأ في تهيئة التطبيق:', error);
-        showError('حدث خطأ في تحميل التطبيق');
+        console.error('خطأ في تهيئة التطبيق:', error);
+        showNotification('error', 'خطأ', 'حدث خطأ في تهيئة التطبيق');
+        hideLoading();
     }
 }
 
-// ===== معالجة تغيير حالة المصادقة =====
-async function handleAuthStateChange(user) {
-    if (!user) {
-        console.log('👤 لم يتم تسجيل الدخول، التوجيه لصفحة التسجيل');
-        window.location.href = 'auth.html';
-        return;
-    }
-    
-    console.log('✅ مستخدم مسجل:', user.uid);
-    
-    try {
-        // جلب بيانات المستخدم
-        currentUser = await getUserData(user.uid);
-        
-        if (!currentUser) {
-            console.error('❌ بيانات المستخدم غير موجودة');
-            await signOut(auth);
-            return;
-        }
-        
-        // حفظ في localStorage
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // تهيئة خدمة المحادثات
-        chatService = new ChatService(currentUser.uid);
-        
-        // تحميل المحادثات
-        await loadUserChats();
-        
-        // تحديث واجهة المستخدم
-        updateUI();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل بيانات المستخدم:', error);
-        showError('حدث خطأ في تحميل بياناتك');
-    }
-}
-
-// ===== جلب بيانات المستخدم =====
-async function getUserData(uid) {
-    try {
-        const userRef = ref(database, 'users/' + uid);
-        const snapshot = await get(userRef);
-        
-        if (snapshot.exists()) {
-            return snapshot.val();
-        } else {
-            console.error('❌ بيانات المستخدم غير موجودة في قاعدة البيانات');
-            await signOut(auth);
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ خطأ في جلب بيانات المستخدم:', error);
-        return null;
-    }
-}
-
-// ===== تحميل محادثات المستخدم =====
-async function loadUserChats() {
-    showLoading(elements.chatsList, 'جاري تحميل المحادثات...');
-    
-    try {
-        // استخدام خدمة المحادثات
-        const chats = await chatService.getRecentChats();
-        
-        if (chats.length === 0) {
-            showEmptyState(elements.chatsList, 'لا توجد محادثات بعد. ابدأ محادثة جديدة!');
-            return;
-        }
-        
-        // عرض المحادثات
-        displayChats(chats);
-        
-        // الاستماع للتحديثات
-        subscribeToChatsUpdates();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل المحادثات:', error);
-        showErrorState(elements.chatsList, 'حدث خطأ في تحميل المحادثات');
-    }
-}
-
-// ===== عرض المحادثات =====
-function displayChats(chats) {
-    elements.chatsList.innerHTML = '';
-    
-    chats.forEach(chat => {
-        const chatElement = createChatElement(chat);
-        elements.chatsList.appendChild(chatElement);
-    });
-}
-
-// ===== إنشاء عنصر محادثة =====
-function createChatElement(chat) {
-    const otherUser = getOtherParticipant(chat);
-    const lastMessageTime = formatDate(chat.lastUpdate);
-    
-    const div = document.createElement('div');
-    div.className = 'chat-item';
-    div.dataset.chatId = chat.id;
-    div.dataset.userId = otherUser?.id;
-    
-    const initials = getInitials(otherUser?.username || 'مستخدم');
-    const color = generateColorCode(otherUser?.username || '');
-    
-    div.innerHTML = `
-        <div class="chat-avatar" style="background: ${color}">
-            ${initials}
-        </div>
-        <div class="chat-info">
-            <h4>${otherUser?.username || 'مستخدم'}</h4>
-            <p>${truncateText(chat.lastMessage || 'بدون رسائل', 25)}</p>
-        </div>
-        <div class="chat-time">${lastMessageTime}</div>
-    `;
-    
-    div.addEventListener('click', () => openChat(chat.id, otherUser));
-    
-    return div;
-}
-
-// ===== الحصول على المستخدم الآخر =====
-function getOtherParticipant(chat) {
-    if (!chat.participants || !currentUser) return null;
-    
-    for (const userId in chat.participants) {
-        if (userId !== currentUser.uid) {
-            return {
-                id: userId,
-                username: chat.participants[userId]?.username,
-                ...(chat.otherUser || {})
-            };
-        }
-    }
-    
-    return null;
-}
-
-// ===== فتح محادثة =====
-async function openChat(chatId, otherUser) {
-    if (!chatId || !chatService) return;
-    
-    console.log('💬 فتح المحادثة:', chatId);
-    
-    // تحديث المحادثة النشطة
-    updateActiveChat(chatId);
-    currentChatId = chatId;
-    
-    // تحديث رأس المحادثة
-    updateChatHeader(otherUser);
-    
-    // تمكين إرسال الرسائل
-    elements.messageInput.disabled = false;
-    elements.sendBtn.disabled = false;
-    
-    // تحميل الرسائل
-    await loadChatMessages(chatId);
-    
-    // التركيز على حقل الإدخال
-    elements.messageInput.focus();
-    
-    // تحديث حالة القراءة
-    await chatService.markAsRead(chatId);
-}
-
-// ===== تحديث المحادثة النشطة =====
-function updateActiveChat(chatId) {
-    // إزالة النشاط من جميع المحادثات
-    document.querySelectorAll('.chat-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // إضافة النشاط للمحادثة المحددة
-    const activeChat = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
-    if (activeChat) {
-        activeChat.classList.add('active');
-    }
-}
-
-// ===== تحديث رأس المحادثة =====
-function updateChatHeader(otherUser) {
-    if (!otherUser) {
-        elements.chatInfo.innerHTML = '<h3>اختر محادثة</h3>';
-        return;
-    }
-    
-    const initials = getInitials(otherUser.username);
-    const color = generateColorCode(otherUser.username);
-    
-    elements.chatInfo.innerHTML = `
-        <div class="chat-header-avatar" style="background: ${color}">
-            ${initials}
-        </div>
-        <div class="chat-header-info">
-            <h3>${otherUser.username}</h3>
-            <p class="text-success">● متصل الآن</p>
-        </div>
-    `;
-}
-
-// ===== تحميل رسائل المحادثة =====
-async function loadChatMessages(chatId) {
-    showLoading(elements.messagesContainer, 'جاري تحميل الرسائل...');
-    
-    try {
-        // جلب الرسائل
-        const messages = await chatService.getChatMessages(chatId, 100);
-        
-        if (messages.length === 0) {
-            showEmptyState(elements.messagesContainer, 'لا توجد رسائل بعد. ابدأ المحادثة!');
-            return;
-        }
-        
-        // عرض الرسائل
-        displayMessages(messages);
-        
-        // الاستماع للرسائل الجديدة
-        subscribeToNewMessages(chatId);
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل الرسائل:', error);
-        showErrorState(elements.messagesContainer, 'حدث خطأ في تحميل الرسائل');
-    }
-}
-
-// ===== عرض الرسائل =====
-function displayMessages(messages) {
-    elements.messagesContainer.innerHTML = '';
-    
-    messages.forEach(message => {
-        const messageElement = createMessageElement(message);
-        elements.messagesContainer.appendChild(messageElement);
-    });
-    
-    // التمرير للأسفل
-    scrollToBottom();
-}
-
-// ===== إنشاء عنصر رسالة =====
-function createMessageElement(message) {
-    const isSent = message.senderId === currentUser.uid;
-    const time = formatDate(message.timestamp, 'time');
-    
-    const div = document.createElement('div');
-    div.className = `message ${isSent ? 'sent' : 'received'}`;
-    div.dataset.messageId = message.id;
-    
-    div.innerHTML = `
-        <div class="message-text">${message.text}</div>
-        <div class="message-time">${time}</div>
-    `;
-    
-    return div;
-}
-
-// ===== إرسال رسالة =====
-async function sendMessage() {
-    const messageText = elements.messageInput.value.trim();
-    
-    if (!messageText || !currentChatId || !chatService) {
-        return;
-    }
-    
-    console.log('📤 إرسال رسالة:', messageText);
-    
-    // تعطيل الزر أثناء الإرسال
-    elements.sendBtn.disabled = true;
-    const originalText = elements.sendBtn.textContent;
-    elements.sendBtn.textContent = 'جاري الإرسال...';
-    
-    try {
-        // إرسال الرسالة
-        const result = await chatService.sendMessage(currentChatId, messageText);
-        
-        if (result.success) {
-            // مسح حقل الإدخال
-            elements.messageInput.value = '';
-            
-            // إعادة تمكين الزر
-            elements.sendBtn.textContent = originalText;
-            elements.sendBtn.disabled = false;
-            
-            console.log('✅ تم إرسال الرسالة بنجاح');
-        } else {
-            throw new Error(result.error || 'فشل إرسال الرسالة');
-        }
-        
-    } catch (error) {
-        console.error('❌ خطأ في إرسال الرسالة:', error);
-        showError('فشل إرسال الرسالة. حاول مرة أخرى.');
-        
-        // إعادة تمكين الزر
-        elements.sendBtn.textContent = originalText;
-        elements.sendBtn.disabled = false;
-    }
-}
-
-// ===== البحث عن مستخدمين =====
-async function searchUsersHandler(searchTerm) {
-    if (!searchTerm || searchTerm.length < 2) {
-        elements.searchResults.innerHTML = '<div class="empty-state">اكتب حرفين على الأقل للبحث</div>';
-        return;
-    }
-    
-    showLoading(elements.searchResults, 'جاري البحث...');
-    
-    try {
-        const result = await searchUsers(searchTerm, {
-            limit: 20,
-            excludeCurrentUser: true,
-            currentUserId: currentUser?.uid
-        });
-        
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-        
-        if (result.results.length === 0) {
-            elements.searchResults.innerHTML = `
-                <div class="empty-state">
-                    <i>🔍</i>
-                    <p>لا توجد نتائج للبحث "${searchTerm}"</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // عرض النتائج
-        displaySearchResults(result.results);
-        
-    } catch (error) {
-        console.error('❌ خطأ في البحث:', error);
-        elements.searchResults.innerHTML = `
-            <div class="error-state">
-                <i>❌</i>
-                <p>حدث خطأ أثناء البحث</p>
-            </div>
-        `;
-    }
-}
-
-// ===== عرض نتائج البحث =====
-function displaySearchResults(users) {
-    elements.searchResults.innerHTML = '';
-    
-    users.forEach(user => {
-        const userElement = createUserResultElement(user);
-        elements.searchResults.appendChild(userElement);
-    });
-}
-
-// ===== إنشاء عنصر نتيجة بحث =====
-function createUserResultElement(user) {
-    const initials = getInitials(user.username);
-    const color = generateColorCode(user.username);
-    const lastActive = formatDate(user.lastActive);
-    
-    const div = document.createElement('div');
-    div.className = 'search-result-item';
-    div.dataset.userId = user.id;
-    
-    div.innerHTML = `
-        <div class="result-avatar" style="background: ${color}">
-            ${initials}
-        </div>
-        <div class="result-info">
-            <h4>${user.username}</h4>
-            <p class="text-muted">نشط ${lastActive}</p>
-        </div>
-        <button class="start-chat-btn" 
-                data-user-id="${user.id}" 
-                data-username="${user.username}">
-            بدء محادثة
-        </button>
-    `;
-    
-    // إضافة مستمع الحدث
-    const chatBtn = div.querySelector('.start-chat-btn');
-    chatBtn.addEventListener('click', () => startChatWithUser(user.id, user.username));
-    
-    return div;
-}
-
-// ===== بدء محادثة مع مستخدم =====
-async function startChatWithUser(userId, username) {
-    if (!chatService) return;
-    
-    console.log('💬 بدء محادثة مع:', username);
-    
-    showLoading(elements.searchResults, 'جاري إنشاء المحادثة...');
-    
-    try {
-        // إنشاء المحادثة
-        const result = await chatService.createChat(userId, username);
-        
-        if (result.success) {
-            // إغلاق نافذة البحث
-            closeSearchModal();
-            
-            // فتح المحادثة
-            const otherUser = { id: userId, username: username };
-            await openChat(result.chatId, otherUser);
-            
-            // إعادة تحميل قائمة المحادثات
-            await loadUserChats();
-            
-            console.log('✅ تم إنشاء المحادثة بنجاح');
-        } else {
-            throw new Error(result.error || 'فشل إنشاء المحادثة');
-        }
-        
-    } catch (error) {
-        console.error('❌ خطأ في إنشاء المحادثة:', error);
-        showError('فشل إنشاء المحادثة. حاول مرة أخرى.');
-    }
-}
-
-// ===== الاشتراك في تحديثات المحادثات =====
-function subscribeToChatsUpdates() {
-    if (!chatService) return;
-    
-    const unsubscribe = chatService.subscribeToChats(async (chatIds) => {
-        if (chatIds.length === 0) {
-            showEmptyState(elements.chatsList, 'لا توجد محادثات بعد. ابدأ محادثة جديدة!');
-            return;
-        }
-        
-        // جلب معلومات المحادثات المحدثة
-        const chats = await chatService.getRecentChats();
-        displayChats(chats);
-    });
-    
-    activeListeners.push(unsubscribe);
-}
-
-// ===== الاشتراك في رسائل جديدة =====
-function subscribeToNewMessages(chatId) {
-    if (!chatService) return;
-    
-    const unsubscribe = chatService.subscribeToMessages(chatId, (messages) => {
-        if (messages.length > 0) {
-            displayMessages(messages);
-        }
-    });
-    
-    activeListeners.push(unsubscribe);
-}
-
-// ===== إعداد مستمعي الأحداث =====
+// إعداد مستمعات الأحداث
 function setupEventListeners() {
-    // إرسال رسالة
+    // أحداث المصادقة
+    elements.loginTab.addEventListener('click', () => switchAuthTab('login'));
+    elements.registerTab.addEventListener('click', () => switchAuthTab('register'));
+    elements.loginForm.addEventListener('submit', handleLogin);
+    elements.registerForm.addEventListener('submit', handleRegister);
+    
+    // أحداث التطبيق الرئيسي
+    elements.menuBtn.addEventListener('click', toggleSidebar);
+    elements.newChatBtn.addEventListener('click', showSearchModal);
+    elements.logoutBtn.addEventListener('click', handleLogout);
+    elements.startNewChatBtn.addEventListener('click', showSearchModal);
+    
+    // أحداث البحث
+    elements.searchUser.addEventListener('input', filterChats);
+    elements.usernameSearch.addEventListener('input', searchUsers);
+    elements.closeSearchBtn.addEventListener('click', hideSearchModal);
+    elements.cancelSearchBtn.addEventListener('click', hideSearchModal);
+    
+    // أحداث الرسائل
     elements.sendBtn.addEventListener('click', sendMessage);
     elements.messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -504,148 +184,417 @@ function setupEventListeners() {
         }
     });
     
-    // تسجيل الخروج
-    elements.logoutBtn.addEventListener('click', async () => {
-        try {
-            // تنظيف المستمعين
-            cleanupListeners();
-            
-            // تسجيل الخروج
-            await signOut(auth);
-            localStorage.removeItem('currentUser');
-            
-            console.log('👋 تم تسجيل الخروج');
-            window.location.href = 'auth.html';
-            
-        } catch (error) {
-            console.error('❌ خطأ في تسجيل الخروج:', error);
-            showError('حدث خطأ أثناء تسجيل الخروج');
+    // إغلاق النماذج المنبثقة عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            hideSearchModal();
         }
     });
     
-    // البحث الفوري
-    let searchTimeout;
-    elements.searchUser.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            searchUsersHandler(e.target.value.trim());
-        }, 300);
-    });
-    
-    // فتح نافذة البحث
-    elements.newChatBtn.addEventListener('click', openSearchModal);
-    
-    // البحث في النافذة المنبثقة
-    let modalSearchTimeout;
-    elements.usernameSearch.addEventListener('input', (e) => {
-        clearTimeout(modalSearchTimeout);
-        modalSearchTimeout = setTimeout(() => {
-            searchUsersHandler(e.target.value.trim());
-        }, 300);
-    });
-    
-    // إغلاق نافذة البحث
-    elements.closeSearchBtn.addEventListener('click', closeSearchModal);
-    elements.searchModal.addEventListener('click', (e) => {
-        if (e.target === elements.searchModal) {
-            closeSearchModal();
-        }
+    // إظهار/إخفاء كلمة المرور
+    document.querySelectorAll('.show-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input');
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
     });
 }
 
-// ===== فتح نافذة البحث =====
-function openSearchModal() {
-    elements.searchModal.classList.add('show');
-    elements.usernameSearch.value = '';
-    elements.searchResults.innerHTML = '';
+// ===== دوال المصادقة =====
+
+function switchAuthTab(tab) {
+    elements.loginTab.classList.toggle('active', tab === 'login');
+    elements.registerTab.classList.toggle('active', tab === 'register');
+    elements.loginForm.classList.toggle('active', tab === 'login');
+    elements.registerForm.classList.toggle('active', tab === 'register');
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = elements.loginEmail.value.trim();
+    const password = elements.loginPassword.value;
+    
+    // التحقق من صحة المدخلات
+    if (!isValidEmail(email)) {
+        showNotification('error', 'خطأ', 'يرجى إدخال بريد إلكتروني صحيح');
+        return;
+    }
+    
+    if (!isStrongPassword(password)) {
+        showNotification('error', 'خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    try {
+        showLoading();
+        await signInWithEmailAndPassword(auth, email, password);
+        showNotification('success', 'تم بنجاح', 'تم تسجيل الدخول بنجاح');
+    } catch (error) {
+        console.error('خطأ في تسجيل الدخول:', error);
+        let message = 'حدث خطأ في تسجيل الدخول';
+        if (error.code === 'auth/user-not-found') {
+            message = 'المستخدم غير موجود';
+        } else if (error.code === 'auth/wrong-password') {
+            message = 'كلمة المرور غير صحيحة';
+        } else if (error.code === 'auth/too-many-requests') {
+            message = 'تم محاولة الدخول عدة مرات، يرجى المحاولة لاحقاً';
+        }
+        showNotification('error', 'خطأ', message);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    const name = elements.registerName.value.trim();
+    const email = elements.registerEmail.value.trim();
+    const password = elements.registerPassword.value;
+    const confirmPassword = elements.registerConfirmPassword.value;
+    
+    // التحقق من صحة المدخلات
+    if (name.length < 2) {
+        showNotification('error', 'خطأ', 'الاسم يجب أن يكون حرفين على الأقل');
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        showNotification('error', 'خطأ', 'يرجى إدخال بريد إلكتروني صحيح');
+        return;
+    }
+    
+    if (!isStrongPassword(password)) {
+        showNotification('error', 'خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showNotification('error', 'خطأ', 'كلمات المرور غير متطابقة');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // تحديث اسم العرض للمستخدم
+        await updateProfile(userCredential.user, {
+            displayName: name
+        });
+        
+        // حفظ معلومات المستخدم في قاعدة البيانات
+        await set(ref(database, `users/${userCredential.user.uid}`), {
+            uid: userCredential.user.uid,
+            email: email,
+            displayName: name,
+            createdAt: Date.now(),
+            lastSeen: Date.now(),
+            online: true
+        });
+        
+        showNotification('success', 'تم بنجاح', 'تم إنشاء الحساب بنجاح');
+        switchAuthTab('login');
+    } catch (error) {
+        console.error('خطأ في التسجيل:', error);
+        let message = 'حدث خطأ في إنشاء الحساب';
+        if (error.code === 'auth/email-already-in-use') {
+            message = 'البريد الإلكتروني مستخدم بالفعل';
+        } else if (error.code === 'auth/weak-password') {
+            message = 'كلمة المرور ضعيفة';
+        }
+        showNotification('error', 'خطأ', message);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleLogout() {
+    try {
+        showLoading();
+        await updateUserOnlineStatus(false);
+        await signOut(auth);
+        showNotification('success', 'تم بنجاح', 'تم تسجيل الخروج بنجاح');
+        currentUser = null;
+        currentChat = null;
+        chats = [];
+        clearChatUI();
+    } catch (error) {
+        console.error('خطأ في تسجيل الخروج:', error);
+        showNotification('error', 'خطأ', 'حدث خطأ في تسجيل الخروج');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===== دوال المحادثات =====
+
+async function loadUserChats() {
+    if (!currentUser) return;
+    
+    try {
+        const userChatsRef = ref(database, `userChats/${currentUser.uid}`);
+        onValue(userChatsRef, (snapshot) => {
+            chats = [];
+            const data = snapshot.val();
+            
+            if (data) {
+                Object.keys(data).forEach(chatId => {
+                    chats.push({
+                        id: chatId,
+                        ...data[chatId]
+                    });
+                });
+                
+                // ترتيب المحادثات حسب الوقت
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+            }
+            
+            renderChatsList();
+        });
+    } catch (error) {
+        console.error('خطأ في تحميل المحادثات:', error);
+    }
+}
+
+function renderChatsList() {
+    elements.chatsList.innerHTML = '';
+    
+    if (chats.length === 0) {
+        elements.chatsList.innerHTML = `
+            <div class="empty-chats">
+                <i class="fas fa-comment-slash"></i>
+                <p>لا توجد محادثات</p>
+                <button class="btn-secondary" id="startNewChatBtn">
+                    ابدأ محادثة جديدة
+                </button>
+            </div>
+        `;
+        document.getElementById('startNewChatBtn').addEventListener('click', showSearchModal);
+        return;
+    }
+    
+    chats.forEach(chat => {
+        const chatElement = document.createElement('div');
+        chatElement.className = `chat-item ${currentChat?.id === chat.id ? 'active' : ''}`;
+        chatElement.dataset.chatId = chat.id;
+        
+        const otherUserName = chat.participants?.find(p => p.uid !== currentUser.uid)?.displayName || 'مستخدم';
+        const lastMessage = chat.lastMessage || 'لا توجد رسائل';
+        const lastMessageTime = chat.lastMessageTime ? formatTime(chat.lastMessageTime) : '';
+        
+        chatElement.innerHTML = `
+            <div class="chat-avatar" style="background: ${generateUserColor(otherUserName)}">
+                ${otherUserName.charAt(0).toUpperCase()}
+            </div>
+            <div class="chat-info">
+                <h4>${otherUserName}</h4>
+                <p>${lastMessage}</p>
+            </div>
+            <div class="chat-time">${lastMessageTime}</div>
+        `;
+        
+        chatElement.addEventListener('click', () => selectChat(chat));
+        elements.chatsList.appendChild(chatElement);
+    });
+}
+
+async function selectChat(chat) {
+    try {
+        currentChat = chat;
+        updateChatHeader();
+        loadChatMessages();
+        renderChatsList();
+        elements.messageInput.disabled = false;
+        elements.sendBtn.disabled = false;
+        elements.messageInput.focus();
+    } catch (error) {
+        console.error('خطأ في اختيار المحادثة:', error);
+    }
+}
+
+function updateChatHeader() {
+    if (!currentChat) return;
+    
+    const otherUser = currentChat.participants?.find(p => p.uid !== currentUser.uid);
+    
+    elements.chatHeader.innerHTML = `
+        <div class="chat-info">
+            <div class="chat-avatar" style="background: ${generateUserColor(otherUser?.displayName || '')}">
+                ${otherUser?.displayName?.charAt(0).toUpperCase() || 'م'}
+            </div>
+            <div class="chat-details">
+                <h3>${otherUser?.displayName || 'مستخدم'}</h3>
+                <p>${otherUser?.online ? 'متصل الآن' : 'غير متصل'}</p>
+            </div>
+        </div>
+    `;
+}
+
+// ===== دوال الرسائل =====
+
+async function loadChatMessages() {
+    if (!currentChat || !currentUser) return;
+    
+    try {
+        const messagesRef = ref(database, `messages/${currentChat.id}`);
+        onValue(messagesRef, (snapshot) => {
+            const messages = [];
+            const data = snapshot.val();
+            
+            if (data) {
+                Object.keys(data).forEach(messageId => {
+                    messages.push({
+                        id: messageId,
+                        ...data[messageId]
+                    });
+                });
+                
+                // ترتيب الرسائل حسب الوقت
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+            }
+            
+            renderMessages(messages);
+            scrollToBottom();
+        });
+    } catch (error) {
+        console.error('خطأ في تحميل الرسائل:', error);
+    }
+}
+
+function renderMessages(messages) {
+    elements.messagesContainer.innerHTML = '';
+    
+    if (messages.length === 0) {
+        elements.messagesContainer.innerHTML = `
+            <div class="welcome-message">
+                <div class="welcome-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <p>ابدأ المحادثة بإرسال رسالة</p>
+            </div>
+        `;
+        return;
+    }
+    
+    messages.forEach(message => {
+        const messageElement = document.createElement('div');
+        const isSent = message.senderId === currentUser.uid;
+        messageElement.className = `message ${isSent ? 'sent' : 'received'}`;
+        
+        const time = formatTime(message.timestamp);
+        
+        messageElement.innerHTML = `
+            <div class="message-text">${message.text}</div>
+            <div class="message-time">${time}</div>
+        `;
+        
+        elements.messagesContainer.appendChild(messageElement);
+    });
+}
+
+async function sendMessage() {
+    if (!currentChat || !currentUser) return;
+    
+    const messageText = elements.messageInput.value.trim();
+    if (!messageText) return;
+    
+    try {
+        const message = {
+            text: messageText,
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName,
+            timestamp: Date.now()
+        };
+        
+        // إضافة الرسالة
+        const messagesRef = ref(database, `messages/${currentChat.id}`);
+        const newMessageRef = push(messagesRef);
+        await set(newMessageRef, message);
+        
+        // تحديث آخر رسالة في المحادثة
+        await update(ref(database, `userChats/${currentUser.uid}/${currentChat.id}`), {
+            lastMessage: messageText,
+            lastMessageTime: Date.now()
+        });
+        
+        // تحديث للمستخدم الآخر
+        const otherUser = currentChat.participants.find(p => p.uid !== currentUser.uid);
+        if (otherUser) {
+            await update(ref(database, `userChats/${otherUser.uid}/${currentChat.id}`), {
+                lastMessage: messageText,
+                lastMessageTime: Date.now()
+            });
+        }
+        
+        // مسح حقل الإدخال
+        elements.messageInput.value = '';
+        elements.messageInput.focus();
+        
+    } catch (error) {
+        console.error('خطأ في إرسال الرسالة:', error);
+        showNotification('error', 'خطأ', 'حدث خطأ في إرسال الرسالة');
+    }
+}
+
+// ===== دوال البحث =====
+
+function showSearchModal() {
+    elements.searchModal.classList.add('active');
     elements.usernameSearch.focus();
 }
 
-// ===== إغلاق نافذة البحث =====
-function closeSearchModal() {
-    elements.searchModal.classList.remove('show');
+function hideSearchModal() {
+    elements.searchModal.classList.remove('active');
     elements.usernameSearch.value = '';
-    elements.searchResults.innerHTML = '';
+    elements.searchResults.innerHTML = `
+        <div class="empty-results">
+            <i class="fas fa-search"></i>
+            <p>اكتب للبحث عن مستخدمين</p>
+        </div>
+    `;
 }
 
-// ===== تنظيف المستمعين =====
-function cleanupListeners() {
-    activeListeners.forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-            unsubscribe();
-        }
-    });
-    activeListeners = [];
+async function searchUsers() {
+    const searchTerm = elements.usernameSearch.value.trim().toLowerCase();
+    if (searchTerm.length < 2) {
+        elements.searchResults.innerHTML = `
+            <div class="empty-results">
+                <i class="fas fa-search"></i>
+                <p>اكتب حرفين على الأقل للبحث</p>
+            </div>
+        `;
+        return;
+    }
     
-    if (chatService) {
-        chatService.cleanup();
-    }
-}
-
-// ===== تحديث واجهة المستخدم =====
-function updateUI() {
-    // إضافة تأثيرات تحميل
-    document.body.classList.add('loaded');
-    
-    // تحديث عنوان الصفحة
-    if (currentUser) {
-        document.title = `دردشة - ${currentUser.username}`;
-    }
-}
-
-// ===== وظائف مساعدة للعرض =====
-function showLoading(container, message = 'جاري التحميل...') {
-    container.innerHTML = `
-        <div class="loading-state">
-            <div class="spinner-small"></div>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-function showEmptyState(container, message = 'لا توجد بيانات') {
-    container.innerHTML = `
-        <div class="empty-state">
-            <i>📭</i>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-function showErrorState(container, message = 'حدث خطأ') {
-    container.innerHTML = `
-        <div class="error-state">
-            <i>❌</i>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-function showError(message) {
-    // يمكن إضافة نافذة منبثقة للخطأ
-    alert(message);
-}
-
-function scrollToBottom() {
-    elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
-}
-
-// ===== تهيئة عند تحميل الصفحة =====
-window.addEventListener('load', initializeApp);
-
-// تنظيف عند إغلاق الصفحة
-window.addEventListener('beforeunload', () => {
-    cleanupListeners();
-});
-
-// ===== تصدير وظائف للمساعدة في التصحيح =====
-window.appDebug = {
-    getCurrentUser: () => currentUser,
-    getCurrentChat: () => currentChatId,
-    getChatService: () => chatService,
-    reloadChats: () => loadUserChats(),
-    clearCache: () => {
-        localStorage.removeItem('currentUser');
-        console.log('✅ تم مسح الكاش');
-    }
-};
+    try {
+        const usersRef = ref(database, 'users');
+        const usersQuery = query(usersRef);
+        
+        onValue(usersQuery, (snapshot) => {
+            const allUsers = [];
+            const data = snapshot.val();
+            
+            if (data) {
+                Object.keys(data).forEach(userId => {
+                    if (userId !== currentUser.uid) {
+                        allUsers.push({
+                            id: userId,
+                            ...data[userId]
+                        });
+                    }
+                });
+            }
+            
+            // فلترة المستخدمين حسب مصطلح البحث
+            const filteredUsers = allUs
