@@ -1,20 +1,24 @@
-// 📄 chat-service.js - خدمة متقدمة لإدارة المحادثات
+// 📄 chat-service.js - خدمة محسنة لإدارة المحادثات
 
 import { database } from './firebase-config.js';
-import { ref, set, get, push, remove, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { ref, set, get, push, remove, onValue, query, orderByChild, limitToLast, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 class ChatService {
     constructor(currentUserId) {
         this.currentUserId = currentUserId;
         this.listeners = [];
+        this.subscriptions = new Map();
     }
     
     // ===== إنشاء محادثة جديدة =====
     async createChat(otherUserId, otherUsername) {
         try {
+            console.log('🔄 بدء إنشاء محادثة مع:', otherUsername);
+            
             // التحقق من وجود محادثة مسبقاً
             const existingChatId = await this.findExistingChat(otherUserId);
             if (existingChatId) {
+                console.log('✅ وجدت محادثة موجودة:', existingChatId);
                 return { success: true, chatId: existingChatId, isNew: false };
             }
             
@@ -22,11 +26,13 @@ class ChatService {
             const newChatRef = push(ref(database, 'chats'));
             const newChatId = newChatRef.key;
             
+            const currentUsername = await this.getCurrentUsername();
+            
             const chatData = {
                 id: newChatId,
                 participants: {
                     [this.currentUserId]: {
-                        username: await this.getCurrentUsername(),
+                        username: currentUsername,
                         joinedAt: Date.now()
                     },
                     [otherUserId]: {
@@ -38,10 +44,12 @@ class ChatService {
                 createdAt: Date.now(),
                 lastUpdate: Date.now(),
                 lastMessage: 'بدون رسائل',
-                lastSenderId: null
+                lastSenderId: null,
+                participantIds: [this.currentUserId, otherUserId]
             };
             
             await set(newChatRef, chatData);
+            console.log('✅ تم إنشاء المحادثة:', newChatId);
             
             // إضافة الأعضاء
             await set(ref(database, 'members/' + newChatId), {
@@ -49,11 +57,20 @@ class ChatService {
                 [otherUserId]: true
             });
             
-            return { success: true, chatId: newChatId, isNew: true };
+            return { 
+                success: true, 
+                chatId: newChatId, 
+                isNew: true,
+                data: chatData 
+            };
             
         } catch (error) {
-            console.error('خطأ في إنشاء المحادثة:', error);
-            return { success: false, error: error.message };
+            console.error('❌ خطأ في إنشاء المحادثة:', error);
+            return { 
+                success: false, 
+                error: error.message,
+                code: error.code 
+            };
         }
     }
     
@@ -62,7 +79,10 @@ class ChatService {
         try {
             const membersRef = ref(database, 'members');
             const snapshot = await get(membersRef);
-            const allMembers = snapshot.val() || {};
+            
+            if (!snapshot.exists()) return null;
+            
+            const allMembers = snapshot.val();
             
             for (const chatId in allMembers) {
                 const members = allMembers[chatId];
@@ -81,27 +101,40 @@ class ChatService {
     // ===== إرسال رسالة =====
     async sendMessage(chatId, messageText) {
         try {
+            if (!messageText.trim()) {
+                return { success: false, error: 'الرسالة فارغة' };
+            }
+            
             const newMessageRef = push(ref(database, 'messages/' + chatId));
             
             const messageData = {
-                text: messageText,
+                text: messageText.trim(),
                 senderId: this.currentUserId,
                 senderName: await this.getCurrentUsername(),
                 timestamp: Date.now(),
                 type: 'text',
-                status: 'sent'
+                status: 'sent',
+                chatId: chatId
             };
             
             await set(newMessageRef, messageData);
             
             // تحديث آخر رسالة في المحادثة
-            await this.updateChatLastMessage(chatId, messageText, this.currentUserId);
+            await this.updateChatLastMessage(chatId, messageText.trim(), this.currentUserId);
             
-            return { success: true, messageId: newMessageRef.key };
+            return { 
+                success: true, 
+                messageId: newMessageRef.key,
+                data: messageData
+            };
             
         } catch (error) {
-            console.error('خطأ في إرسال الرسالة:', error);
-            return { success: false, error: error.message };
+            console.error('❌ خطأ في إرسال الرسالة:', error);
+            return { 
+                success: false, 
+                error: error.message,
+                code: error.code 
+            };
         }
     }
     
@@ -110,9 +143,11 @@ class ChatService {
         try {
             const chatRef = ref(database, 'chats/' + chatId);
             
-            await set(child(chatRef, 'lastMessage'), messageText);
-            await set(child(chatRef, 'lastUpdate'), Date.now());
-            await set(child(chatRef, 'lastSenderId'), senderId);
+            await Promise.all([
+                set(child(chatRef, 'lastMessage'), messageText),
+                set(child(chatRef, 'lastUpdate'), Date.now()),
+                set(child(chatRef, 'lastSenderId'), senderId)
+            ]);
             
         } catch (error) {
             console.error('خطأ في تحديث آخر رسالة:', error);
@@ -131,9 +166,16 @@ class ChatService {
                 
                 if (snapshot.exists()) {
                     const chatData = snapshot.val();
+                    
+                    // إضافة معلومات إضافية
+                    const otherUserId = this.getOtherParticipant(chatData.participants);
+                    const otherUserInfo = await this.getUserInfo(otherUserId);
+                    
                     chatsWithData.push({
                         id: chatId,
-                        ...chatData
+                        ...chatData,
+                        otherUser: otherUserInfo,
+                        unreadCount: await this.getUnreadCount(chatId)
                     });
                 }
             }
@@ -152,8 +194,10 @@ class ChatService {
         try {
             const membersRef = ref(database, 'members');
             const snapshot = await get(membersRef);
-            const allMembers = snapshot.val() || {};
             
+            if (!snapshot.exists()) return [];
+            
+            const allMembers = snapshot.val();
             const userChats = [];
             
             for (const chatId in allMembers) {
@@ -171,10 +215,15 @@ class ChatService {
     
     // ===== الاستماع للتحديثات في الوقت الحقيقي =====
     subscribeToChats(callback) {
-        const membersRef = ref(database, 'members');
+        const userChatsRef = ref(database, 'members');
         
-        const unsubscribe = onValue(membersRef, async (snapshot) => {
-            const allMembers = snapshot.val() || {};
+        const unsubscribe = onValue(userChatsRef, async (snapshot) => {
+            if (!snapshot.exists()) {
+                callback([]);
+                return;
+            }
+            
+            const allMembers = snapshot.val();
             const userChats = [];
             
             for (const chatId in allMembers) {
@@ -187,6 +236,49 @@ class ChatService {
         });
         
         this.listeners.push(unsubscribe);
+        return unsubscribe;
+    }
+    
+    // ===== الاستماع لمحادثة محددة =====
+    subscribeToChat(chatId, callback) {
+        const chatRef = ref(database, 'chats/' + chatId);
+        
+        const unsubscribe = onValue(chatRef, (snapshot) => {
+            if (snapshot.exists()) {
+                callback(snapshot.val());
+            } else {
+                callback(null);
+            }
+        });
+        
+        this.subscriptions.set(chatId, unsubscribe);
+        return unsubscribe;
+    }
+    
+    // ===== الاستماع لرسائل محادثة =====
+    subscribeToMessages(chatId, callback) {
+        const messagesRef = ref(database, 'messages/' + chatId);
+        const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(100));
+        
+        const unsubscribe = onValue(messagesQuery, (snapshot) => {
+            const messages = [];
+            
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                // ترتيب تصاعدي
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+            }
+            
+            callback(messages);
+        });
+        
+        this.subscriptions.set(`messages_${chatId}`, unsubscribe);
         return unsubscribe;
     }
     
@@ -205,12 +297,6 @@ class ChatService {
             console.error('خطأ في جلب اسم المستخدم:', error);
             return 'مستخدم';
         }
-    }
-    
-    // ===== تنظيف المستمعين =====
-    cleanup() {
-        this.listeners.forEach(unsubscribe => unsubscribe());
-        this.listeners = [];
     }
     
     // ===== جلب معلومات المستخدم =====
@@ -239,20 +325,83 @@ class ChatService {
             const snapshot = await get(messagesQuery);
             const messages = [];
             
-            snapshot.forEach((childSnapshot) => {
-                messages.push({
-                    id: childSnapshot.key,
-                    ...childSnapshot.val()
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
                 });
-            });
+                
+                // ترتيب تصاعدي
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+            }
             
-            // ترتيب تصاعدي (من الأقدم للأحدث)
-            return messages.sort((a, b) => a.timestamp - b.timestamp);
+            return messages;
             
         } catch (error) {
             console.error('خطأ في جلب الرسائل:', error);
             return [];
         }
+    }
+    
+    // ===== الحصول على المستخدم الآخر =====
+    getOtherParticipant(participants) {
+        for (const userId in participants) {
+            if (userId !== this.currentUserId) {
+                return userId;
+            }
+        }
+        return null;
+    }
+    
+    // ===== الحصول على عدد الرسائل غير المقروءة =====
+    async getUnreadCount(chatId) {
+        try {
+            // في هذا الإصدار المبسط، نرجع 0
+            // يمكن تطويره ليتتبع الرسائل المقروءة
+            return 0;
+        } catch (error) {
+            console.error('خطأ في جلب عدد غير المقروء:', error);
+            return 0;
+        }
+    }
+    
+    // ===== تحديث حالة القراءة =====
+    async markAsRead(chatId) {
+        try {
+            // يمكن إضافة منطق تحديث حالة القراءة هنا
+            console.log('📖 تحديث حالة القراءة للمحادثة:', chatId);
+        } catch (error) {
+            console.error('خطأ في تحديث حالة القراءة:', error);
+        }
+    }
+    
+    // ===== حذف محادثة =====
+    async deleteChat(chatId) {
+        try {
+            await Promise.all([
+                remove(ref(database, 'chats/' + chatId)),
+                remove(ref(database, 'members/' + chatId)),
+                remove(ref(database, 'messages/' + chatId))
+            ]);
+            
+            return { success: true };
+        } catch (error) {
+            console.error('خطأ في حذف المحادثة:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    // ===== تنظيف جميع المستمعين =====
+    cleanup() {
+        // تنظيف مستمعي المحادثات
+        this.listeners.forEach(unsubscribe => unsubscribe());
+        this.listeners = [];
+        
+        // تنظيف المشتركين
+        this.subscriptions.forEach(unsubscribe => unsubscribe());
+        this.subscriptions.clear();
     }
 }
 
