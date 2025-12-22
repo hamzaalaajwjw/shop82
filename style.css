@@ -1095,3 +1095,136 @@ button:active::after {
         background: #1a1a1a;
     }
     }
+
+/* ==== تنسيقات إضافية لصفحة auth ==== */
+
+/* روابط المصادقة */
+.auth-links {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+
+.auth-links a {
+    display: inline-block;
+    margin: 0 10px;
+    color: #667eea;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.auth-links a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* تحسينات للأزرار */
+.auth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* رسالة الخطأ المحسنة */
+.error-message {
+    background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* تحسينات للشعار */
+.logo .tagline {
+    color: #666;
+    font-size: 16px;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
+/* تحسينات للجوال */
+@media (max-width: 768px) {
+    .auth-box {
+        padding: 25px 20px;
+        margin: 15px;
+        width: 95%;
+    }
+    
+    .auth-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .auth-links a {
+        margin: 5px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-box {
+        padding: 20px 15px;
+    }
+    
+    .logo h1 {
+        font-size: 24px;
+    }
+    
+    .auth-box h2 {
+        font-size: 20px;
+    }
+    
+    .form-group input {
+        padding: 12px;
+        font-size: 15px;
+    }
+    
+    button[type="submit"] {
+        padding: 14px;
+        font-size: 16px;
+    }
+}
+
+/* تأثيرات خاصة للمصادقة */
+.auth-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(102, 126, 234, 0.05) 50%,
+        transparent 70%
+    );
+    animation: shimmer 3s infinite linear;
+    z-index: 0;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-50%) translateY(-50%) rotate(0deg); }
+    100% { transform: translateX(-50%) translateY(-50%) rotate(360deg); }
+}
+
+.auth-box > * {
+    position: relative;
+    z-index: 1;
+}
