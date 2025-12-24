@@ -195,27 +195,6 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   display: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
-
-/* ===== زر حسابي ===== */
-.myaccount-btn {
-  width: 100%;
-  padding: 10px;
-  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-  border: none;
-  color: #000;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 6px;
-  text-align: center;
-  margin-top: 5px;
-  font-weight: bold;
-  transition: transform 0.2s;
-}
-
-.myaccount-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-}
 </style>
 </head>
 <body>
@@ -232,9 +211,6 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   <aside class="sidebar">
     <button onclick="showHome()">🏠 الرئيسية</button>
     <button onclick="showPublish()">➕ نشر إعلان</button>
-    
-    <!-- زر حسابي يظهر فقط للمستخدمين المسجلين -->
-    <button id="myAccountButton" class="myaccount-btn" onclick="showMyAccount()" style="display:none;">👤 حسابي</button>
     
     <!-- إضافة قسم المصادقة -->
     <div id="authSection" class="auth-section"></div>
@@ -425,19 +401,6 @@ function handleSessionTimeout() {
     // للمستخدمين المجهولين، إعادة تحميل الصفحة
     else {
         window.location.reload();
-    }
-}
-
-// ===== دالة الذهاب إلى صفحة حسابي =====
-function showMyAccount() {
-    if (currentUser && !currentUser.isAnonymous) {
-        window.location.href = 'myaccount.html';
-    } else {
-        showSecurityWarning("يرجى تسجيل الدخول للوصول إلى صفحة حسابك");
-        // يمكن إضافة توجيه إلى صفحة تسجيل الدخول
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
     }
 }
 
@@ -861,7 +824,6 @@ function closeDetails(){
 // ===== إضافة دوال المصادقة =====
 function updateAuthUI() {
   const authSection = document.getElementById("authSection");
-  const myAccountButton = document.getElementById("myAccountButton");
   
   if (!authSection) return;
   
@@ -899,11 +861,6 @@ function updateAuthUI() {
           ">لوحة التحكم</button>` : ''}
         </div>
       `;
-      
-      // إظهار زر حسابي للمستخدمين المسجلين فقط
-      if (myAccountButton && !currentUser.isAnonymous) {
-        myAccountButton.style.display = "block";
-      }
     });
   } else {
     // المستخدم غير مسجل
@@ -920,11 +877,6 @@ function updateAuthUI() {
         </div>
       </div>
     `;
-    
-    // إخفاء زر حسابي
-    if (myAccountButton) {
-      myAccountButton.style.display = "none";
-    }
   }
 }
 
@@ -960,7 +912,7 @@ function viewProfile(userId, sellerName) {
 
 function viewMyProfile() {
   if (currentUser && currentUser.uid) {
-    window.location.href = `myaccount.html`;
+    window.location.href = `profile.html?id=${currentUser.uid}`;
   } else {
     alert('يرجى تسجيل الدخول أولاً');
     window.location.href = 'login.html';
