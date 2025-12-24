@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | a3len</title>
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('font.ttf') format('truetype');
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'CustomFont', sans-serif;
+            background: #0f1115;
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: #1c1f27;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .logo h1 {
+            color: #38bdf8;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d1d5db;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            background: #111318;
+            color: #e5e7eb;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        
+        .show-password {
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #38bdf8;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            background: #0ea5e9;
+        }
+        
+        .login-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #374151;
+        }
+        
+        .links a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            margin: 8px 0;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        
+        .security-info {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            text-align: center;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        
+        .attempts-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            text-align: center;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            display: none;
+        }
+        
+        .forgot-password {
+            text-align: left;
+            margin-top: 10px;
+        }
+        
+        .forgot-password a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .remember-me input {
+            width: auto;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+            }
+            
+            .login-options {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>a3len</h1>
+            <p>سوق بيع وشراء قطع البيسي</p>
+        </div>
+        
+        <div class="security-info">
+            🔐 نوصي باستخدام كلمة سر قوية ولا تشارك بيانات الدخول مع أحد
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <div id="attemptsWarning" class="attempts-warning"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">اسم المستخدم أو البريد الإلكتروني</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">كلمة السر</label>
+                <input type="password" id="password" required autocomplete="current-password">
+                <button type="button" class="show-password" id="togglePassword">👁️</button>
+            </div>
+            
+            <div class="login-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">تذكرني</label>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#" onclick="showForgotPassword()">نسيت كلمة السر؟</a>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">تسجيل الدخول</button>
+        </form>
+        
+        <div class="links">
+            <a href="register.html">ليس لديك حساب؟ إنشاء حساب جديد</a>
+            <a href="index.html">← العودة للصفحة الرئيسية</a>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <script>
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+            authDomain: "a3len-3ad54.firebasestorage.app",
+            databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+            projectId: "a3len-3ad54",
+            storageBucket: "a3len-3ad54.firebasestorage.app",
+            messagingSenderId: "767338034080",
+            appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const analytics = firebase.analytics();
+        
+        // متغيرات التحكم في المحاولات
+        let loginAttempts = 0;
+        const maxAttempts = 5;
+        let lockUntil = 0;
+        let failedLogins = {};
+        
+        // تحميل محاولات الدخول الفاشلة من localStorage
+        function loadFailedLogins() {
+            const stored = localStorage.getItem('failedLogins');
+            if (stored) {
+                failedLogins = JSON.parse(stored);
+                // تنظيف المحاولات القديمة (أقدم من 24 ساعة)
+                const now = Date.now();
+                for (const key in failedLogins) {
+                    if (now - failedLogins[key].timestamp > 24 * 60 * 60 * 1000) {
+                        delete failedLogins[key];
+                    }
+                }
+            }
+        }
+        
+        // حفظ محاولات الدخول الفاشلة
+        function saveFailedLogins() {
+            localStorage.setItem('failedLogins', JSON.stringify(failedLogins));
+        }
+        
+        // التحقق من حالة القفل
+        function checkLoginLock() {
+            const now = Date.now();
+            const username = document.getElementById('username').value.trim();
+            
+            if (failedLogins[username]) {
+                const attempts = failedLogins[username].attempts;
+                const lastAttempt = failedLogins[username].timestamp;
+                const lockTime = failedLogins[username].lockUntil || 0;
+                
+                if (now < lockTime) {
+                    // الحساب مقفل
+                    const remainingMinutes = Math.ceil((lockTime - now) / (60 * 1000));
+                    showLockWarning(remainingMinutes);
+                    document.getElementById('loginBtn').disabled = true;
+                    return true;
+                } else if (attempts >= maxAttempts) {
+                    // إعادة تعيين بعد انتهاء القفل
+                    delete failedLogins[username];
+                    saveFailedLogins();
+                } else {
+                    showAttemptsWarning(attempts);
+                }
+            }
+            return false;
+        }
+        
+        // عرض تحذير المحاولات
+        function showAttemptsWarning(attempts) {
+            const warningDiv = document.getElementById('attemptsWarning');
+            const remaining = maxAttempts - attempts;
+            warningDiv.textContent = `⚠️ لديك ${attempts} محاولات فاشلة. ${remaining} محاولات متبقية قبل القفل المؤقت.`;
+            warningDiv.style.display = 'block';
+        }
+        
+        // عرض تحذير القفل
+        function showLockWarning(minutes) {
+            const warningDiv = document.getElementById('attemptsWarning');
+            warningDiv.textContent = `🔒 الحساب مقفل مؤقتاً. يرجى المحاولة بعد ${minutes} دقيقة.`;
+            warningDiv.style.display = 'block';
+            warningDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            warningDiv.style.color = '#ef4444';
+            warningDiv.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        }
+        
+        // تسجيل محاولة فاشلة
+        function recordFailedLogin(username) {
+            if (!failedLogins[username]) {
+                failedLogins[username] = {
+                    attempts: 0,
+                    timestamp: Date.now()
+                };
+            }
+            
+            failedLogins[username].attempts++;
+            failedLogins[username].timestamp = Date.now();
+            
+            // إذا تجاوزت المحاولات الحد الأقصى، قفل الحساب
+            if (failedLogins[username].attempts >= maxAttempts) {
+                failedLogins[username].lockUntil = Date.now() + (30 * 60 * 1000); // قفل لمدة 30 دقيقة
+                showLockWarning(30);
+            }
+            
+            saveFailedLogins();
+            showAttemptsWarning(failedLogins[username].attempts);
+        }
+        
+        // مسح محاولات الدخول الفاشلة عند النجاح
+        function clearFailedLogins(username) {
+            if (failedLogins[username]) {
+                delete failedLogins[username];
+                saveFailedLogins();
+                document.getElementById('attemptsWarning').style.display = 'none';
+            }
+        }
+        
+        // إظهار/إخفاء كلمة السر
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+        
+        // نسيان كلمة السر
+        function showForgotPassword() {
+            const username = document.getElementById('username').value.trim();
+            let email = '';
+            
+            if (username.includes('@')) {
+                email = username;
+            } else {
+                // البحث عن البريد الإلكتروني عبر اسم المستخدم
+                db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        const users = snapshot.val();
+                        for (const uid in users) {
+                            email = users[uid].email;
+                            break;
+                        }
+                    }
+                });
+            }
+            
+            if (email) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert(`تم إرسال رابط إعادة تعيين كلمة السر إلى ${email}`);
+                    })
+                    .catch((error) => {
+                        console.error('Reset password error:', error);
+                        alert('حدث خطأ في إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني.');
+                    });
+            } else {
+                alert('أدخل اسم المستخدم أو البريد الإلكتروني أولاً');
+            }
+            return false;
+        }
+        
+        // التحقق من صحة النموذج
+        function validateForm() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // منع إرسال النموذج
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // التحقق من القفل أولاً
+            if (checkLoginLock()) {
+                return;
+            }
+            
+            loginUser();
+        });
+        
+        // استمع لتغيير اسم المستخدم للتحقق من القفل
+        document.getElementById('username').addEventListener('input', function() {
+            checkLoginLock();
+        });
+        
+        // تسجيل الدخول
+        function loginUser() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // إخفاء الرسائل السابقة
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // التحقق من البيانات
+            if (!username || !password) {
+                errorDiv.textContent = 'جميع الحقول مطلوبة';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // تعطيل زر الدخول أثناء المعالجة
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'جاري تسجيل الدخول...';
+            
+            // تحديد ما إذا كان الإدخال بريداً إلكترونياً أو اسم مستخدم
+            let userEmail = null;
+            
+            if (username.includes('@')) {
+                // إذا كان بريداً إلكترونياً
+                userEmail = username;
+                loginWithEmail(userEmail, password, username);
+            } else {
+                // إذا كان اسم مستخدم، البحث عن البريد الإلكتروني
+                db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
+                    if (!snapshot.exists()) {
+                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
+                        errorDiv.style.display = 'block';
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'تسجيل الدخول';
+                        recordFailedLogin(username);
+                        return;
+                    }
+                    
+                    // الحصول على بيانات المستخدم
+                    const users = snapshot.val();
+                    
+                    for (const uid in users) {
+                        if (users[uid].username === username) {
+                            userEmail = users[uid].email;
+                            break;
+                        }
+                    }
+                    
+                    if (!userEmail) {
+                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
+                        errorDiv.style.display = 'block';
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'تسجيل الدخول';
+                        recordFailedLogin(username);
+                        return;
+                    }
+                    
+                    loginWithEmail(userEmail, password, username);
+                });
+            }
+        }
+        
+        // تسجيل الدخول باستخدام البريد الإلكتروني
+        function loginWithEmail(email, password, username) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // تسجيل التحليلات
+            analytics.logEvent('login', {
+                method: 'email'
+            });
+            
+            // تسجيل الدخول
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // مسح المحاولات الفاشلة
+                    clearFailedLogins(username);
+                    
+                    // تسجيل وقت الدخول
+                    db.ref("users/" + user.uid).update({
+                        lastLogin: firebase.database.ServerValue.TIMESTAMP,
+                        lastActive: firebase.database.ServerValue.TIMESTAMP,
+                        loginCount: firebase.database.ServerValue.increment(1)
+                    });
+                    
+                    // تسجيل نشاط الدخول
+                    db.ref("userActivity/" + user.uid).push().set({
+                        type: 'login',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        ip: 'unknown', // يمكن إضافته لاحقاً
+                        device: navigator.userAgent
+                    });
+                    
+                    successDiv.textContent = '✅ تم تسجيل الدخول بنجاح!';
+                    successDiv.style.display = 'block';
+                    
+                    // حفظ تذكرني
+                    if (document.getElementById('rememberMe').checked) {
+                        localStorage.setItem('rememberedUser', username);
+                    } else {
+                        localStorage.removeItem('rememberedUser');
+                    }
+                    
+                    // الانتقال للصفحة الرئيسية بعد ثانية
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                })
+                .catch((error) => {
+                    console.error('Login error:', error);
+                    
+                    // تسجيل المحاولة الفاشلة
+                    recordFailedLogin(username);
+                    
+                    let errorMessage = 'حدث خطأ أثناء التسجيل';
+                    if (error.code === 'auth/wrong-password') {
+                        errorMessage = 'كلمة السر غير صحيحة';
+                    } else if (error.code === 'auth/user-not-found') {
+                        errorMessage = 'المستخدم غير موجود';
+                    } else if (error.code === 'auth/user-disabled') {
+                        errorMessage = 'الحساب معطل';
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
+                    } else if (error.code === 'auth/network-request-failed') {
+                        errorMessage = 'خطأ في الاتصال بالشبكة';
+                    }
+                    
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.style.display = 'block';
+                    
+                    // إعادة تمكين زر الدخول
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'تسجيل الدخول';
+                });
+        }
+        
+        // تحميل المستخدم المتذكر
+        function loadRememberedUser() {
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                document.getElementById('username').value = rememberedUser;
+                document.getElementById('rememberMe').checked = true;
+            }
+        }
+        
+        // تحميل محاولات الدخول الفاشلة عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFailedLogins();
+            loadRememberedUser();
+            
+            // إضافة حماية ضد هجمات البرمجيات النصية
+            document.addEventListener('keydown', function(e) {
+                // منع فحص الكود
+                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.ctrlKey && e.key === 'U') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // حماية ضد النقر الأيمن
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // حماية ضد السحب والإفلات
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // حماية ضد النسخ
+            document.addEventListener('copy', function(e) {
+                if (e.target.id === 'password') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+        
+        // كشف الأجهزة المتعددة (ميزة متقدمة)
+        function detectSuspiciousActivity(user) {
+            const currentDevice = navigator.userAgent;
+            const lastDevice = localStorage.getItem(`lastDevice_${user.uid}`);
+            
+            if (lastDevice && lastDevice !== currentDevice) {
+                // إرسال تنبيه أو تسجيل النشاط المشبوه
+                db.ref("securityAlerts/" + user.uid).push().set({
+                    type: 'new_device_login',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    previousDevice: lastDevice,
+                    currentDevice: currentDevice,
+                    ip: 'unknown'
+                });
+            }
+            
+            localStorage.setItem(`lastDevice_${user.uid}`, currentDevice);
+        }
+    </script>
+</body>
+</html>
