@@ -277,11 +277,6 @@ const auth = firebase.auth();
 const db = firebase.database();
 const analytics = firebase.analytics();
 
-// مصادقة مجهولة مع تحسينات
-auth.signInAnonymously().catch(err => {
-    console.error("Anonymous auth error:", err);
-    showSecurityWarning("تعذر الاتصال بالنظام. تأكد من اتصال الإنترنت.");
-});
 
 let userUID = null;
 auth.onAuthStateChanged(u => {
