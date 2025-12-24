@@ -1,78 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول / إنشاء حساب</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <div class="logo">
-                <h1>💬 دردشة</h1>
-            </div>
-            
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>جاري التحميل...</p>
-            </div>
-            
-            <div id="formsContainer">
-                <!-- Login Form -->
-                <div id="loginSection">
-                    <h2>تسجيل الدخول</h2>
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <input type="text" id="loginInput" placeholder="اسم المستخدم أو البريد الإلكتروني" required>
-                            <small class="form-hint">يمكنك استخدام اسم المستخدم أو البريد الإلكتروني</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
-                        </div>
-                        <button type="submit" id="loginBtn">دخول</button>
-                        <p class="switch-form">
-                            ليس لديك حساب؟ 
-                            <a href="#" id="showRegister">سجل الآن</a>
-                        </p>
-                    </form>
-                </div>
-                
-                <!-- Register Form -->
-                <div id="registerSection" style="display: none;">
-                    <h2>إنشاء حساب جديد</h2>
-                    <form id="registerForm">
-                        <div class="form-group">
-                            <input type="text" id="registerUsername" placeholder="اسم المستخدم" required>
-                            <small class="form-hint">3-20 حرف، بدون مسافات</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" id="registerEmail" placeholder="البريد الإلكتروني" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="password" id="registerPassword" placeholder="كلمة المرور" required>
-                            <small class="form-hint">6 أحرف على الأقل</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="password" id="registerConfirmPassword" placeholder="تأكيد كلمة المرور" required>
-                        </div>
-                        <button type="submit" id="registerBtn">إنشاء حساب</button>
-                        <p class="switch-form">
-                            لديك حساب بالفعل؟ 
-                            <a href="#" id="showLogin">سجل دخول</a>
-                        </p>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="error-message" id="errorMessage"></div>
-        </div>
-        
-        <div class="debug-info" id="debugInfo"></div>
-    </div>
-
-    <!-- Firebase SDK -->
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="auth.js"></script>
-</body>
-</html>
