@@ -579,35 +579,6 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   min-width: 300px;
 }
 
-/* ===== أنماط لوحة التحكم ===== */
-.stat-box {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  border: 1px solid #374151;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-box:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: #38bdf8;
-  margin-bottom: 5px;
-}
-
-.stat-label {
-  color: #9ca3af;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
 /* ===== Animations ===== */
 @keyframes slideIn {
   from {
@@ -860,5 +831,3 @@ img, svg {
     font-size: 14px;
   }
 }
-</style>
-
