@@ -1427,20 +1427,12 @@
                             <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
                         </div>
                         <div class="contact-item">
-                            <span class="contact-label">البريد الإلكتروني:</span>
-                            <span class="contact-value" id="displayEmail">محمي</span>
-                        </div>
-                        <div class="contact-item">
                             <span class="contact-label">تاريخ الانضمام:</span>
                             <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
                         </div>
                         <div class="contact-item">
                             <span class="contact-label">آخر ظهور:</span>
                             <span class="contact-value" id="lastActive">غير معروف</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-label">الحالة:</span>
-                            <span class="contact-value" id="accountStatus">نشط</span>
                         </div>
                     </div>
                 </div>
@@ -1629,7 +1621,7 @@
                     }
                 }, 200);
                 
-                return () => clearInterval(interval);
+                return () clearInterval(interval);
             }
             
             hideCircularProgress() {
@@ -1764,10 +1756,6 @@
                     document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
                     document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
                     
-                    if (userData.email) {
-                        document.getElementById('displayEmail').textContent = userData.email;
-                    }
-                    
                     if (userData.bio) {
                         document.getElementById('userBio').textContent = userData.bio;
                         currentUserBio = userData.bio;
@@ -1800,15 +1788,6 @@
                     if (userData.lastActive) {
                         const lastActive = formatTimeAgo(userData.lastActive);
                         document.getElementById('lastActive').textContent = lastActive;
-                    }
-                    
-                    if (userData.accountStatus) {
-                        const statusText = userData.accountStatus === 'active' ? 'نشط' : 
-                                         userData.accountStatus === 'suspended' ? 'موقوف' : 'غير نشط';
-                        const statusColor = userData.accountStatus === 'active' ? '#10b981' : 
-                                          userData.accountStatus === 'suspended' ? '#ef4444' : '#9ca3af';
-                        document.getElementById('accountStatus').textContent = statusText;
-                        document.getElementById('accountStatus').style.color = statusColor;
                     }
                     
                     // إخفاء Skeleton وإظهار المحتوى الحقيقي
@@ -2089,6 +2068,11 @@
                             updateBlockButton();
                             blockBtn.classList.remove('loading');
                             profileProgress.showSuccess('تم حظر المستخدم بنجاح');
+                            
+                            // العودة إلى صفحة الرئيسية بعد الحظر
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 1000);
                         });
                     } else {
                         blockBtn.classList.remove('loading');
