@@ -336,26 +336,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         
-        /* مؤشر النشاط - دائرة خضراء/حمراء */
-        .status-indicator {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid #0f1115;
-            z-index: 1;
-        }
-        
-        .status-online {
-            background: #10b981;
-        }
-        
-        .status-offline {
-            background: #ef4444;
-        }
-        
         .verified-badge {
             position: absolute;
             top: 5px;
@@ -717,17 +697,6 @@
             font-size: 16px;
             font-weight: bold;
             color: white;
-            position: relative;
-        }
-        
-        .reviewer-status {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid #1f2937;
         }
         
         .reviewer-name {
@@ -797,17 +766,6 @@
             font-weight: bold;
             color: white;
             flex-shrink: 0;
-            position: relative;
-        }
-        
-        .follow-status {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid #1f2937;
         }
         
         .follow-info {
@@ -1335,7 +1293,6 @@
                 <div class="profile-info">
                     <div class="avatar-container">
                         <div class="avatar" id="userAvatar">👤</div>
-                        <div class="status-indicator" id="statusIndicator"></div>
                         <div class="verified-badge" id="verifiedBadge" style="display: none;">✓</div>
                     </div>
                     <div class="profile-details">
@@ -1427,20 +1384,8 @@
                             <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
                         </div>
                         <div class="contact-item">
-                            <span class="contact-label">البريد الإلكتروني:</span>
-                            <span class="contact-value" id="displayEmail">محمي</span>
-                        </div>
-                        <div class="contact-item">
                             <span class="contact-label">تاريخ الانضمام:</span>
                             <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-label">آخر ظهور:</span>
-                            <span class="contact-value" id="lastActive">غير معروف</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-label">الحالة:</span>
-                            <span class="contact-value" id="accountStatus">نشط</span>
                         </div>
                     </div>
                 </div>
@@ -1764,10 +1709,6 @@
                     document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
                     document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
                     
-                    if (userData.email) {
-                        document.getElementById('displayEmail').textContent = userData.email;
-                    }
-                    
                     if (userData.bio) {
                         document.getElementById('userBio').textContent = userData.bio;
                         currentUserBio = userData.bio;
@@ -1787,8 +1728,6 @@
                         document.getElementById('verifiedBadge').style.display = 'block';
                     }
                     
-                    updateStatusIndicator(userData);
-                    
                     const firstLetter = displayName.charAt(0).toUpperCase();
                     document.getElementById('userAvatar').textContent = firstLetter;
                     
@@ -1796,20 +1735,6 @@
                     
                     const joinDate = userData.joinDate || formatDate(userData.createdAt) || 'غير معروف';
                     document.getElementById('joinDate').textContent = joinDate;
-                    
-                    if (userData.lastActive) {
-                        const lastActive = formatTimeAgo(userData.lastActive);
-                        document.getElementById('lastActive').textContent = lastActive;
-                    }
-                    
-                    if (userData.accountStatus) {
-                        const statusText = userData.accountStatus === 'active' ? 'نشط' : 
-                                         userData.accountStatus === 'suspended' ? 'موقوف' : 'غير نشط';
-                        const statusColor = userData.accountStatus === 'active' ? '#10b981' : 
-                                          userData.accountStatus === 'suspended' ? '#ef4444' : '#9ca3af';
-                        document.getElementById('accountStatus').textContent = statusText;
-                        document.getElementById('accountStatus').style.color = statusColor;
-                    }
                     
                     // إخفاء Skeleton وإظهار المحتوى الحقيقي
                     setTimeout(() => {
@@ -1846,30 +1771,6 @@
                     profileProgress.showError('حدث خطأ في تحميل الملف الشخصي');
                 }, 300);
             });
-        }
-        
-        // تحديث مؤشر النشاط
-        function updateStatusIndicator(userData) {
-            const statusIndicator = document.getElementById('statusIndicator');
-            
-            if (userData.accountStatus === 'suspended') {
-                statusIndicator.className = 'status-indicator status-offline';
-                return;
-            }
-            
-            if (userData.lastActive) {
-                const lastActive = new Date(userData.lastActive);
-                const now = new Date();
-                const diffMinutes = (now - lastActive) / (1000 * 60);
-                
-                if (diffMinutes < 5) {
-                    statusIndicator.className = 'status-indicator status-online';
-                } else {
-                    statusIndicator.className = 'status-indicator status-offline';
-                }
-            } else {
-                statusIndicator.className = 'status-indicator status-offline';
-            }
         }
         
         // Update Stats from User Data
@@ -2080,7 +1981,7 @@
                         profileProgress.hideOverlay();
                     }
                 } else {
-                    if (confirm('هل أنت متأكد من حظر هذا المستخدم؟ لن تتمكن من رؤية إعلاناته أو التواصل معه.')) {
+                    if (confirm('هل أنت متأكد من حظر هذا المستخدم؟ سيتم إعادتك للصفحة الرئيسية.')) {
                         blockRef.set({
                             timestamp: Date.now(),
                             reason: 'بواسطة المستخدم'
@@ -2089,6 +1990,11 @@
                             updateBlockButton();
                             blockBtn.classList.remove('loading');
                             profileProgress.showSuccess('تم حظر المستخدم بنجاح');
+                            
+                            // العودة إلى الصفحة الرئيسية بعد 1.5 ثانية
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 1500);
                         });
                     } else {
                         blockBtn.classList.remove('loading');
@@ -2193,16 +2099,6 @@
                     const productCount = data.totalProducts || 0;
                     const followersCount = data.followersCount || 0;
                     
-                    let statusClass = 'status-offline';
-                    if (data.accountStatus === 'suspended') {
-                        statusClass = 'status-offline';
-                    } else if (data.lastActive) {
-                        const lastActive = new Date(data.lastActive);
-                        const now = new Date();
-                        const diffMinutes = (now - lastActive) / (1000 * 60);
-                        statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
-                    }
-                    
                     const userCard = document.createElement('div');
                     userCard.className = 'follow-card';
                     userCard.onclick = () => viewUserProfile(id);
@@ -2232,9 +2128,7 @@
                     }
                     
                     userCard.innerHTML = `
-                        <div class="follow-avatar">${firstLetter}
-                            <div class="follow-status ${statusClass}"></div>
-                        </div>
+                        <div class="follow-avatar">${firstLetter}</div>
                         <div class="follow-info">
                             <div class="follow-name">${displayName}</div>
                             <div class="follow-username">@${data.username || 'user'}</div>
@@ -2755,14 +2649,6 @@
                         const firstLetter = reviewerName.charAt(0).toUpperCase();
                         const date = formatTimeAgo(review.timestamp);
                         
-                        let statusClass = 'status-offline';
-                        if (review.reviewerData && review.reviewerData.lastActive) {
-                            const lastActive = new Date(review.reviewerData.lastActive);
-                            const now = new Date();
-                            const diffMinutes = (now - lastActive) / (1000 * 60);
-                            statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
-                        }
-                        
                         let starsHTML = '';
                         for (let i = 1; i <= 5; i++) {
                             if (i <= review.rating) {
@@ -2777,9 +2663,7 @@
                         reviewCard.innerHTML = `
                             <div class="review-header">
                                 <div class="reviewer-info">
-                                    <div class="reviewer-avatar">${firstLetter}
-                                        <div class="reviewer-status ${statusClass}"></div>
-                                    </div>
+                                    <div class="reviewer-avatar">${firstLetter}</div>
                                     <div>
                                         <div class="reviewer-name" onclick="viewUserProfile('${review.reviewerId}')">
                                             ${reviewerName}
