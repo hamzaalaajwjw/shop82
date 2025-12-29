@@ -30,6 +30,234 @@
             padding: 0 15px;
         }
         
+        /* Progress Bar System للملف الشخصي */
+        .top-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 9999;
+            display: none;
+        }
+
+        .progress-bar-line {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7);
+            transition: width 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.4), 
+                transparent);
+            animation: progressShine 1.5s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .circular-progress {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9998;
+            background: rgba(15, 17, 21, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .circular-progress svg {
+            width: 50px;
+            height: 50px;
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transform-origin: center;
+        }
+
+        .circular-progress .progress-bg {
+            stroke: rgba(56, 189, 248, 0.1);
+        }
+
+        .circular-progress .progress-fill {
+            stroke: url(#progressGradient);
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 17, 21, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 9997;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .progress-overlay.active {
+            opacity: 1;
+            display: flex;
+        }
+
+        .progress-overlay-content {
+            text-align: center;
+            max-width: 300px;
+            padding: 20px;
+        }
+
+        .progress-overlay-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        .progress-overlay-text {
+            color: #e5e7eb;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .progress-overlay-subtext {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        /* Skeleton Loading للملف الشخصي */
+        .skeleton-card {
+            background: #1c1f27;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2d3748;
+            animation: skeletonPulse 1.5s infinite;
+            margin-bottom: 15px;
+        }
+
+        .skeleton-line {
+            height: 16px;
+            background: linear-gradient(90deg, 
+                rgba(31, 41, 55, 0.4) 25%, 
+                rgba(56, 189, 248, 0.1) 50%, 
+                rgba(31, 41, 55, 0.4) 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            animation: skeletonWave 1.5s infinite;
+        }
+
+        .skeleton-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+            background-size: 200% 100%;
+            animation: skeletonWave 1.5s infinite;
+            margin-bottom: 15px;
+        }
+
+        .skeleton-text {
+            height: 20px;
+            background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            animation: skeletonWave 1.5s infinite;
+        }
+
+        .skeleton-text.short {
+            width: 60%;
+        }
+
+        .skeleton-text.medium {
+            width: 80%;
+        }
+
+        .skeleton-text.long {
+            width: 100%;
+        }
+
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes skeletonWave {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Button Loading State */
+        .btn.loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        /* Progress States */
+        .progress-success {
+            background: linear-gradient(90deg, #10b981, #059669) !important;
+        }
+
+        .progress-error {
+            background: linear-gradient(90deg, #ef4444, #dc2626) !important;
+        }
+
+        .progress-warning {
+            background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+        }
+
         /* Header */
         .header {
             background: #0b0d12;
@@ -987,13 +1215,36 @@
             animation: spin 1s ease-in-out infinite;
             display: inline-block;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
+    <!-- Progress Indicators -->
+    <div class="top-progress-bar" id="profileProgressBar">
+        <div class="progress-bar-line" id="profileProgressLine"></div>
+    </div>
+
+    <div class="circular-progress" id="circularProgress">
+        <svg viewBox="0 0 36 36">
+            <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#38bdf8" />
+                    <stop offset="100%" stop-color="#0ea5e9" />
+                </linearGradient>
+            </defs>
+            <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+            <circle class="progress-fill" cx="18" cy="18" r="16" 
+                    stroke-dasharray="100" stroke-dashoffset="100"></circle>
+        </svg>
+    </div>
+
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-overlay-content">
+            <div class="progress-overlay-spinner"></div>
+            <div class="progress-overlay-text" id="progressText">جاري التحميل...</div>
+            <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <div class="container">
@@ -1011,195 +1262,263 @@
         </div>
     </div>
 
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="container">
-            <div class="profile-info">
-                <div class="avatar-container">
-                    <div class="avatar" id="userAvatar">👤</div>
-                    <div class="status-indicator" id="statusIndicator"></div>
-                    <div class="verified-badge" id="verifiedBadge" style="display: none;">✓</div>
-                </div>
-                <div class="profile-details">
-                    <h1 class="profile-name" id="userFullName">
-                        <span id="fullNameText">جارٍ التحميل...</span>
-                        <span id="adminBadge" class="admin-badge" style="display: none;">مدير</span>
-                    </h1>
-                    <div class="profile-username" id="userName">@username</div>
-                    
-                    <!-- وصف المستخدم -->
-                    <div class="profile-bio-container">
-                        <div class="profile-bio" id="userBio">لا يوجد وصف شخصي</div>
-                        <button class="edit-bio-btn" id="editBioBtn" onclick="showBioEditor()">تعديل الوصف</button>
+    <!-- Skeleton Loading أثناء التحميل -->
+    <div id="skeletonLoading" style="display: none;">
+        <div class="profile-header">
+            <div class="container">
+                <div class="profile-info">
+                    <div class="avatar-container">
+                        <div class="skeleton-avatar"></div>
                     </div>
-                    
-                    <div class="profile-stats">
-                        <div class="stat-item" onclick="showTab('products')">
-                            <span class="stat-number" id="productsCount">0</span>
-                            <span class="stat-label">إعلانات</span>
+                    <div class="profile-details">
+                        <div class="skeleton-text long" style="height: 30px; margin-bottom: 10px;"></div>
+                        <div class="skeleton-text medium" style="height: 20px; margin-bottom: 15px;"></div>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
+                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
+                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
+                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
+                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                            </div>
                         </div>
-                        <div class="stat-item" onclick="showTab('followers')">
-                            <span class="stat-number" id="followersCount">0</span>
-                            <span class="stat-label">متابعين</span>
-                        </div>
-                        <div class="stat-item" onclick="showTab('following')">
-                            <span class="stat-number" id="followingCount">0</span>
-                            <span class="stat-label">يتبع</span>
-                        </div>
-                        <div class="stat-item" onclick="showTab('reviews')">
-                            <span class="stat-number" id="totalReviews">0</span>
-                            <span class="stat-label">تقييمات</span>
-                        </div>
-                    </div>
-                    
-                    <div class="profile-actions" id="profileActions">
-                        <button class="btn btn-primary" id="followButton" onclick="toggleFollow()">
-                            <span id="followText">متابعة</span>
-                        </button>
-                        <button class="btn btn-danger" id="blockButton" onclick="toggleBlockUser()">
-                            <span id="blockText">حظر</span>
-                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="container">
+                <div class="tabs-container">
+                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" style="padding: 25px 0;">
+            <div class="skeleton-card">
+                <div class="skeleton-line" style="height: 20px; width: 70%"></div>
+                <div class="skeleton-line" style="height: 16px; width: 40%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 60%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 50%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 80%"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton-line" style="height: 20px; width: 70%"></div>
+                <div class="skeleton-line" style="height: 16px; width: 40%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 60%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 50%"></div>
+                <div class="skeleton-line" style="height: 12px; width: 80%"></div>
             </div>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
+    <!-- المحتوى الفعلي -->
+    <div id="realContent" style="display: none;">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="container">
+                <div class="profile-info">
+                    <div class="avatar-container">
+                        <div class="avatar" id="userAvatar">👤</div>
+                        <div class="status-indicator" id="statusIndicator"></div>
+                        <div class="verified-badge" id="verifiedBadge" style="display: none;">✓</div>
+                    </div>
+                    <div class="profile-details">
+                        <h1 class="profile-name" id="userFullName">
+                            <span id="fullNameText">جارٍ التحميل...</span>
+                            <span id="adminBadge" class="admin-badge" style="display: none;">مدير</span>
+                        </h1>
+                        <div class="profile-username" id="userName">@username</div>
+                        
+                        <!-- وصف المستخدم -->
+                        <div class="profile-bio-container">
+                            <div class="profile-bio" id="userBio">لا يوجد وصف شخصي</div>
+                            <button class="edit-bio-btn" id="editBioBtn" onclick="showBioEditor()">تعديل الوصف</button>
+                        </div>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item" onclick="showTab('products')">
+                                <span class="stat-number" id="productsCount">0</span>
+                                <span class="stat-label">إعلانات</span>
+                            </div>
+                            <div class="stat-item" onclick="showTab('followers')">
+                                <span class="stat-number" id="followersCount">0</span>
+                                <span class="stat-label">متابعين</span>
+                            </div>
+                            <div class="stat-item" onclick="showTab('following')">
+                                <span class="stat-number" id="followingCount">0</span>
+                                <span class="stat-label">يتبع</span>
+                            </div>
+                            <div class="stat-item" onclick="showTab('reviews')">
+                                <span class="stat-number" id="totalReviews">0</span>
+                                <span class="stat-label">تقييمات</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-actions" id="profileActions">
+                            <button class="btn btn-primary" id="followButton" onclick="toggleFollow()">
+                                <span id="followText">متابعة</span>
+                            </button>
+                            <button class="btn btn-danger" id="blockButton" onclick="toggleBlockUser()">
+                                <span id="blockText">حظر</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="container">
+                <div class="tabs-container">
+                    <a href="#" class="tab active" data-tab="info" onclick="showTab('info'); return false;">
+                        <span>ℹ️</span>
+                        معلومات
+                    </a>
+                    <a href="#" class="tab" data-tab="products" onclick="showTab('products'); return false;">
+                        <span>🛒</span>
+                        الإعلانات
+                    </a>
+                    <a href="#" class="tab" data-tab="reviews" onclick="showTab('reviews'); return false;">
+                        <span>⭐</span>
+                        التقييمات
+                    </a>
+                    <a href="#" class="tab" data-tab="followers" onclick="showTab('followers'); return false;">
+                        <span>👥</span>
+                        المتابعون
+                    </a>
+                    <a href="#" class="tab" data-tab="following" onclick="showTab('following'); return false;">
+                        <span>👣</span>
+                        المتابعة
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
         <div class="container">
-            <div class="tabs-container">
-                <a href="#" class="tab active" data-tab="info" onclick="showTab('info'); return false;">
-                    <span>ℹ️</span>
-                    معلومات
-                </a>
-                <a href="#" class="tab" data-tab="products" onclick="showTab('products'); return false;">
-                    <span>🛒</span>
-                    الإعلانات
-                </a>
-                <a href="#" class="tab" data-tab="reviews" onclick="showTab('reviews'); return false;">
-                    <span>⭐</span>
-                    التقييمات
-                </a>
-                <a href="#" class="tab" data-tab="followers" onclick="showTab('followers'); return false;">
-                    <span>👥</span>
-                    المتابعون
-                </a>
-                <a href="#" class="tab" data-tab="following" onclick="showTab('following'); return false;">
-                    <span>👣</span>
-                    المتابعة
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab Content -->
-    <div class="container">
-        <!-- Info Tab -->
-        <div id="infoTab" class="tab-content active">
-            <div class="contact-section">
-                <h2 class="section-title">📞 معلومات الاتصال</h2>
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <span class="contact-label">اسم المستخدم:</span>
-                        <span class="contact-value" id="displayUsername">@username</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">رقم الهاتف:</span>
-                        <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">البريد الإلكتروني:</span>
-                        <span class="contact-value" id="displayEmail">محمي</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">تاريخ الانضمام:</span>
-                        <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">آخر ظهور:</span>
-                        <span class="contact-value" id="lastActive">غير معروف</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-label">الحالة:</span>
-                        <span class="contact-value" id="accountStatus">نشط</span>
+            <!-- Info Tab -->
+            <div id="infoTab" class="tab-content active">
+                <div class="contact-section">
+                    <h2 class="section-title">📞 معلومات الاتصال</h2>
+                    <div class="contact-grid">
+                        <div class="contact-item">
+                            <span class="contact-label">اسم المستخدم:</span>
+                            <span class="contact-value" id="displayUsername">@username</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">رقم الهاتف:</span>
+                            <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">البريد الإلكتروني:</span>
+                            <span class="contact-value" id="displayEmail">محمي</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">تاريخ الانضمام:</span>
+                            <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">آخر ظهور:</span>
+                            <span class="contact-value" id="lastActive">غير معروف</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">الحالة:</span>
+                            <span class="contact-value" id="accountStatus">نشط</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Add Review Section -->
-            <div class="add-review-section" id="addReviewSection">
-                <h2 class="section-title">✍️ أضف تقييمك</h2>
-                <div class="rating-input" id="ratingInput">
-                    <span class="star" data-rating="1">☆</span>
-                    <span class="star" data-rating="2">☆</span>
-                    <span class="star" data-rating="3">☆</span>
-                    <span class="star" data-rating="4">☆</span>
-                    <span class="star" data-rating="5">☆</span>
-                </div>
-                <textarea class="comment-input" id="commentInput" placeholder="اكتب تعليقك هنا (اختياري)..."></textarea>
-                <button class="btn btn-primary submit-btn" id="submitReviewBtn" onclick="submitReview()">
-                    إرسال التقييم
-                </button>
-            </div>
-        </div>
-
-        <!-- Products Tab -->
-        <div id="productsTab" class="tab-content">
-            <div class="section-title">🛒 إعلانات المستخدم</div>
-            <div id="userProducts" class="empty-state">
-                <div class="empty-icon">🛒</div>
-                <div class="empty-text">جارٍ تحميل الإعلانات...</div>
-            </div>
-        </div>
-
-        <!-- Reviews Tab -->
-        <div id="reviewsTab" class="tab-content">
-            <div class="reviews-section">
-                <h2 class="section-title">⭐ التقييمات</h2>
                 
-                <div class="rating-summary">
-                    <div class="average-rating">
-                        <div class="rating-number" id="averageRating">0.0</div>
-                        <div class="rating-stars" id="ratingStars">☆☆☆☆☆</div>
-                        <div class="rating-count" id="ratingCount">من 0 تقييم</div>
+                <!-- Add Review Section -->
+                <div class="add-review-section" id="addReviewSection">
+                    <h2 class="section-title">✍️ أضف تقييمك</h2>
+                    <div class="rating-input" id="ratingInput">
+                        <span class="star" data-rating="1">☆</span>
+                        <span class="star" data-rating="2">☆</span>
+                        <span class="star" data-rating="3">☆</span>
+                        <span class="star" data-rating="4">☆</span>
+                        <span class="star" data-rating="5">☆</span>
+                    </div>
+                    <textarea class="comment-input" id="commentInput" placeholder="اكتب تعليقك هنا (اختياري)..."></textarea>
+                    <button class="btn btn-primary submit-btn" id="submitReviewBtn" onclick="submitReview()">
+                        إرسال التقييم
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div id="productsTab" class="tab-content">
+                <div class="section-title">🛒 إعلانات المستخدم</div>
+                <div id="userProducts" class="empty-state">
+                    <div class="empty-icon">🛒</div>
+                    <div class="empty-text">جارٍ تحميل الإعلانات...</div>
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="reviewsTab" class="tab-content">
+                <div class="reviews-section">
+                    <h2 class="section-title">⭐ التقييمات</h2>
+                    
+                    <div class="rating-summary">
+                        <div class="average-rating">
+                            <div class="rating-number" id="averageRating">0.0</div>
+                            <div class="rating-stars" id="ratingStars">☆☆☆☆☆</div>
+                            <div class="rating-count" id="ratingCount">من 0 تقييم</div>
+                        </div>
+                        
+                        <div class="rating-bars" id="ratingBars">
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
+                        </div>
                     </div>
                     
-                    <div class="rating-bars" id="ratingBars">
-                        <!-- سيتم ملؤها بالجافاسكريبت -->
-                    </div>
-                </div>
-                
-                <div id="reviewsList">
-                    <div class="empty-state">
-                        <div class="empty-icon">⭐</div>
-                        <div class="empty-text">جارٍ تحميل التقييمات...</div>
+                    <div id="reviewsList">
+                        <div class="empty-state">
+                            <div class="empty-icon">⭐</div>
+                            <div class="empty-text">جارٍ تحميل التقييمات...</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Followers Tab -->
-        <div id="followersTab" class="tab-content">
-            <div class="follow-section">
-                <h2 class="section-title">👥 المتابعون</h2>
-                <div id="followersList">
-                    <div class="empty-state">
-                        <div class="empty-icon">👥</div>
-                        <div class="empty-text">جارٍ تحميل المتابعين...</div>
+            <!-- Followers Tab -->
+            <div id="followersTab" class="tab-content">
+                <div class="follow-section">
+                    <h2 class="section-title">👥 المتابعون</h2>
+                    <div id="followersList">
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <div class="empty-text">جارٍ تحميل المتابعين...</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Following Tab -->
-        <div id="followingTab" class="tab-content">
-            <div class="follow-section">
-                <h2 class="section-title">👣 المتابعة</h2>
-                <div id="followingList">
-                    <div class="empty-state">
-                        <div class="empty-icon">👣</div>
-                        <div class="empty-text">جارٍ تحميل قائمة المتابعة...</div>
+            <!-- Following Tab -->
+            <div id="followingTab" class="tab-content">
+                <div class="follow-section">
+                    <h2 class="section-title">👣 المتابعة</h2>
+                    <div id="followingList">
+                        <div class="empty-state">
+                            <div class="empty-icon">👣</div>
+                            <div class="empty-text">جارٍ تحميل قائمة المتابعة...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1244,6 +1563,138 @@
         const db = firebase.database();
         const auth = firebase.auth();
         
+        // Progress Manager للملف الشخصي
+        class ProfileProgressManager {
+            constructor() {
+                this.progressBar = document.getElementById('profileProgressBar');
+                this.progressLine = document.getElementById('profileProgressLine');
+                this.circularProgress = document.getElementById('circularProgress');
+                this.progressOverlay = document.getElementById('progressOverlay');
+                this.progressText = document.getElementById('progressText');
+                this.progressSubtext = document.getElementById('progressSubtext');
+                
+                this.currentProgress = 0;
+                this.progressInterval = null;
+                this.isLoading = false;
+            }
+            
+            showProgressBar() {
+                this.progressBar.style.display = 'block';
+                this.progressLine.style.width = '0%';
+                this.progressLine.className = 'progress-bar-line';
+                
+                this.currentProgress = 0;
+                clearInterval(this.progressInterval);
+                
+                this.progressInterval = setInterval(() => {
+                    if (this.currentProgress < 90) {
+                        this.currentProgress += Math.random() * 10;
+                        this.updateProgress(this.currentProgress);
+                    }
+                }, 200);
+            }
+            
+            updateProgress(percent) {
+                this.progressLine.style.width = `${Math.min(percent, 100)}%`;
+            }
+            
+            hideProgressBar() {
+                clearInterval(this.progressInterval);
+                this.updateProgress(100);
+                
+                setTimeout(() => {
+                    this.progressBar.style.display = 'none';
+                    this.currentProgress = 0;
+                }, 300);
+            }
+            
+            showCircularProgress() {
+                this.circularProgress.style.display = 'block';
+                
+                const circle = this.circularProgress.querySelector('.progress-fill');
+                if (circle) {
+                    circle.style.strokeDashoffset = '100';
+                }
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    if (circle) {
+                        const offset = 100 - progress;
+                        circle.style.strokeDashoffset = offset;
+                    }
+                    
+                    if (progress >= 100) {
+                        progress = 0;
+                    }
+                }, 200);
+                
+                return () => clearInterval(interval);
+            }
+            
+            hideCircularProgress() {
+                this.circularProgress.style.display = 'none';
+            }
+            
+            showOverlay(text = 'جاري التحميل...', subtext = 'يرجى الانتظار') {
+                this.isLoading = true;
+                this.progressText.textContent = text;
+                this.progressSubtext.textContent = subtext;
+                this.progressOverlay.classList.add('active');
+                
+                document.body.style.overflow = 'hidden';
+            }
+            
+            updateOverlayText(text, subtext = null) {
+                this.progressText.textContent = text;
+                if (subtext !== null) {
+                    this.progressSubtext.textContent = subtext;
+                }
+            }
+            
+            hideOverlay() {
+                this.isLoading = false;
+                this.progressOverlay.classList.remove('active');
+                
+                setTimeout(() => {
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+            
+            showSuccess(message = 'تم بنجاح!') {
+                this.progressLine.className = 'progress-bar-line progress-success';
+                this.updateOverlayText(message, '');
+                
+                setTimeout(() => {
+                    this.hideOverlay();
+                    this.hideProgressBar();
+                }, 1500);
+            }
+            
+            showError(message = 'حدث خطأ!') {
+                this.progressLine.className = 'progress-bar-line progress-error';
+                this.updateOverlayText(message, 'الرجاء المحاولة مرة أخرى');
+                
+                setTimeout(() => {
+                    this.hideOverlay();
+                    this.hideProgressBar();
+                }, 2000);
+            }
+            
+            showWarning(message = 'تحذير!') {
+                this.progressLine.className = 'progress-bar-line progress-warning';
+                this.updateOverlayText(message, '');
+                
+                setTimeout(() => {
+                    this.hideOverlay();
+                    this.hideProgressBar();
+                }, 1500);
+            }
+        }
+        
+        // تهيئة Progress Manager
+        const profileProgress = new ProfileProgressManager();
+        
         // متغيرات عامة
         let currentUserId = null;
         let profileUserId = null;
@@ -1267,59 +1718,56 @@
                 return;
             }
             
-            // التحقق من تسجيل الدخول
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    loadProfileData(profileUserId);
-                    checkFollowStatus();
-                    checkBlockStatus();
-                    
-                    // إخفاء قسم إضافة التقييم إذا كان المستخدم يزور صفحته الخاصة
-                    if (currentUserId === profileUserId) {
-                        document.getElementById('addReviewSection').style.display = 'none';
+            // إظهار Skeleton أولاً
+            document.getElementById('skeletonLoading').style.display = 'block';
+            profileProgress.showProgressBar();
+            
+            // التحقق من تسجيل الدخول بعد تأخير بسيط
+            setTimeout(() => {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        loadProfileData(profileUserId);
+                        checkFollowStatus();
+                        checkBlockStatus();
+                        
+                        if (currentUserId === profileUserId) {
+                            document.getElementById('addReviewSection').style.display = 'none';
+                            document.getElementById('followButton').style.display = 'none';
+                            document.getElementById('blockButton').style.display = 'none';
+                            document.getElementById('editBioBtn').style.display = 'block';
+                        }
+                    } else {
                         document.getElementById('followButton').style.display = 'none';
                         document.getElementById('blockButton').style.display = 'none';
-                        document.getElementById('editBioBtn').style.display = 'block';
+                        document.getElementById('addReviewSection').style.display = 'none';
+                        document.getElementById('editBioBtn').style.display = 'none';
+                        loadProfileData(profileUserId);
                     }
-                } else {
-                    // إذا لم يكن مسجلاً دخول، إخفاء الأزرار غير المناسبة
-                    document.getElementById('followButton').style.display = 'none';
-                    document.getElementById('blockButton').style.display = 'none';
-                    document.getElementById('addReviewSection').style.display = 'none';
-                    document.getElementById('editBioBtn').style.display = 'none';
-                    loadProfileData(profileUserId);
-                }
-            });
-            
-            // إعداد تقييم النجوم
-            setupRatingStars();
-            
-            // تعيين تبويب النشاط الأول
-            showTab('info');
-            
-            // إعداد محرر الوصف
-            setupBioEditor();
+                });
+                
+                setupRatingStars();
+                showTab('info');
+                setupBioEditor();
+            }, 500);
         });
         
-        // Load Profile Data
+        // Load Profile Data مع Progress
         function loadProfileData(userId) {
-            // Load user data
+            profileProgress.updateOverlayText('جاري تحميل بيانات الملف الشخصي...', 'انتظر قليلاً');
+            
             db.ref('users/' + userId).once('value', (snapshot) => {
                 const userData = snapshot.val();
                 if (userData) {
-                    // عرض الاسم الكامل أو اسم المستخدم
                     const displayName = userData.fullName || userData.username || 'مستخدم';
                     document.getElementById('fullNameText').textContent = displayName;
                     document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
                     document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
                     
-                    // عرض البريد الإلكتروني إذا كان متوفراً
                     if (userData.email) {
                         document.getElementById('displayEmail').textContent = userData.email;
                     }
                     
-                    // عرض الوصف الشخصي
                     if (userData.bio) {
                         document.getElementById('userBio').textContent = userData.bio;
                         currentUserBio = userData.bio;
@@ -1328,41 +1776,32 @@
                         currentUserBio = '';
                     }
                     
-                    // تحديث حقل محرر الوصف
                     document.getElementById('bioEditor').value = currentUserBio;
                     updateCharCount();
                     
-                    // عرض شارة المدير إذا كان مديراً
                     if (userData.isAdmin) {
                         document.getElementById('adminBadge').style.display = 'inline-block';
                     }
                     
-                    // عرض شارة التوثيق إذا كان موثقاً
                     if (userData.isVerified) {
                         document.getElementById('verifiedBadge').style.display = 'block';
                     }
                     
-                    // تحديث مؤشر النشاط
                     updateStatusIndicator(userData);
                     
-                    // توليد صورة رمزية من الحرف الأول
                     const firstLetter = displayName.charAt(0).toUpperCase();
                     document.getElementById('userAvatar').textContent = firstLetter;
                     
-                    // عرض الإحصائيات
                     updateStatsFromUserData(userData);
                     
-                    // عرض تاريخ الانضمام
                     const joinDate = userData.joinDate || formatDate(userData.createdAt) || 'غير معروف';
                     document.getElementById('joinDate').textContent = joinDate;
                     
-                    // عرض آخر ظهور
                     if (userData.lastActive) {
                         const lastActive = formatTimeAgo(userData.lastActive);
                         document.getElementById('lastActive').textContent = lastActive;
                     }
                     
-                    // عرض حالة الحساب
                     if (userData.accountStatus) {
                         const statusText = userData.accountStatus === 'active' ? 'نشط' : 
                                          userData.accountStatus === 'suspended' ? 'موقوف' : 'غير نشط';
@@ -1372,25 +1811,40 @@
                         document.getElementById('accountStatus').style.color = statusColor;
                     }
                     
-                    // سحب رقم الهاتف من منشورات المستخدم
+                    // إخفاء Skeleton وإظهار المحتوى الحقيقي
+                    setTimeout(() => {
+                        document.getElementById('skeletonLoading').style.display = 'none';
+                        document.getElementById('realContent').style.display = 'block';
+                        profileProgress.hideProgressBar();
+                    }, 300);
+                    
                     fetchUserPhoneNumber(userId);
-                    
-                    // تحميل التقييمات
                     calculateUserRating(userId);
-                    
-                    // تحميل قوائم المتابعين والمتابعة
                     loadFollowersList(userId);
                     loadFollowingList(userId);
-                    
-                    // تحميل إعلانات المستخدم
                     loadUserProducts(userId);
                     
                 } else {
-                    // إذا لم يوجد المستخدم
                     document.getElementById('fullNameText').textContent = 'مستخدم غير موجود';
                     document.getElementById('userName').textContent = '@unknown';
+                    
+                    setTimeout(() => {
+                        document.getElementById('skeletonLoading').style.display = 'none';
+                        document.getElementById('realContent').style.display = 'block';
+                        profileProgress.hideProgressBar();
+                        profileProgress.showError('المستخدم غير موجود');
+                    }, 300);
+                    
                     showTab('info');
                 }
+            }).catch(error => {
+                console.error('Error loading profile:', error);
+                setTimeout(() => {
+                    document.getElementById('skeletonLoading').style.display = 'none';
+                    document.getElementById('realContent').style.display = 'block';
+                    profileProgress.hideProgressBar();
+                    profileProgress.showError('حدث خطأ في تحميل الملف الشخصي');
+                }, 300);
             });
         }
         
@@ -1408,7 +1862,6 @@
                 const now = new Date();
                 const diffMinutes = (now - lastActive) / (1000 * 60);
                 
-                // إذا كان آخر نشاط منذ أقل من 5 دقائق، يعتبر نشط
                 if (diffMinutes < 5) {
                     statusIndicator.className = 'status-indicator status-online';
                 } else {
@@ -1421,7 +1874,6 @@
         
         // Update Stats from User Data
         function updateStatsFromUserData(userData) {
-            // تحديث الإحصائيات من بيانات المستخدم
             document.getElementById('productsCount').textContent = userData.totalProducts || 0;
             document.getElementById('followersCount').textContent = userData.followersCount || 0;
             document.getElementById('followingCount').textContent = userData.followingCount || 0;
@@ -1437,14 +1889,12 @@
                 if (products) {
                     const product = Object.values(products)[0];
                     if (product.phone) {
-                        // إظهار الرقم كاملاً
                         phoneNumber = product.phone;
                     }
                 }
                 
                 document.getElementById('displayPhone').textContent = phoneNumber;
                 
-                // إذا لم يتم العثور على رقم في المنتجات، حاول البحث في بيانات المستخدم
                 if (phoneNumber === 'غير متوفر') {
                     db.ref('users/' + userId).once('value', (userSnapshot) => {
                         const userData = userSnapshot.val();
@@ -1512,10 +1962,10 @@
             }
         }
         
-        // Toggle Follow - نظام متابعة سريع وسلس
+        // Toggle Follow مع Progress
         function toggleFollow() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                alert('لا يمكنك متابعة نفسك');
+                profileProgress.showError('لا يمكنك متابعة نفسك');
                 return;
             }
             
@@ -1525,95 +1975,85 @@
             const followBtn = document.getElementById('followButton');
             const followText = document.getElementById('followText');
             
-            // تحديث واجهة المستخدم فوراً لتحسين التجربة
+            // إضافة حالة تحميل للزر
+            followBtn.classList.add('loading');
+            followBtn.innerHTML = '<span class="spinner"></span>';
+            
             if (isFollowing) {
-                // إلغاء المتابعة
-                followText.textContent = '+ متابعة';
-                followBtn.classList.remove('btn-success');
-                followBtn.classList.add('btn-primary');
-                isFollowing = false;
-                
-                // تحديث العدد المحلي
-                let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
-                if (currentFollowers > 0) {
-                    document.getElementById('followersCount').textContent = currentFollowers - 1;
-                }
+                followRef.once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        followRef.remove().then(() => {
+                            followingRef.remove();
+                            
+                            db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
+                                return (current || 1) - 1;
+                            });
+                            
+                            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                                return (current || 1) - 1;
+                            });
+                            
+                            isFollowing = false;
+                            updateFollowButton();
+                            
+                            let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                            if (currentFollowers > 0) {
+                                document.getElementById('followersCount').textContent = currentFollowers - 1;
+                            }
+                            
+                            followBtn.classList.remove('loading');
+                            followText.textContent = '+ متابعة';
+                            
+                            profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
+                            
+                            if (document.getElementById('followersTab').classList.contains('active')) {
+                                loadFollowersList(profileUserId);
+                            }
+                        });
+                    }
+                });
             } else {
-                // المتابعة
-                followText.textContent = '✓ متابع';
-                followBtn.classList.remove('btn-primary');
-                followBtn.classList.add('btn-success');
-                isFollowing = true;
+                const followData = {
+                    timestamp: Date.now(),
+                    userId: currentUserId
+                };
                 
-                // تحديث العدد المحلي
-                let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
-                document.getElementById('followersCount').textContent = currentFollowers + 1;
-            }
-            
-            // إضافة تأثير بسيط
-            followBtn.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                followBtn.style.transform = '';
-            }, 150);
-            
-            // تنفيذ العملية على Firebase
-            followRef.once('value', (snapshot) => {
-                const currentlyFollowing = snapshot.exists();
-                
-                if (currentlyFollowing) {
-                    // إلغاء المتابعة على Firebase
-                    followRef.remove().then(() => {
-                        followingRef.remove();
-                        
-                        // تحديث العداد في قاعدة البيانات
-                        db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                            return (current || 1) - 1;
-                        });
-                        
-                        db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                            return (current || 1) - 1;
-                        });
-                        
-                        // إعادة تحميل قائمة المتابعين إذا كانت مفتوحة
-                        if (document.getElementById('followersTab').classList.contains('active')) {
-                            loadFollowersList(profileUserId);
-                        }
-                    });
-                } else {
-                    // المتابعة على Firebase
-                    const followData = {
+                followRef.set(followData).then(() => {
+                    followingRef.set({
                         timestamp: Date.now(),
-                        userId: currentUserId
-                    };
-                    
-                    followRef.set(followData).then(() => {
-                        followingRef.set({
-                            timestamp: Date.now(),
-                            userId: profileUserId
-                        });
-                        
-                        // تحديث العداد في قاعدة البيانات
-                        db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                            return (current || 0) + 1;
-                        });
-                        
-                        db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                            return (current || 0) + 1;
-                        });
-                        
-                        // إعادة تحميل قائمة المتابعين إذا كانت مفتوحة
-                        if (document.getElementById('followersTab').classList.contains('active')) {
-                            loadFollowersList(profileUserId);
-                        }
+                        userId: profileUserId
                     });
-                }
-            });
+                    
+                    db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
+                        return (current || 0) + 1;
+                    });
+                    
+                    db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                        return (current || 0) + 1;
+                    });
+                    
+                    isFollowing = true;
+                    updateFollowButton();
+                    
+                    let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                    document.getElementById('followersCount').textContent = currentFollowers + 1;
+                    
+                    followBtn.classList.remove('loading');
+                    followText.textContent = '✓ متابع';
+                    
+                    profileProgress.showSuccess('تمت المتابعة بنجاح');
+                    
+                    if (document.getElementById('followersTab').classList.contains('active')) {
+                        loadFollowersList(profileUserId);
+                    }
+                });
+            }
         }
         
-        // Toggle Block User
+        // Toggle Block User مع Progress
         function toggleBlockUser() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                alert('لا يمكنك حظر نفسك');
+                profileProgress.showError('لا يمكنك حظر نفسك');
                 return;
             }
             
@@ -1622,24 +2062,24 @@
             
             blockBtn.classList.add('loading');
             blockBtn.innerHTML = '<span class="spinner"></span>';
+            profileProgress.showOverlay('جاري المعالجة...', 'انتظر قليلاً');
             
             blockRef.once('value', (snapshot) => {
                 const currentlyBlocked = snapshot.exists();
                 
                 if (currentlyBlocked) {
-                    // إلغاء الحظر
                     if (confirm('هل تريد إلغاء حظر هذا المستخدم؟')) {
                         blockRef.remove().then(() => {
                             isBlocked = false;
                             updateBlockButton();
                             blockBtn.classList.remove('loading');
-                            alert('تم إلغاء حظر المستخدم');
+                            profileProgress.showSuccess('تم إلغاء حظر المستخدم');
                         });
                     } else {
                         blockBtn.classList.remove('loading');
+                        profileProgress.hideOverlay();
                     }
                 } else {
-                    // حظر المستخدم
                     if (confirm('هل أنت متأكد من حظر هذا المستخدم؟ لن تتمكن من رؤية إعلاناته أو التواصل معه.')) {
                         blockRef.set({
                             timestamp: Date.now(),
@@ -1648,20 +2088,23 @@
                             isBlocked = true;
                             updateBlockButton();
                             blockBtn.classList.remove('loading');
-                            alert('تم حظر المستخدم بنجاح');
+                            profileProgress.showSuccess('تم حظر المستخدم بنجاح');
                         });
                     } else {
                         blockBtn.classList.remove('loading');
+                        profileProgress.hideOverlay();
                     }
                 }
             });
         }
         
-        // Load Followers List - الطريقة الصحيحة
+        // Load Followers List مع Progress
         function loadFollowersList(userId) {
+            const followersList = document.getElementById('followersList');
+            followersList.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">جاري التحميل...</div></div>';
+            
             db.ref('followers/' + userId).once('value', (snapshot) => {
                 const followers = snapshot.val();
-                const followersList = document.getElementById('followersList');
                 
                 if (!followers) {
                     followersList.innerHTML = `
@@ -1672,27 +2115,23 @@
                         </div>
                     `;
                     
-                    // تحديث العدد
                     document.getElementById('followersCount').textContent = '0';
                     return;
                 }
                 
-                // الحصول على IDs جميع المتابعين
                 const followerIds = Object.keys(followers);
-                
-                // تحديث العدد
                 document.getElementById('followersCount').textContent = followerIds.length;
-                
-                // تحميل بيانات المتابعين
                 loadUsersList(followerIds, followersList, 'followers', 'متابعون');
             });
         }
         
-        // Load Following List - الطريقة الصحيحة
+        // Load Following List مع Progress
         function loadFollowingList(userId) {
+            const followingList = document.getElementById('followingList');
+            followingList.innerHTML = '<div class="empty-state"><div class="empty-icon">👣</div><div class="empty-text">جاري التحميل...</div></div>';
+            
             db.ref('following/' + userId).once('value', (snapshot) => {
                 const following = snapshot.val();
-                const followingList = document.getElementById('followingList');
                 
                 if (!following) {
                     followingList.innerHTML = `
@@ -1703,23 +2142,17 @@
                         </div>
                     `;
                     
-                    // تحديث العدد
                     document.getElementById('followingCount').textContent = '0';
                     return;
                 }
                 
-                // الحصول على IDs جميع الأشخاص الذين يتابعهم
                 const followingIds = Object.keys(following);
-                
-                // تحديث العدد
                 document.getElementById('followingCount').textContent = followingIds.length;
-                
-                // تحميل بيانات الأشخاص الذين يتابعهم
                 loadUsersList(followingIds, followingList, 'following', 'المتابعة');
             });
         }
         
-        // Load Users List (for followers/following)
+        // Load Users List مع Progress
         function loadUsersList(userIds, container, type, title) {
             container.innerHTML = '<div class="follow-grid"></div>';
             const grid = container.querySelector('.follow-grid');
@@ -1734,7 +2167,6 @@
                 return;
             }
             
-            // تحميل بيانات كل مستخدم
             const userPromises = userIds.map(userId => 
                 db.ref('users/' + userId).once('value').then(snap => ({
                     id: userId,
@@ -1743,7 +2175,6 @@
             );
             
             Promise.all(userPromises).then(userData => {
-                // تصفية المستخدمين الذين لا توجد بيانات لهم
                 const validUsers = userData.filter(({data}) => data);
                 
                 if (validUsers.length === 0) {
@@ -1762,7 +2193,6 @@
                     const productCount = data.totalProducts || 0;
                     const followersCount = data.followersCount || 0;
                     
-                    // تحديث مؤشر النشاط
                     let statusClass = 'status-offline';
                     if (data.accountStatus === 'suspended') {
                         statusClass = 'status-offline';
@@ -1777,7 +2207,6 @@
                     userCard.className = 'follow-card';
                     userCard.onclick = () => viewUserProfile(id);
                     
-                    // التحقق مما إذا كان المستخدم الحالي يتابع هذا المستخدم
                     let followButtonHTML = '';
                     if (currentUserId && currentUserId !== id) {
                         db.ref('followers/' + id + '/' + currentUserId).once('value', (snap) => {
@@ -1822,36 +2251,27 @@
             });
         }
         
-        // Toggle Follow for user in list - نظام متابعة سريع
+        // Toggle Follow for user in list مع Progress
         function toggleFollowListUser(targetUserId, button) {
             event.stopPropagation();
             
             if (!currentUserId) {
-                alert('يجب تسجيل الدخول للمتابعة');
+                profileProgress.showError('يجب تسجيل الدخول للمتابعة');
                 return;
             }
             
             if (currentUserId === targetUserId) {
-                alert('لا يمكنك متابعة نفسك');
+                profileProgress.showError('لا يمكنك متابعة نفسك');
                 return;
             }
             
             const followRef = db.ref('followers/' + targetUserId + '/' + currentUserId);
             const followingRef = db.ref('following/' + currentUserId + '/' + targetUserId);
             
-            // تحديث واجهة المستخدم فوراً
+            button.classList.add('loading');
+            button.innerHTML = '<span class="spinner"></span>';
+            
             if (button.textContent === 'متابعة') {
-                button.textContent = '✓ متابع';
-                button.classList.remove('btn-outline');
-                button.classList.add('btn-success');
-                
-                // تأثير بسيط
-                button.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    button.style.transform = '';
-                }, 150);
-                
-                // المتابعة على Firebase
                 const followData = {
                     timestamp: Date.now(),
                     userId: currentUserId
@@ -1863,43 +2283,42 @@
                         userId: targetUserId
                     });
                     
-                    // تحديث العدادات
                     updateFollowCounts(targetUserId, 1);
+                    
+                    button.classList.remove('loading');
+                    button.textContent = '✓ متابع';
+                    button.classList.remove('btn-outline');
+                    button.classList.add('btn-success');
                 });
             } else {
-                button.textContent = 'متابعة';
-                button.classList.remove('btn-success');
-                button.classList.add('btn-outline');
-                
-                // إلغاء المتابعة على Firebase
                 followRef.remove().then(() => {
                     followingRef.remove();
                     
-                    // تحديث العدادات
                     updateFollowCounts(targetUserId, -1);
+                    
+                    button.classList.remove('loading');
+                    button.textContent = 'متابعة';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline');
                 });
             }
         }
         
         function updateFollowCounts(targetUserId, change) {
-            // تحديث عدد متابعي المستخدم الهدف
             db.ref('users/' + targetUserId + '/followersCount').transaction((current) => {
                 return (current || 0) + change;
             });
             
-            // تحديث عدد المتابعة للمستخدم الحالي
             db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
                 return (current || 0) + change;
             });
             
-            // تحديث العدد المعروض في صفحة البروفايل الحالية
             if (targetUserId === profileUserId) {
                 db.ref('users/' + targetUserId + '/followersCount').once('value', (snap) => {
                     document.getElementById('followersCount').textContent = snap.val() || 0;
                 });
             }
             
-            // تحديث العدد المعروض للمستخدم الحالي
             if (currentUserId === profileUserId) {
                 db.ref('users/' + currentUserId + '/followingCount').once('value', (snap) => {
                     document.getElementById('followingCount').textContent = snap.val() || 0;
@@ -1907,9 +2326,13 @@
             }
         }
         
-        // View User Profile
+        // View User Profile مع Progress
         function viewUserProfile(userId) {
-            window.location.href = `profile.html?id=${userId}`;
+            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+            
+            setTimeout(() => {
+                window.location.href = `profile.html?id=${userId}`;
+            }, 500);
         }
         
         // Setup Bio Editor
@@ -1963,20 +2386,27 @@
             modal.style.display = 'none';
         }
         
-        // Save Bio
+        // Save Bio مع Progress
         function saveBio() {
             const bioEditor = document.getElementById('bioEditor');
             const newBio = bioEditor.value.trim();
             
             if (newBio.length > 70) {
-                alert('الوصف يجب ألا يتجاوز 70 حرفاً');
+                profileProgress.showError('الوصف يجب ألا يتجاوز 70 حرفاً');
                 return;
             }
             
             if (!currentUserId || currentUserId !== profileUserId) {
-                alert('ليس لديك صلاحية لتعديل هذا الوصف');
+                profileProgress.showError('ليس لديك صلاحية لتعديل هذا الوصف');
                 return;
             }
+            
+            const saveBtn = document.querySelector('.modal-actions .btn-primary');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
+            saveBtn.classList.add('loading');
+            
+            profileProgress.showOverlay('جاري حفظ الوصف...', 'انتظر قليلاً');
             
             db.ref('users/' + currentUserId).update({
                 bio: newBio,
@@ -1985,18 +2415,28 @@
                 currentUserBio = newBio;
                 document.getElementById('userBio').textContent = newBio || 'لا يوجد وصف شخصي';
                 closeBioEditor();
-                alert('تم حفظ الوصف بنجاح');
+                
+                saveBtn.innerHTML = originalText;
+                saveBtn.classList.remove('loading');
+                
+                profileProgress.showSuccess('تم حفظ الوصف بنجاح');
             }).catch((error) => {
                 console.error('Error saving bio:', error);
-                alert('حدث خطأ أثناء حفظ الوصف');
+                
+                saveBtn.innerHTML = originalText;
+                saveBtn.classList.remove('loading');
+                
+                profileProgress.showError('حدث خطأ أثناء حفظ الوصف');
             });
         }
         
-        // Load User Products
+        // Load User Products مع Progress
         function loadUserProducts(userId) {
             const productsContainer = document.getElementById('userProducts');
             productsContainer.innerHTML = '<div class="products-grid"></div>';
             const grid = productsContainer.querySelector('.products-grid');
+            
+            profileProgress.showCircularProgress();
             
             db.ref('products').orderByChild('uid').equalTo(userId).once('value', (snapshot) => {
                 const products = snapshot.val();
@@ -2011,19 +2451,17 @@
                     `;
                     
                     document.getElementById('productsCount').textContent = '0';
+                    profileProgress.hideCircularProgress();
                     return;
                 }
                 
                 const productArray = Object.entries(products).reverse();
-                
-                // تحديث عدد الإعلانات
                 document.getElementById('productsCount').textContent = productArray.length;
                 
                 productArray.forEach(([productId, product]) => {
-                    const firstLetter = (product.title || 'إعلان').charAt(0).toUpperCase();
+                    const firstLetter = (product.name || 'إعلان').charAt(0).toUpperCase();
                     const price = product.price ? formatPrice(product.price) : 'غير محدد';
                     const date = product.timestamp ? formatTimeAgo(product.timestamp) : 'غير معروف';
-                    const views = product.views || 0;
                     
                     const productCard = document.createElement('div');
                     productCard.className = 'product-card';
@@ -2031,24 +2469,40 @@
                     
                     productCard.innerHTML = `
                         <div class="product-image">${firstLetter}</div>
-                        <div class="product-name">${product.title || 'إعلان بدون عنوان'}</div>
-                        <div class="product-price">${price} ر.س</div>
+                        <div class="product-name">${product.name || 'إعلان بدون عنوان'}</div>
+                        <div class="product-price">${price} د.ع</div>
                         <div class="product-meta">
                             <span>${date}</span>
-                            <span>👁️ ${views} مشاهدة</span>
+                            <span>${product.category || 'غير محدد'}</span>
                         </div>
                     `;
                     
                     grid.appendChild(productCard);
                 });
+                
+                profileProgress.hideCircularProgress();
+            }).catch(error => {
+                console.error('Error loading user products:', error);
+                productsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🛒</div>
+                        <div class="empty-text">حدث خطأ في تحميل الإعلانات</div>
+                    </div>
+                `;
+                profileProgress.hideCircularProgress();
+                profileProgress.showError('حدث خطأ في تحميل الإعلانات');
             });
         }
         
         function viewProduct(productId) {
-            window.location.href = `product.html?id=${productId}`;
+            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+            
+            setTimeout(() => {
+                window.location.href = `index.html#details-${productId}`;
+            }, 500);
         }
         
-        // Setup Rating Stars - نظام تقييم فعال
+        // Setup Rating Stars
         function setupRatingStars() {
             const stars = document.querySelectorAll('#ratingInput .star');
             stars.forEach(star => {
@@ -2056,41 +2510,8 @@
                     const rating = parseInt(this.getAttribute('data-rating'));
                     currentUserRating = rating;
                     
-                    // تحديث النجوم
                     stars.forEach((s, index) => {
                         if (index < rating) {
-                            s.textContent = '★';
-                            s.classList.add('active');
-                        } else {
-                            s.textContent = '☆';
-                            s.classList.remove('active');
-                        }
-                    });
-                    
-                    // إضافة تأثير بسيط
-                    this.style.transform = 'scale(1.3)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1)';
-                    }, 200);
-                });
-                
-                star.addEventListener('mouseover', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    const stars = document.querySelectorAll('#ratingInput .star');
-                    
-                    stars.forEach((s, index) => {
-                        if (index < rating) {
-                            s.textContent = '★';
-                        } else {
-                            s.textContent = '☆';
-                        }
-                    });
-                });
-                
-                star.addEventListener('mouseout', function() {
-                    const stars = document.querySelectorAll('#ratingInput .star');
-                    stars.forEach((s, index) => {
-                        if (index < currentUserRating) {
                             s.textContent = '★';
                             s.classList.add('active');
                         } else {
@@ -2102,20 +2523,20 @@
             });
         }
         
-        // Submit Review - نظام تقييم فعال
+        // Submit Review مع Progress
         function submitReview() {
             if (!currentUserId) {
-                alert('يجب تسجيل الدخول لإضافة تقييم');
+                profileProgress.showError('يجب تسجيل الدخول لإضافة تقييم');
                 return;
             }
             
             if (currentUserId === profileUserId) {
-                alert('لا يمكنك تقييم نفسك');
+                profileProgress.showError('لا يمكنك تقييم نفسك');
                 return;
             }
             
             if (currentUserRating === 0) {
-                alert('الرجاء اختيار تقييم من 1 إلى 5 نجوم');
+                profileProgress.showError('الرجاء اختيار تقييم من 1 إلى 5 نجوم');
                 return;
             }
             
@@ -2126,16 +2547,17 @@
             submitBtn.classList.add('loading');
             submitBtn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
             
-            // التحقق مما إذا كان المستخدم قد قام بالتقييم من قبل
+            profileProgress.showOverlay('جاري إرسال التقييم...', 'انتظر قليلاً');
+            
             reviewRef.once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     submitBtn.classList.remove('loading');
                     submitBtn.textContent = 'إرسال التقييم';
-                    alert('لقد قمت بتقييم هذا المستخدم من قبل');
+                    profileProgress.hideOverlay();
+                    profileProgress.showError('لقد قمت بتقييم هذا المستخدم من قبل');
                     return;
                 }
                 
-                // إنشاء التقييم
                 const reviewData = {
                     rating: currentUserRating,
                     comment: comment,
@@ -2145,14 +2567,11 @@
                 };
                 
                 reviewRef.set(reviewData).then(() => {
-                    // تحديث إحصائيات التقييمات
                     updateReviewStats();
                     
-                    // إعادة تعيين النموذج
                     document.getElementById('commentInput').value = '';
                     currentUserRating = 0;
                     
-                    // إعادة تعيين النجوم
                     const stars = document.querySelectorAll('#ratingInput .star');
                     stars.forEach(star => {
                         star.textContent = '☆';
@@ -2162,40 +2581,37 @@
                     submitBtn.classList.remove('loading');
                     submitBtn.textContent = 'إرسال التقييم';
                     
-                    // إظهار رسالة نجاح
-                    alert('تم إرسال تقييمك بنجاح');
-                    
-                    // إعادة تحميل التقييمات
+                    profileProgress.showSuccess('تم إرسال تقييمك بنجاح');
                     calculateUserRating(profileUserId);
                     
                 }).catch((error) => {
                     console.error('Error submitting review:', error);
                     submitBtn.classList.remove('loading');
                     submitBtn.textContent = 'إرسال التقييم';
-                    alert('حدث خطأ أثناء إرسال التقييم');
+                    profileProgress.hideOverlay();
+                    profileProgress.showError('حدث خطأ أثناء إرسال التقييم');
                 });
             });
         }
         
         function updateReviewStats() {
-            // تحديث عدد التقييمات للمستخدم
             db.ref('users/' + profileUserId + '/totalReviews').transaction((current) => {
                 return (current || 0) + 1;
             }).then(() => {
-                // تحديث العدد المعروض
                 db.ref('users/' + profileUserId + '/totalReviews').once('value', (snap) => {
                     document.getElementById('totalReviews').textContent = snap.val() || 0;
                 });
             });
         }
         
-        // Calculate User Rating - نظام تقييم فعال
+        // Calculate User Rating مع Progress
         function calculateUserRating(userId) {
+            const clearCircular = profileProgress.showCircularProgress();
+            
             db.ref('reviews/' + userId).once('value', (snapshot) => {
                 const reviews = snapshot.val();
                 
                 if (!reviews) {
-                    // لا توجد تقييمات
                     document.getElementById('averageRating').textContent = '0.0';
                     document.getElementById('ratingStars').innerHTML = '☆☆☆☆☆';
                     document.getElementById('ratingCount').textContent = 'من 0 تقييم';
@@ -2228,13 +2644,13 @@
                     `;
                     
                     loadUserReviews(userId);
+                    profileProgress.hideCircularProgress();
                     return;
                 }
                 
                 const reviewArray = Object.values(reviews);
                 const totalReviews = reviewArray.length;
                 
-                // حساب المتوسط
                 let totalRating = 0;
                 const ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
                 
@@ -2247,21 +2663,20 @@
                 
                 const averageRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : '0.0';
                 
-                // تحديث العرض
                 document.getElementById('averageRating').textContent = averageRating;
                 document.getElementById('ratingCount').textContent = `من ${totalReviews} تقييم`;
                 
-                // تحديث النجوم
                 updateRatingStars(averageRating);
-                
-                // تحديث أشرطة التقييم
                 updateRatingBars(ratingDistribution, totalReviews);
-                
-                // تحديث عدد التقييمات في الإحصائيات
                 document.getElementById('totalReviews').textContent = totalReviews;
                 
-                // تحميل التقييمات الفردية
                 loadUserReviews(userId);
+                profileProgress.hideCircularProgress();
+                
+            }).catch(error => {
+                console.error('Error calculating rating:', error);
+                profileProgress.hideCircularProgress();
+                profileProgress.showError('حدث خطأ في تحميل التقييمات');
             });
         }
         
@@ -2300,7 +2715,7 @@
             ratingBars.innerHTML = barsHTML;
         }
         
-        // Load User Reviews
+        // Load User Reviews مع Progress
         function loadUserReviews(userId) {
             db.ref('reviews/' + userId).once('value', (snapshot) => {
                 const reviews = snapshot.val();
@@ -2317,7 +2732,6 @@
                     return;
                 }
                 
-                // تحويل الكائن إلى مصفوفة وترتيبها حسب التاريخ
                 const reviewArray = Object.entries(reviews).map(([reviewId, review]) => ({
                     id: reviewId,
                     ...review
@@ -2325,7 +2739,6 @@
                 
                 reviewsList.innerHTML = '';
                 
-                // تحميل بيانات كل مقيّم
                 const reviewerPromises = reviewArray.map(review => 
                     db.ref('users/' + review.reviewerId).once('value').then(snap => ({
                         ...review,
@@ -2342,7 +2755,6 @@
                         const firstLetter = reviewerName.charAt(0).toUpperCase();
                         const date = formatTimeAgo(review.timestamp);
                         
-                        // تحديث مؤشر النشاط للمقيّم
                         let statusClass = 'status-offline';
                         if (review.reviewerData && review.reviewerData.lastActive) {
                             const lastActive = new Date(review.reviewerData.lastActive);
@@ -2351,7 +2763,6 @@
                             statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
                         }
                         
-                        // إنشاء نجوم التقييم
                         let starsHTML = '';
                         for (let i = 1; i <= 5; i++) {
                             if (i <= review.rating) {
@@ -2439,40 +2850,50 @@
                     url: profileUrl
                 });
             } else {
-                // Fallback for browsers that don't support Web Share API
                 navigator.clipboard.writeText(profileUrl).then(() => {
-                    alert('تم نسخ رابط الملف الشخصي إلى الحافظة');
+                    profileProgress.showSuccess('تم نسخ رابط الملف الشخصي إلى الحافظة');
                 });
             }
         }
         
-        // Show Tab
+        // Show Tab مع Progress
         function showTab(tabName) {
-            // إخفاء جميع المحتويات
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // إزالة النشاط من جميع التبويبات
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // إظهار المحتوى المطلوب
             document.getElementById(tabName + 'Tab').classList.add('active');
-            
-            // تفعيل التبويب المطلوب
             document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
             
-            // تحميل البيانات إذا لزم الأمر
+            // إظهار Progress عند تحميل المحتوى
             if (tabName === 'followers') {
-                loadFollowersList(profileUserId);
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadFollowersList(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
             } else if (tabName === 'following') {
-                loadFollowingList(profileUserId);
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadFollowingList(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
             } else if (tabName === 'reviews') {
-                calculateUserRating(profileUserId);
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    calculateUserRating(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
             } else if (tabName === 'products') {
-                loadUserProducts(profileUserId);
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadUserProducts(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
             }
         }
     </script>
