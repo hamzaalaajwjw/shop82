@@ -594,11 +594,11 @@ function loadProducts(){
         `<div class="seller">
           👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> 
           ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-          | ☎ ${maskPhoneNumber(p.phone)}
+          | ☎ ${formatPhoneNumber(p.phone)}
           <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
         </div>` :
         `<div class="seller">
-          👤 ${p.seller} | ☎ ${maskPhoneNumber(p.phone)}
+          👤 ${p.seller} | ☎ ${formatPhoneNumber(p.phone)}
         </div>`;
       
       htmlCards.push({uid:p.uid,key:k,html:`
@@ -948,7 +948,7 @@ function showDetails(k){
       <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
       ${statusText}
       ${sellerWithLink}
-      <p><strong>رقم الهاتف:</strong> ${maskPhoneNumber(p.phone)}</p>
+      <p><strong>رقم الهاتف:</strong> ${formatPhoneNumber(p.phone)}</p>
       <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
       <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
       ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
@@ -1077,9 +1077,10 @@ function escapeHTML(text) {
   return div.innerHTML;
 }
 
-function maskPhoneNumber(phone) {
-  if (!phone || phone.length !== 11) return phone;
-  return phone.substring(0, 4) + '****' + phone.substring(8);
+// دالة جديدة لعرض الرقم بشكل طبيعي بدون تشفير
+function formatPhoneNumber(phone) {
+  if (!phone) return 'غير متوفر';
+  return phone;
 }
 
 function formatPrice(price) {
