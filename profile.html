@@ -1970,4 +1970,932 @@
             }
             
             const followRef = db.ref('followers/' + profileUserId + '/' + currentUserId);
-            const f
+            const followingRef = db.ref('following/' + currentUserId + '/' + profileUserId);
+            
+            const followBtn = document.getElementById('followButton');
+            const followText = document.getElementById('followText');
+            
+            // إضافة حالة تحميل للزر
+            followBtn.classList.add('loading');
+            followBtn.innerHTML = '<span class="spinner"></span>';
+            
+            if (isFollowing) {
+                followRef.once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        followRef.remove().then(() => {
+                            followingRef.remove();
+                            
+                            db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
+                                return (current || 1) - 1;
+                            });
+                            
+                            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                                return (current || 1) - 1;
+                            });
+                            
+                            isFollowing = false;
+                            updateFollowButton();
+                            
+                            let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                            if (currentFollowers > 0) {
+                                document.getElementById('followersCount').textContent = currentFollowers - 1;
+                            }
+                            
+                            followBtn.classList.remove('loading');
+                            followText.textContent = '+ متابعة';
+                            
+                            profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
+                            
+                            if (document.getElementById('followersTab').classList.contains('active')) {
+                                loadFollowersList(profileUserId);
+                            }
+                        });
+                    }
+                });
+            } else {
+                const followData = {
+                    timestamp: Date.now(),
+                    userId: currentUserId
+                };
+                
+                followRef.set(followData).then(() => {
+                    followingRef.set({
+                        timestamp: Date.now(),
+                        userId: profileUserId
+                    });
+                    
+                    db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
+                        return (current || 0) + 1;
+                    });
+                    
+                    db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                        return (current || 0) + 1;
+                    });
+                    
+                    isFollowing = true;
+                    updateFollowButton();
+                    
+                    let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                    document.getElementById('followersCount').textContent = currentFollowers + 1;
+                    
+                    followBtn.classList.remove('loading');
+                    followText.textContent = '✓ متابع';
+                    
+                    profileProgress.showSuccess('تمت المتابعة بنجاح');
+                    
+                    if (document.getElementById('followersTab').classList.contains('active')) {
+                        loadFollowersList(profileUserId);
+                    }
+                });
+            }
+        }
+        
+        // Toggle Block User مع Progress
+        function toggleBlockUser() {
+            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
+                profileProgress.showError('لا يمكنك حظر نفسك');
+                return;
+            }
+            
+            const blockRef = db.ref('blocks/' + currentUserId + '/' + profileUserId);
+            const blockBtn = document.getElementById('blockButton');
+            
+            blockBtn.classList.add('loading');
+            blockBtn.innerHTML = '<span class="spinner"></span>';
+            profileProgress.showOverlay('جاري المعالجة...', 'انتظر قليلاً');
+            
+            blockRef.once('value', (snapshot) => {
+                const currentlyBlocked = snapshot.exists();
+                
+                if (currentlyBlocked) {
+                    if (confirm('هل تريد إلغاء حظر هذا المستخدم؟')) {
+                        blockRef.remove().then(() => {
+                            isBlocked = false;
+                            updateBlockButton();
+                            blockBtn.classList.remove('loading');
+                            profileProgress.showSuccess('تم إلغاء حظر المستخدم');
+                        });
+                    } else {
+                        blockBtn.classList.remove('loading');
+                        profileProgress.hideOverlay();
+                    }
+                } else {
+                    if (confirm('هل أنت متأكد من حظر هذا المستخدم؟ لن تتمكن من رؤية إعلاناته أو التواصل معه.')) {
+                        blockRef.set({
+                            timestamp: Date.now(),
+                            reason: 'بواسطة المستخدم'
+                        }).then(() => {
+                            isBlocked = true;
+                            updateBlockButton();
+                            blockBtn.classList.remove('loading');
+                            profileProgress.showSuccess('تم حظر المستخدم بنجاح');
+                        });
+                    } else {
+                        blockBtn.classList.remove('loading');
+                        profileProgress.hideOverlay();
+                    }
+                }
+            });
+        }
+        
+        // Load Followers List مع Progress
+        function loadFollowersList(userId) {
+            const followersList = document.getElementById('followersList');
+            followersList.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">جاري التحميل...</div></div>';
+            
+            db.ref('followers/' + userId).once('value', (snapshot) => {
+                const followers = snapshot.val();
+                
+                if (!followers) {
+                    followersList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <div class="empty-text">لا يوجد متابعين</div>
+                            <div class="empty-subtext">لم يتابع هذا المستخدم أحد بعد</div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('followersCount').textContent = '0';
+                    return;
+                }
+                
+                const followerIds = Object.keys(followers);
+                document.getElementById('followersCount').textContent = followerIds.length;
+                loadUsersList(followerIds, followersList, 'followers', 'متابعون');
+            });
+        }
+        
+        // Load Following List مع Progress
+        function loadFollowingList(userId) {
+            const followingList = document.getElementById('followingList');
+            followingList.innerHTML = '<div class="empty-state"><div class="empty-icon">👣</div><div class="empty-text">جاري التحميل...</div></div>';
+            
+            db.ref('following/' + userId).once('value', (snapshot) => {
+                const following = snapshot.val();
+                
+                if (!following) {
+                    followingList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👣</div>
+                            <div class="empty-text">لا يتابع أحد</div>
+                            <div class="empty-subtext">لم يبدأ هذا المستخدم بمتابعة أحد بعد</div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('followingCount').textContent = '0';
+                    return;
+                }
+                
+                const followingIds = Object.keys(following);
+                document.getElementById('followingCount').textContent = followingIds.length;
+                loadUsersList(followingIds, followingList, 'following', 'المتابعة');
+            });
+        }
+        
+        // Load Users List مع Progress
+        function loadUsersList(userIds, container, type, title) {
+            container.innerHTML = '<div class="follow-grid"></div>';
+            const grid = container.querySelector('.follow-grid');
+            
+            if (userIds.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
+                        <div class="empty-text">لا يوجد ${title}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const userPromises = userIds.map(userId => 
+                db.ref('users/' + userId).once('value').then(snap => ({
+                    id: userId,
+                    data: snap.val()
+                }))
+            );
+            
+            Promise.all(userPromises).then(userData => {
+                const validUsers = userData.filter(({data}) => data);
+                
+                if (validUsers.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
+                            <div class="empty-text">لا يوجد ${title}</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                validUsers.forEach(({id, data}) => {
+                    const displayName = data.fullName || data.username || 'مستخدم';
+                    const firstLetter = displayName.charAt(0).toUpperCase();
+                    const productCount = data.totalProducts || 0;
+                    const followersCount = data.followersCount || 0;
+                    
+                    let statusClass = 'status-offline';
+                    if (data.accountStatus === 'suspended') {
+                        statusClass = 'status-offline';
+                    } else if (data.lastActive) {
+                        const lastActive = new Date(data.lastActive);
+                        const now = new Date();
+                        const diffMinutes = (now - lastActive) / (1000 * 60);
+                        statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
+                    }
+                    
+                    const userCard = document.createElement('div');
+                    userCard.className = 'follow-card';
+                    userCard.onclick = () => viewUserProfile(id);
+                    
+                    let followButtonHTML = '';
+                    if (currentUserId && currentUserId !== id) {
+                        db.ref('followers/' + id + '/' + currentUserId).once('value', (snap) => {
+                            const isFollowingUser = snap.exists();
+                            const followBtn = userCard.querySelector('.follow-btn');
+                            if (followBtn) {
+                                if (isFollowingUser) {
+                                    followBtn.textContent = '✓ متابع';
+                                    followBtn.classList.remove('btn-outline');
+                                    followBtn.classList.add('btn-success');
+                                } else {
+                                    followBtn.textContent = 'متابعة';
+                                    followBtn.classList.remove('btn-success');
+                                    followBtn.classList.add('btn-outline');
+                                }
+                            }
+                        });
+                        
+                        followButtonHTML = `
+                            <button class="btn btn-outline follow-btn" onclick="event.stopPropagation(); toggleFollowListUser('${id}', this)">
+                                متابعة
+                            </button>`;
+                    }
+                    
+                    userCard.innerHTML = `
+                        <div class="follow-avatar">${firstLetter}
+                            <div class="follow-status ${statusClass}"></div>
+                        </div>
+                        <div class="follow-info">
+                            <div class="follow-name">${displayName}</div>
+                            <div class="follow-username">@${data.username || 'user'}</div>
+                            <div class="follow-stats">
+                                <span class="follow-stat">${productCount} إعلان</span>
+                                <span class="follow-stat">${followersCount} متابع</span>
+                            </div>
+                        </div>
+                        ${followButtonHTML}
+                    `;
+                    
+                    grid.appendChild(userCard);
+                });
+            });
+        }
+        
+        // Toggle Follow for user in list مع Progress
+        function toggleFollowListUser(targetUserId, button) {
+            event.stopPropagation();
+            
+            if (!currentUserId) {
+                profileProgress.showError('يجب تسجيل الدخول للمتابعة');
+                return;
+            }
+            
+            if (currentUserId === targetUserId) {
+                profileProgress.showError('لا يمكنك متابعة نفسك');
+                return;
+            }
+            
+            const followRef = db.ref('followers/' + targetUserId + '/' + currentUserId);
+            const followingRef = db.ref('following/' + currentUserId + '/' + targetUserId);
+            
+            button.classList.add('loading');
+            button.innerHTML = '<span class="spinner"></span>';
+            
+            if (button.textContent === 'متابعة') {
+                const followData = {
+                    timestamp: Date.now(),
+                    userId: currentUserId
+                };
+                
+                followRef.set(followData).then(() => {
+                    followingRef.set({
+                        timestamp: Date.now(),
+                        userId: targetUserId
+                    });
+                    
+                    updateFollowCounts(targetUserId, 1);
+                    
+                    button.classList.remove('loading');
+                    button.textContent = '✓ متابع';
+                    button.classList.remove('btn-outline');
+                    button.classList.add('btn-success');
+                });
+            } else {
+                followRef.remove().then(() => {
+                    followingRef.remove();
+                    
+                    updateFollowCounts(targetUserId, -1);
+                    
+                    button.classList.remove('loading');
+                    button.textContent = 'متابعة';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline');
+                });
+            }
+        }
+        
+        function updateFollowCounts(targetUserId, change) {
+            db.ref('users/' + targetUserId + '/followersCount').transaction((current) => {
+                return (current || 0) + change;
+            });
+            
+            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                return (current || 0) + change;
+            });
+            
+            if (targetUserId === profileUserId) {
+                db.ref('users/' + targetUserId + '/followersCount').once('value', (snap) => {
+                    document.getElementById('followersCount').textContent = snap.val() || 0;
+                });
+            }
+            
+            if (currentUserId === profileUserId) {
+                db.ref('users/' + currentUserId + '/followingCount').once('value', (snap) => {
+                    document.getElementById('followingCount').textContent = snap.val() || 0;
+                });
+            }
+        }
+        
+        // View User Profile مع Progress
+        function viewUserProfile(userId) {
+            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+            
+            setTimeout(() => {
+                window.location.href = `profile.html?id=${userId}`;
+            }, 500);
+        }
+        
+        // Setup Bio Editor
+        function setupBioEditor() {
+            const bioEditor = document.getElementById('bioEditor');
+            const charCount = document.getElementById('charCount');
+            
+            bioEditor.addEventListener('input', function() {
+                updateCharCount();
+            });
+            
+            bioEditor.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    saveBio();
+                }
+            });
+        }
+        
+        // Update Character Count
+        function updateCharCount() {
+            const bioEditor = document.getElementById('bioEditor');
+            const charCount = document.getElementById('charCount');
+            const currentLength = bioEditor.value.length;
+            const maxLength = 70;
+            
+            charCount.textContent = `${currentLength}/${maxLength}`;
+            
+            if (currentLength >= maxLength - 10) {
+                charCount.className = 'char-count warning';
+            } else if (currentLength >= maxLength) {
+                charCount.className = 'char-count error';
+            } else {
+                charCount.className = 'char-count';
+            }
+        }
+        
+        // Show Bio Editor
+        function showBioEditor() {
+            const modal = document.getElementById('bioEditorModal');
+            const bioEditor = document.getElementById('bioEditor');
+            
+            bioEditor.value = currentUserBio;
+            updateCharCount();
+            modal.style.display = 'flex';
+            bioEditor.focus();
+        }
+        
+        // Close Bio Editor
+        function closeBioEditor() {
+            const modal = document.getElementById('bioEditorModal');
+            modal.style.display = 'none';
+        }
+        
+        // Save Bio مع Progress
+        function saveBio() {
+            const bioEditor = document.getElementById('bioEditor');
+            const newBio = bioEditor.value.trim();
+            
+            if (newBio.length > 70) {
+                profileProgress.showError('الوصف يجب ألا يتجاوز 70 حرفاً');
+                return;
+            }
+            
+            if (!currentUserId || currentUserId !== profileUserId) {
+                profileProgress.showError('ليس لديك صلاحية لتعديل هذا الوصف');
+                return;
+            }
+            
+            const saveBtn = document.querySelector('.modal-actions .btn-primary');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
+            saveBtn.classList.add('loading');
+            
+            profileProgress.showOverlay('جاري حفظ الوصف...', 'انتظر قليلاً');
+            
+            db.ref('users/' + currentUserId).update({
+                bio: newBio,
+                lastActive: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                currentUserBio = newBio;
+                document.getElementById('userBio').textContent = newBio || 'لا يوجد وصف شخصي';
+                closeBioEditor();
+                
+                saveBtn.innerHTML = originalText;
+                saveBtn.classList.remove('loading');
+                
+                profileProgress.showSuccess('تم حفظ الوصف بنجاح');
+            }).catch((error) => {
+                console.error('Error saving bio:', error);
+                
+                saveBtn.innerHTML = originalText;
+                saveBtn.classList.remove('loading');
+                
+                profileProgress.showError('حدث خطأ أثناء حفظ الوصف');
+            });
+        }
+        
+        // Load User Products مع Progress
+        function loadUserProducts(userId) {
+            const productsContainer = document.getElementById('userProducts');
+            productsContainer.innerHTML = '<div class="products-grid"></div>';
+            const grid = productsContainer.querySelector('.products-grid');
+            
+            profileProgress.showCircularProgress();
+            
+            db.ref('products').orderByChild('uid').equalTo(userId).once('value', (snapshot) => {
+                const products = snapshot.val();
+                
+                if (!products) {
+                    productsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🛒</div>
+                            <div class="empty-text">لا توجد إعلانات</div>
+                            <div class="empty-subtext">لم ينشر هذا المستخدم أي إعلانات بعد</div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('productsCount').textContent = '0';
+                    profileProgress.hideCircularProgress();
+                    return;
+                }
+                
+                const productArray = Object.entries(products).reverse();
+                document.getElementById('productsCount').textContent = productArray.length;
+                
+                productArray.forEach(([productId, product]) => {
+                    const firstLetter = (product.name || 'إعلان').charAt(0).toUpperCase();
+                    const price = product.price ? formatPrice(product.price) : 'غير محدد';
+                    const date = product.timestamp ? formatTimeAgo(product.timestamp) : 'غير معروف';
+                    
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.onclick = () => viewProduct(productId);
+                    
+                    productCard.innerHTML = `
+                        <div class="product-image">${firstLetter}</div>
+                        <div class="product-name">${product.name || 'إعلان بدون عنوان'}</div>
+                        <div class="product-price">${price} د.ع</div>
+                        <div class="product-meta">
+                            <span>${date}</span>
+                            <span>${product.category || 'غير محدد'}</span>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(productCard);
+                });
+                
+                profileProgress.hideCircularProgress();
+            }).catch(error => {
+                console.error('Error loading user products:', error);
+                productsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🛒</div>
+                        <div class="empty-text">حدث خطأ في تحميل الإعلانات</div>
+                    </div>
+                `;
+                profileProgress.hideCircularProgress();
+                profileProgress.showError('حدث خطأ في تحميل الإعلانات');
+            });
+        }
+        
+        function viewProduct(productId) {
+            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+            
+            setTimeout(() => {
+                window.location.href = `index.html#details-${productId}`;
+            }, 500);
+        }
+        
+        // Setup Rating Stars
+        function setupRatingStars() {
+            const stars = document.querySelectorAll('#ratingInput .star');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    currentUserRating = rating;
+                    
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.textContent = '★';
+                            s.classList.add('active');
+                        } else {
+                            s.textContent = '☆';
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Submit Review مع Progress
+        function submitReview() {
+            if (!currentUserId) {
+                profileProgress.showError('يجب تسجيل الدخول لإضافة تقييم');
+                return;
+            }
+            
+            if (currentUserId === profileUserId) {
+                profileProgress.showError('لا يمكنك تقييم نفسك');
+                return;
+            }
+            
+            if (currentUserRating === 0) {
+                profileProgress.showError('الرجاء اختيار تقييم من 1 إلى 5 نجوم');
+                return;
+            }
+            
+            const comment = document.getElementById('commentInput').value.trim();
+            const reviewRef = db.ref('reviews/' + profileUserId + '/' + currentUserId);
+            const submitBtn = document.getElementById('submitReviewBtn');
+            
+            submitBtn.classList.add('loading');
+            submitBtn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
+            
+            profileProgress.showOverlay('جاري إرسال التقييم...', 'انتظر قليلاً');
+            
+            reviewRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.textContent = 'إرسال التقييم';
+                    profileProgress.hideOverlay();
+                    profileProgress.showError('لقد قمت بتقييم هذا المستخدم من قبل');
+                    return;
+                }
+                
+                const reviewData = {
+                    rating: currentUserRating,
+                    comment: comment,
+                    reviewerId: currentUserId,
+                    timestamp: Date.now(),
+                    targetId: profileUserId
+                };
+                
+                reviewRef.set(reviewData).then(() => {
+                    updateReviewStats();
+                    
+                    document.getElementById('commentInput').value = '';
+                    currentUserRating = 0;
+                    
+                    const stars = document.querySelectorAll('#ratingInput .star');
+                    stars.forEach(star => {
+                        star.textContent = '☆';
+                        star.classList.remove('active');
+                    });
+                    
+                    submitBtn.classList.remove('loading');
+                    submitBtn.textContent = 'إرسال التقييم';
+                    
+                    profileProgress.showSuccess('تم إرسال تقييمك بنجاح');
+                    calculateUserRating(profileUserId);
+                    
+                }).catch((error) => {
+                    console.error('Error submitting review:', error);
+                    submitBtn.classList.remove('loading');
+                    submitBtn.textContent = 'إرسال التقييم';
+                    profileProgress.hideOverlay();
+                    profileProgress.showError('حدث خطأ أثناء إرسال التقييم');
+                });
+            });
+        }
+        
+        function updateReviewStats() {
+            db.ref('users/' + profileUserId + '/totalReviews').transaction((current) => {
+                return (current || 0) + 1;
+            }).then(() => {
+                db.ref('users/' + profileUserId + '/totalReviews').once('value', (snap) => {
+                    document.getElementById('totalReviews').textContent = snap.val() || 0;
+                });
+            });
+        }
+        
+        // Calculate User Rating مع Progress
+        function calculateUserRating(userId) {
+            const clearCircular = profileProgress.showCircularProgress();
+            
+            db.ref('reviews/' + userId).once('value', (snapshot) => {
+                const reviews = snapshot.val();
+                
+                if (!reviews) {
+                    document.getElementById('averageRating').textContent = '0.0';
+                    document.getElementById('ratingStars').innerHTML = '☆☆☆☆☆';
+                    document.getElementById('ratingCount').textContent = 'من 0 تقييم';
+                    document.getElementById('ratingBars').innerHTML = `
+                        <div class="rating-bar">
+                            <span class="bar-label">5 نجوم</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="bar-label">4 نجوم</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="bar-label">3 نجوم</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="bar-label">نجمتان</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </div>
+                        <div class="rating-bar">
+                            <span class="bar-label">نجمة</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </div>
+                    `;
+                    
+                    loadUserReviews(userId);
+                    profileProgress.hideCircularProgress();
+                    return;
+                }
+                
+                const reviewArray = Object.values(reviews);
+                const totalReviews = reviewArray.length;
+                
+                let totalRating = 0;
+                const ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+                
+                reviewArray.forEach(review => {
+                    totalRating += review.rating || 0;
+                    if (review.rating >= 1 && review.rating <= 5) {
+                        ratingDistribution[review.rating]++;
+                    }
+                });
+                
+                const averageRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : '0.0';
+                
+                document.getElementById('averageRating').textContent = averageRating;
+                document.getElementById('ratingCount').textContent = `من ${totalReviews} تقييم`;
+                
+                updateRatingStars(averageRating);
+                updateRatingBars(ratingDistribution, totalReviews);
+                document.getElementById('totalReviews').textContent = totalReviews;
+                
+                loadUserReviews(userId);
+                profileProgress.hideCircularProgress();
+                
+            }).catch(error => {
+                console.error('Error calculating rating:', error);
+                profileProgress.hideCircularProgress();
+                profileProgress.showError('حدث خطأ في تحميل التقييمات');
+            });
+        }
+        
+        function updateRatingStars(rating) {
+            const ratingStars = document.getElementById('ratingStars');
+            const stars = Math.round(parseFloat(rating));
+            
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= stars) {
+                    starsHTML += '★';
+                } else {
+                    starsHTML += '☆';
+                }
+            }
+            ratingStars.innerHTML = starsHTML;
+        }
+        
+        function updateRatingBars(distribution, totalReviews) {
+            const ratingBars = document.getElementById('ratingBars');
+            let barsHTML = '';
+            
+            for (let i = 5; i >= 1; i--) {
+                const count = distribution[i] || 0;
+                const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+                
+                barsHTML += `
+                    <div class="rating-bar">
+                        <span class="bar-label">${i} نجوم</span>
+                        <div class="bar-container"><div class="bar-fill" style="width: ${percentage}%"></div></div>
+                        <span>${percentage}%</span>
+                    </div>
+                `;
+            }
+            
+            ratingBars.innerHTML = barsHTML;
+        }
+        
+        // Load User Reviews مع Progress
+        function loadUserReviews(userId) {
+            db.ref('reviews/' + userId).once('value', (snapshot) => {
+                const reviews = snapshot.val();
+                const reviewsList = document.getElementById('reviewsList');
+                
+                if (!reviews) {
+                    reviewsList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⭐</div>
+                            <div class="empty-text">لا توجد تقييمات</div>
+                            <div class="empty-subtext">كن أول من يقيم هذا المستخدم</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const reviewArray = Object.entries(reviews).map(([reviewId, review]) => ({
+                    id: reviewId,
+                    ...review
+                })).sort((a, b) => b.timestamp - a.timestamp);
+                
+                reviewsList.innerHTML = '';
+                
+                const reviewerPromises = reviewArray.map(review => 
+                    db.ref('users/' + review.reviewerId).once('value').then(snap => ({
+                        ...review,
+                        reviewerData: snap.val()
+                    }))
+                );
+                
+                Promise.all(reviewerPromises).then(reviewsWithData => {
+                    reviewsWithData.forEach(review => {
+                        const reviewerName = review.reviewerData ? 
+                            (review.reviewerData.fullName || review.reviewerData.username || 'مستخدم مجهول') : 
+                            'مستخدم مجهول';
+                        
+                        const firstLetter = reviewerName.charAt(0).toUpperCase();
+                        const date = formatTimeAgo(review.timestamp);
+                        
+                        let statusClass = 'status-offline';
+                        if (review.reviewerData && review.reviewerData.lastActive) {
+                            const lastActive = new Date(review.reviewerData.lastActive);
+                            const now = new Date();
+                            const diffMinutes = (now - lastActive) / (1000 * 60);
+                            statusClass = diffMinutes < 5 ? 'status-online' : 'status-offline';
+                        }
+                        
+                        let starsHTML = '';
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= review.rating) {
+                                starsHTML += '★';
+                            } else {
+                                starsHTML += '☆';
+                            }
+                        }
+                        
+                        const reviewCard = document.createElement('div');
+                        reviewCard.className = 'review-card';
+                        reviewCard.innerHTML = `
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">${firstLetter}
+                                        <div class="reviewer-status ${statusClass}"></div>
+                                    </div>
+                                    <div>
+                                        <div class="reviewer-name" onclick="viewUserProfile('${review.reviewerId}')">
+                                            ${reviewerName}
+                                        </div>
+                                        <div class="review-date">${date}</div>
+                                    </div>
+                                </div>
+                                <div class="rating-stars" style="direction: ltr; color: #f59e0b; font-size: 18px;">
+                                    ${starsHTML}
+                                </div>
+                            </div>
+                            ${review.comment ? `
+                                <div class="review-comment">${review.comment}</div>
+                            ` : ''}
+                        `;
+                        
+                        reviewsList.appendChild(reviewCard);
+                    });
+                });
+            });
+        }
+        
+        // Helper Functions
+        function formatDate(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 1) return 'الآن';
+            if (diffMins < 60) return `قبل ${diffMins} دقيقة`;
+            if (diffHours < 24) return `قبل ${diffHours} ساعة`;
+            if (diffDays < 7) return `قبل ${diffDays} يوم`;
+            if (diffDays < 30) return `قبل ${Math.floor(diffDays / 7)} أسبوع`;
+            if (diffDays < 365) return `قبل ${Math.floor(diffDays / 30)} شهر`;
+            
+            return `قبل ${Math.floor(diffDays / 365)} سنة`;
+        }
+        
+        function formatPrice(price) {
+            if (!price) return '0';
+            return parseInt(price).toLocaleString('ar-SA');
+        }
+        
+        function shareProfile() {
+            const profileUrl = window.location.href;
+            const shareText = `تفضل بزيارة الملف الشخصي لـ ${document.getElementById('fullNameText').textContent} على a3len`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'a3len - ملف شخصي',
+                    text: shareText,
+                    url: profileUrl
+                });
+            } else {
+                navigator.clipboard.writeText(profileUrl).then(() => {
+                    profileProgress.showSuccess('تم نسخ رابط الملف الشخصي إلى الحافظة');
+                });
+            }
+        }
+        
+        // Show Tab مع Progress
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            
+            // إظهار Progress عند تحميل المحتوى
+            if (tabName === 'followers') {
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadFollowersList(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
+            } else if (tabName === 'following') {
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadFollowingList(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
+            } else if (tabName === 'reviews') {
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    calculateUserRating(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
+            } else if (tabName === 'products') {
+                profileProgress.showProgressBar();
+                setTimeout(() => {
+                    loadUserProducts(profileUserId);
+                    profileProgress.hideProgressBar();
+                }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
