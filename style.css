@@ -396,17 +396,6 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   border-color:#38bdf8;
   box-shadow:0 0 0 2px rgba(56, 189, 248, 0.2);
 }
-.search-bar .budget-btn{
-  background:#1f2937;
-  color:#e5e7eb;
-  border:none;
-  padding:10px 15px;
-  border-radius:6px;
-  cursor:pointer;
-  transition: background 0.2s, transform 0.1s;
-}
-.search-bar .budget-btn:hover{background:#374151; transform: translateY(-2px);}
-.search-bar .budget-btn:active{transform: translateY(0);}
 
 /* ===== Cards ===== */
 .cards{display:grid;grid-template-columns:1fr;gap:15px}
@@ -560,76 +549,6 @@ main{flex:1;padding:20px;overflow:auto;margin-left:0}
   background: rgba(31, 41, 55, 0.3);
   border-radius: 8px;
   border: 1px dashed #374151;
-}
-
-/* ===== Budget Dialog ===== */
-.budget-dialog {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#0f1115;
-  color:#e5e7eb;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 15px rgba(0,0,0,0.5);
-  z-index:103;
-  display:none;
-  opacity:0;
-  transition: opacity 0.3s ease;
-  border: 1px solid #374151;
-  max-width: 400px;
-  width: 90%;
-}
-.budget-dialog.show{
-  display:block;
-  opacity:1;
-}
-.budget-dialog input {
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-  border-radius:6px;
-  border:1px solid #333;
-  background:#1f1f1f;
-  color:#e5e7eb;
-  transition: border-color 0.2s;
-}
-.budget-dialog input:focus{
-  outline:none;
-  border-color:#38bdf8;
-}
-.budget-dialog button{
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:bold;
-  transition: all 0.2s;
-  min-width: 80px;
-}
-.budget-dialog button:not(.close-btn){
-  background:#38bdf8;
-  color:#000;
-}
-.budget-dialog button:not(.close-btn):hover{
-  background:#0ea5e9;
-  transform: translateY(-1px);
-}
-.budget-dialog button:not(.close-btn):active{
-  transform: translateY(0);
-}
-.budget-dialog .close-btn{
-  background:#ef4444;
-  margin-left:10px;
-  color:#fff;
-}
-.budget-dialog .close-btn:hover{
-  background:#dc2626;
-  transform: translateY(-1px);
-}
-.budget-dialog .close-btn:active{
-  transform: translateY(0);
 }
 
 /* ===== Pagination ===== */
@@ -939,9 +858,6 @@ input:valid, select:valid {
   .search-bar select{
     width:100%;
   }
-  .search-bar .budget-btn {
-    width: 100%;
-  }
   .cards{
     grid-template-columns: 1fr;
     gap: 12px;
@@ -992,7 +908,6 @@ input:valid, select:valid {
   .actions,
   .auth-section,
   .session-timeout,
-  .budget-dialog,
   .details-dialog,
   .overlay,
   .top-progress-bar,
