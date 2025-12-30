@@ -496,7 +496,7 @@ function applyBudget(){
   showHome();
 }
 
-// Load Products
+// Load Products - الإصلاح الرئيسي هنا
 function loadProducts(){
   const search = document.getElementById("search")?.value.toLowerCase() || '';
   const category = document.getElementById("cat")?.value || '';
@@ -505,13 +505,20 @@ function loadProducts(){
     const data = snap.val() || {};
     let allProducts = [];
     
+    // جمع كل المنتجات مع تطبيق الفلترة
     Object.keys(data).forEach(key=>{
       const product = data[key];
-      const price = parseFloat(product.price) || 0;
+      if(!product || typeof product !== 'object') return;
       
-      if((!category || product.category===category) && product.name.toLowerCase().includes(search)){
-        if(budgetActive && price > budget) return;
-        
+      const price = parseFloat(product.price) || 0;
+      const productName = product.name ? product.name.toLowerCase() : '';
+      
+      // تطبيق الفلاتر
+      const matchesSearch = productName.includes(search);
+      const matchesCategory = !category || product.category === category;
+      const withinBudget = !budgetActive || price <= budget;
+      
+      if(matchesSearch && matchesCategory && withinBudget){
         allProducts.push({
           key: key,
           product: product,
@@ -520,92 +527,98 @@ function loadProducts(){
       }
     });
     
-    // Sort by user's products first
-    if(userUID){
-      allProducts.sort((a,b)=>{
-        if(a.product.uid === userUID && b.product.uid !== userUID) return -1;
-        if(a.product.uid !== userUID && b.product.uid === userUID) return 1;
-        return 0;
-      });
-    }
+    // السجل التشخيصي
+    console.log(`المنتجات المطابقة: ${allProducts.length}`);
     
+    // حساب الترقيم الصحيح
     const totalProducts = allProducts.length;
-    const totalPages = Math.ceil(totalProducts / postsPerPage);
+    const totalPages = Math.max(1, Math.ceil(totalProducts / postsPerPage));
     
-    // إصلاح المشكلة: الصفحة 1 تظهر 2 منشورات فقط
-    // السبب: كان currentPage > totalPages فيعود currentPage = 1 لكن التقطيع يكون خاطئ
-    if(currentPage > totalPages) {
-      currentPage = Math.max(1, totalPages);
-    }
+    // إصلاح: تأكد من أن currentPage ضمن النطاق الصحيح
+    if(currentPage < 1) currentPage = 1;
+    if(currentPage > totalPages) currentPage = totalPages;
     
     const startIndex = (currentPage - 1) * postsPerPage;
     const endIndex = Math.min(startIndex + postsPerPage, totalProducts);
     
-    console.log(`الصفحة ${currentPage}: من ${startIndex} إلى ${endIndex} (${endIndex - startIndex} منشور)`);
+    console.log(`الصفحة ${currentPage}: عرض المنتجات ${startIndex + 1}-${endIndex} من ${totalProducts}`);
     
-    // بدء Progress Bar بحجم المنشورات
-    progressManager.startLoading(allProducts.length);
+    // بدء Progress Bar
+    progressManager.startLoading(totalProducts);
     
     const productsContainer = document.getElementById('products');
     if (!productsContainer) return;
     
     // عرض Skeleton أثناء التحميل
-    productsContainer.innerHTML = `
-      <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
-      <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
-      <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
-    `;
+    if(allProducts.length > 0) {
+      productsContainer.innerHTML = `
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:60%"></div></div>
+      `;
+    } else {
+      productsContainer.innerHTML = '';
+    }
     
+    // تأخير صغير لعرض Skeleton ثم عرض المنتجات
     setTimeout(() => {
       let productsHTML = '';
       const currentPageProducts = allProducts.slice(startIndex, endIndex);
       
-      currentPageProducts.forEach(item => {
-        const p = item.product;
-        
-        const sellerSection = userDisplayName ? 
-          `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
-            <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
-          </div>` :
-          `<div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
-          </div>`;
-        
-        // زر التعديل والحذف يظهر دائماً بدون الحاجة لـ hover
-        const actionsHTML = p.uid === userUID ? 
-          `<div class="actions" style="opacity: 1; display: flex;">
-            <button class="edit" onclick="event.stopPropagation(); editProduct('${item.key}')">تعديل</button>
-            <button class="del" onclick="event.stopPropagation(); deleteProduct('${item.key}')">حذف</button>
-          </div>` : 
-          `<div class="actions" style="opacity: 1; display: flex;">
-            <button class="edit" onclick="event.stopPropagation(); showDetails('${item.key}')">عرض</button>
-          </div>`;
-        
-        productsHTML += `
-          <div class="card" onclick="showDetails('${item.key}')">
-            <h3>${p.name}</h3>
-            <span class="price">${p.price} د.ع</span>
-            <div class="meta">
-              <span>${p.category}</span>
-              <span>${p.province}</span>
-              <span>توصيل: ${p.delivery}</span>
-            </div>
-            ${sellerSection}
-            ${actionsHTML}
-          </div>`;
-        
-        // تحديث Progress بعد كل منتج
-        progressManager.updateProgress();
-      });
-      
-      if(productsHTML === ''){
+      if(currentPageProducts.length === 0){
         productsHTML = `<p class='empty'>لا توجد إعلانات ${budgetActive ? 'ضمن ميزانيتك' : ''}</p>`;
         progressManager.completeLoading();
+      } else {
+        currentPageProducts.forEach(item => {
+          const p = item.product;
+          
+          const sellerSection = userDisplayName ? 
+            `<div class="seller">
+              👤 <span class="seller-link" onclick="event.stopPropagation(); viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+              <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
+            </div>` :
+            `<div class="seller">
+              👤 ${p.seller} | ☎ ${p.phone}
+            </div>`;
+          
+          // زر التعديل والحذف يظهر دائماً
+          const actionsHTML = p.uid === userUID ? 
+            `<div class="actions">
+              <button class="edit" onclick="event.stopPropagation(); editProduct('${item.key}')">تعديل</button>
+              <button class="del" onclick="event.stopPropagation(); deleteProduct('${item.key}')">حذف</button>
+            </div>` : 
+            `<div class="actions">
+              <button class="edit" onclick="event.stopPropagation(); showDetails('${item.key}')">عرض</button>
+            </div>`;
+          
+          productsHTML += `
+            <div class="card" onclick="showDetails('${item.key}')">
+              <h3>${p.name || 'بدون اسم'}</h3>
+              <span class="price">${p.price || 0} د.ع</span>
+              <div class="meta">
+                <span>${p.category || 'غير محدد'}</span>
+                <span>${p.province || 'غير محدد'}</span>
+                <span>توصيل: ${p.delivery || 'لا'}</span>
+              </div>
+              ${sellerSection}
+              ${actionsHTML}
+            </div>`;
+          
+          // تحديث Progress
+          progressManager.updateProgress();
+        });
       }
       
       productsContainer.innerHTML = productsHTML;
       renderPagination(totalPages);
+      
+      // إذا لم يكن هناك منتجات، أكمل التحميل فوراً
+      if(allProducts.length === 0) {
+        progressManager.completeLoading();
+      }
       
     }, 300);
     
@@ -620,23 +633,28 @@ function loadProducts(){
 }
 
 // Render Pagination Buttons
-function renderPagination(total){
+function renderPagination(totalPages){
   const pagination = document.getElementById('pagination');
   if(!pagination) return;
   
   let html = "";
   
-  if(total > 1){
+  if(totalPages > 1){
     if(currentPage > 1){
-      html += `<button onclick="goPage(${currentPage - 1})" style="margin:3px; padding:6px 10px; border-radius:5px; border:none; cursor:pointer; background:#1f2937; color:#fff;">السابق</button>`;
+      html += `<button onclick="goPage(${currentPage - 1})">السابق</button>`;
     }
     
-    for(let i = 1; i <= total; i++){
-      html += `<button onclick="goPage(${i})" style="margin:3px; padding:6px 10px; border-radius:5px; border:none; cursor:pointer; background:${i===currentPage?'#38bdf8':'#1f2937'}; color:${i===currentPage?'#000':'#fff'};">${i}</button>`;
+    // عرض أرقام الصفحات
+    for(let i = 1; i <= totalPages; i++){
+      if(i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)){
+        html += `<button onclick="goPage(${i})" class="${i===currentPage?'active':''}">${i}</button>`;
+      } else if(i === currentPage - 2 || i === currentPage + 2){
+        html += `<span style="padding:6px 10px; color:#9ca3af;">...</span>`;
+      }
     }
     
-    if(currentPage < total){
-      html += `<button onclick="goPage(${currentPage + 1})" style="margin:3px; padding:6px 10px; border-radius:5px; border:none; cursor:pointer; background:#1f2937; color:#fff;">التالي</button>`;
+    if(currentPage < totalPages){
+      html += `<button onclick="goPage(${currentPage + 1})">التالي</button>`;
     }
   }
   
@@ -699,17 +717,17 @@ function showPublish(product=null, key=null){
   document.getElementById("content").innerHTML=`
     <div class="form-box">
       <h2>${product?"تعديل إعلان":"نشر إعلان جديد"}</h2>
-      <input id="name" placeholder="اسم القطعة" value="${product?product.name:""}">
-      <input id="price" type="number" placeholder="السعر" value="${product?product.price:""}">
+      <input id="name" placeholder="اسم القطعة" value="${product?product.name:""}" required>
+      <input id="price" type="number" placeholder="السعر" value="${product?product.price:""}" required min="0">
       <select id="category">${categories.map(c=>`<option ${product&&product.category===c?"selected":""}>${c}</option>`).join("")}</select>
       ${sellerField}
-      <input id="phone" placeholder="رقم الهاتف" value="${product?product.phone:""}">
-      <input id="province" placeholder="المحافظة" value="${product?product.province:""}">
+      <input id="phone" placeholder="رقم الهاتف" value="${product?product.phone:""}" pattern="[0][0-9]{10}" title="رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر" required>
+      <input id="province" placeholder="المحافظة" value="${product?product.province:""}" required>
       <select id="delivery">
         <option ${product&&product.delivery==="نعم"?"selected":""}>نعم</option>
         <option ${product&&product.delivery==="لا"?"selected":""}>لا</option>
       </select>
-      <button onclick="save('${key||""}')">💾 حفظ</button>
+      <button onclick="save('${key||""}')">💾 ${product?"تحديث":"نشر"}</button>
     </div>`;
 }
 
