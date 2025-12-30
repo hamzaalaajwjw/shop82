@@ -1,3 +1,5 @@
+[file name]: deepseek_html_20251230_086a7b.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -496,7 +498,7 @@ function applyBudget(){
   showHome();
 }
 
-// Load Products - الإصلاح الرئيسي هنا
+// Load Products - مع فرز المنتجات: أولاً منتجات المستخدم، ثم الأحدث
 function loadProducts(){
   const search = document.getElementById("search")?.value.toLowerCase() || '';
   const category = document.getElementById("cat")?.value || '';
@@ -522,13 +524,35 @@ function loadProducts(){
         allProducts.push({
           key: key,
           product: product,
-          price: price
+          price: price,
+          isCurrentUserProduct: product.uid === userUID,
+          timestamp: product.timestamp || 0
         });
       }
     });
     
     // السجل التشخيصي
     console.log(`المنتجات المطابقة: ${allProducts.length}`);
+    console.log(`المستخدم الحالي: ${userUID}`);
+    
+    // ===== التعديل الرئيسي هنا: فرز المنتجات =====
+    allProducts.sort((a, b) => {
+      // 1. أولاً: منتجات المستخدم الحالي (إذا كان مسجل دخول)
+      if (userUID) {
+        if (a.product.uid === userUID && b.product.uid !== userUID) return -1;
+        if (a.product.uid !== userUID && b.product.uid === userUID) return 1;
+        
+        // 2. إذا كان كلاهما للمستخدم الحالي، فرز حسب الأحدث
+        if (a.product.uid === userUID && b.product.uid === userUID) {
+          return (b.timestamp || 0) - (a.timestamp || 0);
+        }
+      }
+      
+      // 3. منتجات الآخرين: فرز من الأحدث إلى الأقدم
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
+    
+    console.log("المنتجات بعد الفرز:", allProducts.map(p => ({name: p.product.name, uid: p.product.uid, timestamp: p.timestamp})));
     
     // حساب الترقيم الصحيح
     const totalProducts = allProducts.length;
@@ -572,16 +596,21 @@ function loadProducts(){
         productsHTML = `<p class='empty'>لا توجد إعلانات ${budgetActive ? 'ضمن ميزانيتك' : ''}</p>`;
         progressManager.completeLoading();
       } else {
-        currentPageProducts.forEach(item => {
+        currentPageProducts.forEach((item, index) => {
           const p = item.product;
+          
+          // تمييز منتجات المستخدم الحالي
+          const isCurrentUserProduct = p.uid === userUID;
+          const userBadge = isCurrentUserProduct ? 
+            `<span style="background:#38bdf8; color:#000; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:5px;">إعلانك</span>` : '';
           
           const sellerSection = userDisplayName ? 
             `<div class="seller">
-              👤 <span class="seller-link" onclick="event.stopPropagation(); viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+              ${userBadge}👤 <span class="seller-link" onclick="event.stopPropagation(); viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
               <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
             </div>` :
             `<div class="seller">
-              👤 ${p.seller} | ☎ ${p.phone}
+              ${userBadge}👤 ${p.seller} | ☎ ${p.phone}
             </div>`;
           
           // زر التعديل والحذف يظهر دائماً
@@ -595,8 +624,8 @@ function loadProducts(){
             </div>`;
           
           productsHTML += `
-            <div class="card" onclick="showDetails('${item.key}')">
-              <h3>${p.name || 'بدون اسم'}</h3>
+            <div class="card" onclick="showDetails('${item.key}')" style="${isCurrentUserProduct ? 'border: 2px solid #38bdf8;' : ''}">
+              <h3>${p.name || 'بدون اسم'} ${isCurrentUserProduct ? '⭐' : ''}</h3>
               <span class="price">${p.price || 0} د.ع</span>
               <div class="meta">
                 <span>${p.category || 'غير محدد'}</span>
@@ -731,7 +760,7 @@ function showPublish(product=null, key=null){
     </div>`;
 }
 
-// Save Product
+// Save Product - تأكد من حفظ timestamp
 function save(key){
   const phone = document.getElementById("phone").value.trim();
   if(!/^[0][0-9]{10}$/.test(phone)){
@@ -750,7 +779,7 @@ function save(key){
     province: document.getElementById("province").value,
     delivery: document.getElementById("delivery").value,
     uid: userUID,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
+    timestamp: firebase.database.ServerValue.TIMESTAMP  // التأكد من وجود timestamp
   };
   
   const ref = key ? db.ref("products/"+key) : db.ref("products").push();
@@ -793,17 +822,26 @@ function showDetails(key){
        <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
       `<p><strong>البائع:</strong> ${product.seller}</p>`;
     
+    const isCurrentUserProduct = product.uid === userUID;
+    const userBadge = isCurrentUserProduct ? 
+      `<p style="color:#38bdf8; font-size:14px; margin-top:10px; background:rgba(56, 189, 248, 0.1); padding:8px; border-radius:6px; border-right:3px solid #38bdf8;">⭐ هذا إعلانك</p>` : "";
+    
+    // عرض تاريخ النشر إذا كان موجوداً
+    const dateInfo = product.timestamp ? 
+      `<p><strong>تاريخ النشر:</strong> ${new Date(product.timestamp).toLocaleDateString('ar-EG')}</p>` : "";
+    
     document.getElementById("detailsContent").innerHTML = `
       <h2>${product.name}</h2>
       <p><strong>السعر:</strong> ${product.price} د.ع</p>
       <p><strong>القسم:</strong> ${product.category}</p>
+      ${dateInfo}
       ${sellerWithLink}
       <p><strong>رقم الهاتف:</strong> ${product.phone}</p>
       <p><strong>المحافظة:</strong> ${product.province}</p>
       <p><strong>التوصيل:</strong> ${product.delivery}</p>
-      ${product.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
+      ${userBadge}
       <div style="margin-top:20px; display:flex; gap:10px;">
-        ${product.uid === userUID ? `
+        ${isCurrentUserProduct ? `
           <button onclick="editProduct('${key}')" style="flex:1; padding:10px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer;">تعديل</button>
           <button onclick="deleteProduct('${key}')" style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">حذف</button>
         ` : ''}
@@ -907,3 +945,4 @@ document.addEventListener("DOMContentLoaded",function(){
 </script>
 </body>
 </html>
+[file content end]
