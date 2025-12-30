@@ -410,10 +410,11 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 <!-- نافذة مشاهدة الإعلان -->
 <div class="ad-watch-dialog" id="adWatchDialog">
   <h3>🔔 الإعلان قيد التشغيل</h3>
-  <div class="ad-watch-timer" id="adWatchTimer">10</div>
+  <div class="ad-watch-timer" id="adWatchTimer">15</div>
   <div class="ad-watch-loader"></div>
   <p class="ad-watch-message">يرجى عدم إغلاق هذه النافذة حتى انتهاء الوقت</p>
   <p style="color:#9ca3af; font-size:12px;">سيتم كشف رقم الهاتف تلقائياً بعد انتهاء الإعلان</p>
+  <div id="adStatus" style="color:#38bdf8; font-size:12px; margin-top:10px;"></div>
 </div>
 
 <div class="overlay" onclick="closeSidebar()"></div>
@@ -461,9 +462,6 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   ">توسيع الوقت</button>
 </div>
 
-<!-- إضافة سكريبت الإعلان الخاص بـ a3len.store -->
-<script src="https://pl28361715.effectivegatecpm.com/21/5c/1e/215c1e533129b4f3fbaee542aa92dca9.js"></script>
-
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -498,6 +496,45 @@ let adWatchInProgress = false;
 let adCountdownInterval = null;
 let adWatchInterval = null;
 let adPopunderWindow = null;
+let richAdsLoaded = false;
+
+// ===== تحميل سكريبت RichAds =====
+function loadRichAdsScript() {
+  return new Promise((resolve, reject) => {
+    if (richAdsLoaded) {
+      resolve(true);
+      return;
+    }
+    
+    console.log("Loading RichAds script...");
+    const script = document.createElement('script');
+    script.src = 'https://richinfo.co/richpartners/pops/js/richads-pu-ob.js';
+    script.setAttribute('data-pubid', '997615');
+    script.setAttribute('data-siteid', '382131');
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    
+    script.onload = () => {
+      console.log("RichAds script loaded successfully");
+      richAdsLoaded = true;
+      
+      // انتظر لتتأكد من تهيئة RichAds
+      setTimeout(() => {
+        console.log("RichAds should be initialized now");
+        console.log("window.RichAds exists:", typeof window.RichAds !== 'undefined');
+        console.log("window.RichPartners exists:", typeof window.RichPartners !== 'undefined');
+        resolve(true);
+      }, 1500);
+    };
+    
+    script.onerror = () => {
+      console.error("Failed to load RichAds script");
+      resolve(false);
+    };
+    
+    document.head.appendChild(script);
+  });
+}
 
 // ===== دالة كشف رقم الهاتف بعد الإعلان =====
 function revealPhoneNumber(phone, productKey, elementId) {
@@ -556,34 +593,66 @@ function skipAd() {
 }
 
 // ===== مشاهدة الإعلان =====
-function watchAd() {
+async function watchAd() {
   clearInterval(adCountdownInterval);
   closeAllAdDialogs();
   
-  // إظهار نافذة مشاهدة الإعلان
-  showAdWatchDialog();
+  // تحميل سكريبت RichAds أولاً
+  progressManager.showOverlay("جاري تحميل الإعلان...", "يرجى الانتظار");
   
-  // فتح إعلان a3len.store بعد ثانية
-  setTimeout(() => {
-    openA3lenAd();
-  }, 1000);
+  try {
+    const scriptLoaded = await loadRichAdsScript();
+    
+    if (!scriptLoaded) {
+      progressManager.hideOverlay();
+      progressManager.showError("فشل تحميل نظام الإعلانات. الرجاء المحاولة لاحقاً.");
+      adWatchInProgress = false;
+      return;
+    }
+    
+    progressManager.hideOverlay();
+    
+    // إظهار نافذة مشاهدة الإعلان
+    showAdWatchDialog();
+    
+    // فتح الإعلان بعد تحميل السكريبت
+    setTimeout(() => {
+      openRichAds();
+    }, 1000);
+    
+  } catch (error) {
+    console.error("Error loading ad:", error);
+    progressManager.hideOverlay();
+    progressManager.showError("حدث خطأ في تحميل الإعلان");
+    adWatchInProgress = false;
+  }
 }
 
 // ===== إظهار نافذة مشاهدة الإعلان =====
 function showAdWatchDialog() {
   const dialog = document.getElementById('adWatchDialog');
   const timerElement = document.getElementById('adWatchTimer');
+  const statusElement = document.getElementById('adStatus');
   
   dialog.style.display = 'block';
   document.body.style.overflow = 'hidden';
   
-  let timer = 10;
+  let timer = 15;
   timerElement.textContent = timer;
+  statusElement.textContent = "جاري تشغيل الإعلان...";
   
   // بدء مؤقت المشاهدة
   adWatchInterval = setInterval(() => {
     timer--;
     timerElement.textContent = timer;
+    
+    if (timer <= 10) {
+      statusElement.textContent = "الإعلان يعمل...";
+    }
+    
+    if (timer <= 5) {
+      statusElement.textContent = "جارٍ الانتهاء...";
+    }
     
     if (timer <= 0) {
       clearInterval(adWatchInterval);
@@ -592,42 +661,119 @@ function showAdWatchDialog() {
   }, 1000);
 }
 
-// ===== فتح إعلان a3len.store فقط =====
-function openA3lenAd() {
-  console.log("Attempting to open a3len.store ad...");
+// ===== فتح إعلان RichAds =====
+function openRichAds() {
+  console.log("Attempting to open RichAds...");
+  const statusElement = document.getElementById('adStatus');
   
   try {
-    // محاولة استخدام الدوال المختلفة من سكريبت a3len.store
-    if (typeof effectivePopunder === 'function') {
-      console.log("Found effectivePopunder function, calling it...");
-      effectivePopunder();
+    // طريقة 1: إذا كان RichAds يقدم دالة معينة
+    if (typeof window.RichAds !== 'undefined' && typeof window.RichAds.show === 'function') {
+      console.log("Using RichAds.show()");
+      statusElement.textContent = "جاري فتح الإعلان...";
+      window.RichAds.show();
+      statusElement.textContent = "تم فتح الإعلان ✓";
       return true;
     }
     
-    // تحقق من وجود دوال أخرى محتملة
-    if (window.a3len && typeof window.a3len.showAd === 'function') {
-      console.log("Found a3len.showAd function, calling it...");
-      window.a3len.showAd();
+    // طريقة 2: إذا كان RichPartners يقدم دالة
+    if (typeof window.RichPartners !== 'undefined' && typeof window.RichPartners.showAd === 'function') {
+      console.log("Using RichPartners.showAd()");
+      statusElement.textContent = "جاري فتح الإعلان...";
+      window.RichPartners.showAd();
+      statusElement.textContent = "تم فتح الإعلان ✓";
       return true;
     }
     
-    // إذا لم توجد دوال محددة، جرب فتح popunder يدوياً باستخدام الدوال العامة
-    if (typeof popunder === 'function') {
-      console.log("Found popunder function, calling it...");
-      popunder();
-      return true;
+    // طريقة 3: البحث عن أي دوال مرتبطة بـ RichAds
+    for (let key in window) {
+      if (typeof window[key] === 'function' && 
+          (key.toLowerCase().includes('rich') || 
+           key.toLowerCase().includes('ad') || 
+           key.toLowerCase().includes('pop') ||
+           key.toLowerCase().includes('pu'))) {
+        console.log(`Found potential RichAds function: ${key}`);
+        try {
+          statusElement.textContent = "جاري فتح الإعلان...";
+          window[key]();
+          statusElement.textContent = "تم فتح الإعلان ✓";
+          return true;
+        } catch (e) {
+          console.log(`Function ${key} failed:`, e);
+        }
+      }
     }
     
-    // إذا فشلت جميع المحاولات، عرض رسالة
-    console.error("No a3len ad functions found!");
-    progressManager.showError("عذراً، لم يتم تحميل نظام الإعلانات. الرجاء المحاولة لاحقاً.");
-    closeAllAdDialogs();
-    return false;
+    // طريقة 4: إذا لم توجد دوال، جرب إرسال حدث
+    console.log("Trying to dispatch RichAds event...");
+    statusElement.textContent = "جاري فتح الإعلان...";
+    
+    try {
+      // محاولة إرسال حدث لتفعيل الإعلان
+      const event = new CustomEvent('richads-trigger');
+      window.dispatchEvent(event);
+      statusElement.textContent = "تم تشغيل الإعلان ✓";
+      
+      // افتح نافذة احتياطية بعد 3 ثواني
+      setTimeout(() => {
+        if (!adPopunderWindow || adPopunderWindow.closed) {
+          openFallbackAd();
+        }
+      }, 3000);
+      
+      return true;
+    } catch (e) {
+      console.log("Event dispatch failed:", e);
+    }
+    
+    // طريقة 5: فتح نافذة احتياطية
+    console.log("Opening fallback RichAds window...");
+    return openFallbackAd();
     
   } catch (error) {
-    console.error("Error opening a3len ad:", error);
-    progressManager.showError("حدث خطأ في تشغيل الإعلان");
-    closeAllAdDialogs();
+    console.error("Error opening RichAds:", error);
+    statusElement.textContent = "⚠️ حدث خطأ في فتح الإعلان";
+    return openFallbackAd();
+  }
+}
+
+// ===== فتح إعلان احتياطي =====
+function openFallbackAd() {
+  const statusElement = document.getElementById('adStatus');
+  
+  try {
+    statusElement.textContent = "جاري فتح الإعلان...";
+    
+    // افتح نافذة RichAds مباشرة
+    adPopunderWindow = window.open(
+      'https://richinfo.co',
+      '_blank',
+      'width=800,height=600,scrollbars=yes,resizable=yes,top=100,left=100'
+    );
+    
+    if (adPopunderWindow) {
+      statusElement.textContent = "تم فتح الإعلان ✓";
+      
+      // إغلاق النافذة تلقائياً بعد 10 ثواني
+      setTimeout(() => {
+        try {
+          if (adPopunderWindow && !adPopunderWindow.closed) {
+            adPopunderWindow.close();
+          }
+        } catch (e) {
+          console.log("Could not close window:", e);
+        }
+      }, 10000);
+      
+      return true;
+    } else {
+      statusElement.textContent = "⚠️ تم حظر النافذة المنبثقة";
+      return false;
+    }
+    
+  } catch (error) {
+    console.error("Error opening fallback ad:", error);
+    statusElement.textContent = "⚠️ فشل فتح الإعلان";
     return false;
   }
 }
@@ -1689,19 +1835,15 @@ document.addEventListener("DOMContentLoaded", function() {
     closeAllAdDialogs();
   });
   
-  // اختبار سكريبت الإعلان عند التحميل
+  // تحميل RichAds تلقائياً عند فتح الصفحة
   setTimeout(() => {
-    console.log("=== a3len.store Ad Script Check ===");
-    console.log("Script loaded from: https://pl28361715.effectivegatecpm.com/21/5c/1e/215c1e533129b4f3fbaee542aa92dca9.js");
-    console.log("effectivePopunder function exists:", typeof effectivePopunder === 'function');
-    console.log("popunder function exists:", typeof popunder === 'function');
-    console.log("window.a3len object exists:", typeof window.a3len !== 'undefined');
-    if (window.a3len) {
-      console.log("a3len.showAd function exists:", typeof window.a3len.showAd === 'function');
-    }
-    console.log("=== End of Check ===");
-  }, 3000);
+    loadRichAdsScript().then(success => {
+      console.log("RichAds pre-loaded:", success);
+    });
+  }, 2000);
 });
 </script>
+
+<!-- RichAds Script - سيتم تحميله ديناميكياً عند الحاجة -->
 </body>
 </html>
