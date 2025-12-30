@@ -1,4 +1,3 @@
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
   authDomain: "a3len-3ad54.firebaseapp.com",
@@ -17,20 +16,16 @@ firebase.auth().onAuthStateChanged(u=>{if(u) userUID = u.uid;});
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 let budget = null;
 
-/* ===== Pagination Variables ===== */
 let currentPage = 1;
 const postsPerPage = 6;
 
-// ===== إضافة متغيرات نظام المصادقة =====
 let currentUser = null;
 let userDisplayName = null;
 let userFullName = null;
 
-// Sidebar
 function toggleSidebar(){document.querySelector(".sidebar").classList.toggle("active")}
 function closeSidebar(){document.querySelector(".sidebar").classList.remove("active")}
 
-// Home
 function showHome(){
   closeSidebar();
   document.getElementById("content").innerHTML = `
@@ -48,7 +43,6 @@ function showHome(){
   loadProducts();
 }
 
-// Budget Dialog
 function showBudgetDialog(){document.getElementById("budgetDialog").classList.add("show")}
 function closeBudget(){document.getElementById("budgetDialog").classList.remove("show")}
 function applyBudget(){
@@ -58,7 +52,6 @@ function applyBudget(){
   loadProducts();
 }
 
-// Load Products
 function loadProducts(){
   const s=document.getElementById("search").value.toLowerCase();
   const c=document.getElementById("cat").value;
@@ -71,7 +64,6 @@ function loadProducts(){
       if((!c||p.category===c)&&p.name.toLowerCase().includes(s)){
         if(budget&&price>budget) return;
         
-        // ===== إضافة زر الملف الشخصي للبائع =====
         const sellerSection = userDisplayName ? 
           `<div class="seller">
             👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
@@ -99,12 +91,10 @@ function loadProducts(){
       }
     });
 
-    // ترتيب منشورات المستخدم أولاً
     if(userUID){
       htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
     }
 
-    // Pagination
     const totalPages = Math.ceil(htmlCards.length / postsPerPage);
     if(currentPage > totalPages) currentPage = 1;
     const start = (currentPage-1)*postsPerPage;
@@ -117,7 +107,6 @@ function loadProducts(){
   });
 }
 
-// Render Pagination Buttons
 function renderPagination(total){
   let html = "";
   for(let i=1;i<=total;i++){
@@ -143,14 +132,11 @@ function goPage(p){
   loadProducts();
 }
 
-// ===== تحديث دالة deleteProduct لتحديث العداد =====
 function deleteProduct(k){ 
   if(confirm("حذف الإعلان؟")) {
-    // الحصول على بيانات المنتج أولاً
     db.ref("products/" + k).once('value', (snapshot) => {
       const product = snapshot.val();
       if (product) {
-        // تقليل عداد منتجات المستخدم
         if (product.uid) {
           db.ref('users/' + product.uid).once('value', (userSnapshot) => {
             const userData = userSnapshot.val();
@@ -165,7 +151,6 @@ function deleteProduct(k){
           });
         }
         
-        // حذف المنتج
         db.ref("products/"+k).remove().then(() => {
           loadProducts();
         });
@@ -176,11 +161,9 @@ function deleteProduct(k){
 
 function editProduct(k){db.ref("products/"+k).once("value",s=>showPublish(s.val(),k))}
 
-// ===== تعديل دالة showPublish لدعم المصادقة =====
 function showPublish(p=null,k=null){
   closeSidebar();
   
-  // استخدام اسم المستخدم إذا كان مسجلاً
   const sellerName = userDisplayName || (p ? p.seller : "");
   const sellerField = userDisplayName ? 
     `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
@@ -204,7 +187,6 @@ function showPublish(p=null,k=null){
     </div>`;
 }
 
-// ===== تحديث دالة save لإضافة عداد المنتجات =====
 function save(k){
   const phone = document.getElementById("phone").value.trim();
   if(!/^[0][0-9]{10}$/.test(phone)){
@@ -212,7 +194,6 @@ function save(k){
     return;
   }
 
-  // استخدام اسم المستخدم المسجل إذا كان متوفراً
   const seller = userDisplayName || document.getElementById("seller").value;
 
   const data = {
@@ -230,7 +211,6 @@ function save(k){
   const ref = k ? db.ref("products/"+k) : db.ref("products").push();
   
   ref.set(data).then(() => {
-    // ===== تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط) =====
     if (!k && userUID) {
       db.ref('users/' + userUID).once('value', (snapshot) => {
         const userData = snapshot.val();
@@ -241,7 +221,6 @@ function save(k){
             lastActive: firebase.database.ServerValue.TIMESTAMP
           });
         } else {
-          // إذا لم يكن للمستخدم بيانات، إنشاءها
           db.ref('users/' + userUID).update({
             totalProducts: 1,
             lastActive: firebase.database.ServerValue.TIMESTAMP
@@ -256,13 +235,11 @@ function save(k){
   });
 }
 
-// ===== إضافة دالة showDetails لعرض تفاصيل المنتج =====
 function showDetails(k){
   db.ref("products/"+k).once("value",snap=>{
     const p = snap.val();
     if(!p) return;
     
-    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل =====
     const sellerWithLink = userDisplayName ? 
       `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
        <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
@@ -286,13 +263,11 @@ function closeDetails(){
   document.getElementById("detailsDialog").style.display="none";
 }
 
-// ===== تحديث دالة updateAuthUI لعرض الاسم الكامل =====
 function updateAuthUI() {
   const authSection = document.getElementById("authSection");
   if (!authSection) return;
   
   if (currentUser && userDisplayName) {
-    // المستخدم مسجل الدخول
     const displayName = userFullName || userDisplayName;
     authSection.innerHTML = `
       <div class="user-info">
@@ -302,7 +277,6 @@ function updateAuthUI() {
       </div>
     `;
   } else {
-    // المستخدم غير مسجل
     authSection.innerHTML = `
       <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
       <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
@@ -325,14 +299,11 @@ function logoutUser() {
     });
 }
 
-// ===== إضافة دوال نظام الملف الشخصي =====
 function viewProfile(userId, sellerName) {
-  // حفظ اسم البائع للاستخدام لاحقاً
   if (sellerName) {
     localStorage.setItem('profileSellerName', sellerName);
   }
   
-  // الانتقال لصفحة الملف الشخصي
   window.location.href = `profile.html?id=${userId}`;
 }
 
@@ -345,13 +316,11 @@ function viewMyProfile() {
   }
 }
 
-// متابعة حالة المصادقة
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
     currentUser = user;
     userUID = user.uid;
     
-    // الحصول على بيانات المستخدم من قاعدة البيانات
     db.ref("users/" + user.uid).once("value", snapshot => {
       const userData = snapshot.val();
       if (userData) {
@@ -359,14 +328,12 @@ firebase.auth().onAuthStateChanged((user) => {
         userFullName = userData.fullName || userData.username;
         updateAuthUI();
         
-        // تحديث وقت آخر نشاط
         db.ref("users/" + user.uid).update({
           lastActive: firebase.database.ServerValue.TIMESTAMP
         });
       }
     });
   } else {
-    // المستخدم غير مسجل
     currentUser = null;
     userDisplayName = null;
     userFullName = null;
@@ -374,12 +341,10 @@ firebase.auth().onAuthStateChanged((user) => {
   }
 });
 
-// Init
 document.addEventListener("DOMContentLoaded",function(){
   showHome();
   updateAuthUI();
   
-  // إضافة أنماط إضافية لروابط البائعين
   const style = document.createElement('style');
   style.textContent = `
     .seller-link {
