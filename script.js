@@ -26,25 +26,7 @@ let currentUser = null;
 let userDisplayName = null;
 let userFullName = null;
 
-function openA3lenAd() {
-  console.log("Attempting to open a3len.store ad...");
-  
-  try {
-    // فقط دوال a3len.store
-    if (typeof effectivePopunder === 'function') {
-      effectivePopunder();
-      return true;
-    }
-    
-    if (window.a3len && typeof window.a3len.showAd === 'function') {
-      window.a3len.showAd();
-      return true;
-    }
-    
-    if (typeof popunder === 'function') {
-      popunder();
-      return true;
-    }
+
     
     // إذا لم توجد دوال
     console.error("No a3len ad functions found!");
@@ -430,4 +412,5 @@ document.addEventListener("DOMContentLoaded",function(){
   `;
   document.head.appendChild(style);
 });
+
 
