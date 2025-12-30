@@ -195,6 +195,112 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   display: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+
+/* ===== أنماط نظام كشف رقم الهاتف بعد الإعلان ===== */
+.phone-reveal {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+.phone-reveal:hover {
+  color: #38bdf8;
+}
+.phone-reveal::after {
+  content: "🔓 انقر لعرض الرقم بعد مشاهدة إعلان";
+  position: absolute;
+  bottom: -25px;
+  right: 0;
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.phone-reveal:hover::after {
+  opacity: 1;
+}
+.phone-unlocked {
+  color: #10b981 !important;
+  cursor: default;
+}
+.phone-unlocked:hover {
+  color: #10b981 !important;
+}
+.phone-unlocked::after {
+  content: "✅ تم كشف الرقم" !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+}
+
+/* ===== نافذة تأكيد مشاهدة الإعلان ===== */
+.ad-confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #0f1115;
+  color: #e5e7eb;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: none;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid #374151;
+}
+.ad-confirm-dialog h3 {
+  margin-top: 0;
+  color: #38bdf8;
+  margin-bottom: 15px;
+}
+.ad-confirm-dialog p {
+  margin-bottom: 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ad-confirm-dialog-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.ad-confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+  min-width: 120px;
+}
+.ad-confirm-btn.primary {
+  background: #10b981;
+  color: white;
+}
+.ad-confirm-btn.primary:hover {
+  background: #0da271;
+}
+.ad-confirm-btn.secondary {
+  background: #6b7280;
+  color: white;
+}
+.ad-confirm-btn.secondary:hover {
+  background: #4b5563;
+}
+.ad-confirm-countdown {
+  font-size: 24px;
+  font-weight: bold;
+  color: #38bdf8;
+  margin: 15px 0;
+}
 </style>
 </head>
 <body>
@@ -230,6 +336,18 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
         <div class="progress-overlay-text" id="progressText">جاري التحميل...</div>
         <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
     </div>
+</div>
+
+<!-- نافذة تأكيد مشاهدة الإعلان -->
+<div class="ad-confirm-dialog" id="adConfirmDialog">
+  <h3>👁️ مشاهدة الإعلان</h3>
+  <p>لمشاهدة رقم الهاتف، يجب مشاهدة الإعلان التالي بشكل كامل.</p>
+  <div class="ad-confirm-countdown" id="adCountdown">5</div>
+  <p>بعد مشاهدة الإعلان، سيتم الكشف عن رقم الهاتف كاملاً.</p>
+  <div class="ad-confirm-dialog-buttons">
+    <button class="ad-confirm-btn secondary" onclick="skipAd()">تخطي</button>
+    <button class="ad-confirm-btn primary" onclick="watchAd()" id="watchAdBtn" disabled>مشاهدة (5)</button>
+  </div>
 </div>
 
 <div class="overlay" onclick="closeSidebar()"></div>
@@ -277,6 +395,9 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   ">توسيع الوقت</button>
 </div>
 
+<!-- إضافة سكريبت الإعلان -->
+<script src="https://pl28361715.effectivegatecpm.com/21/5c/1e/215c1e533129b4f3fbaee542aa92dca9.js"></script>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -303,6 +424,220 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.database();
 const analytics = firebase.analytics();
+
+// ===== متغيرات نظام كشف رقم الهاتف =====
+let currentPhoneToReveal = null;
+let currentProductKey = null;
+let adWatchInProgress = false;
+let adCountdownInterval = null;
+
+// ===== دالة كشف رقم الهاتف بعد الإعلان =====
+function revealPhoneNumber(phone, productKey, elementId) {
+  // التحقق إذا كان الرقم مكشوفاً مسبقاً
+  const revealedPhones = JSON.parse(localStorage.getItem('revealedPhones') || '{}');
+  if (revealedPhones[productKey]) {
+    showFullPhoneNumber(phone, elementId, productKey);
+    return;
+  }
+  
+  currentPhoneToReveal = phone;
+  currentProductKey = productKey;
+  
+  // إظهار نافذة تأكيد مشاهدة الإعلان
+  showAdConfirmationDialog(elementId);
+}
+
+// ===== إظهار نافذة تأكيد مشاهدة الإعلان =====
+function showAdConfirmationDialog(elementId) {
+  if (adWatchInProgress) return;
+  
+  adWatchInProgress = true;
+  const dialog = document.getElementById('adConfirmDialog');
+  const countdownElement = document.getElementById('adCountdown');
+  const watchBtn = document.getElementById('watchAdBtn');
+  
+  dialog.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  
+  let countdown = 5;
+  countdownElement.textContent = countdown;
+  watchBtn.disabled = true;
+  watchBtn.textContent = `مشاهدة (${countdown})`;
+  
+  // بدء العد التنازلي
+  adCountdownInterval = setInterval(() => {
+    countdown--;
+    countdownElement.textContent = countdown;
+    watchBtn.textContent = `مشاهدة (${countdown})`;
+    
+    if (countdown <= 0) {
+      clearInterval(adCountdownInterval);
+      watchBtn.disabled = false;
+      watchBtn.textContent = 'مشاهدة الإعلان';
+    }
+  }, 1000);
+}
+
+// ===== تخطي الإعلان =====
+function skipAd() {
+  clearInterval(adCountdownInterval);
+  document.getElementById('adConfirmDialog').style.display = 'none';
+  document.body.style.overflow = '';
+  adWatchInProgress = false;
+  
+  progressManager.showWarning("لم يتم كشف الرقم. يجب مشاهدة الإعلان كاملاً.");
+}
+
+// ===== مشاهدة الإعلان =====
+function watchAd() {
+  clearInterval(adCountdownInterval);
+  const dialog = document.getElementById('adConfirmDialog');
+  
+  // إظهار تحميل
+  progressManager.showOverlay("جاري فتح الإعلان...", "يرجى الانتظار");
+  
+  // محاولة فتح popunder
+  try {
+    // هذه الدالة تأتي من سكريبت الإعلان
+    if (typeof effectivePopunder === 'function') {
+      effectivePopunder();
+    }
+    
+    // إخفاء نافذة التأكيد
+    dialog.style.display = 'none';
+    document.body.style.overflow = '';
+    
+    // بدء مؤقت لمراقبة الإعلان
+    setTimeout(() => {
+      checkAdCompletion();
+    }, 3000); // انتظر 3 ثواني لفتح الإعلان
+    
+  } catch (error) {
+    console.error("Error showing ad:", error);
+    progressManager.hideOverlay();
+    dialog.style.display = 'none';
+    document.body.style.overflow = '';
+    adWatchInProgress = false;
+    progressManager.showError("حدث خطأ في فتح الإعلان");
+  }
+}
+
+// ===== التحقق من اكتمال مشاهدة الإعلان =====
+function checkAdCompletion() {
+  // هنا يمكن إضافة منطق أكثر تعقيداً للتحقق من مشاهدة الإعلان
+  // حالياً نفترض أن الإعلان تمت مشاهدته بعد 5 ثواني
+  
+  progressManager.updateOverlayText("جاري التحقق من الإعلان...", "يرجى عدم إغلاق النافذة");
+  
+  setTimeout(() => {
+    // بعد 5 ثواني، نفترض أن الإعلان تمت مشاهدته
+    onAdCompleted();
+  }, 5000);
+}
+
+// ===== عند اكتمال الإعلان =====
+function onAdCompleted() {
+  progressManager.showSuccess("تمت مشاهدة الإعلان بنجاح!");
+  
+  // حفظ حالة كشف الرقم في localStorage
+  const revealedPhones = JSON.parse(localStorage.getItem('revealedPhones') || '{}');
+  revealedPhones[currentProductKey] = {
+    phone: currentPhoneToReveal,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('revealedPhones', JSON.stringify(revealedPhones));
+  
+  // تحديث واجهة المستخدم لإظهار الرقم
+  showFullPhoneNumber(currentPhoneToReveal, null, currentProductKey);
+  
+  // تحديث جميع التكرارات لهذا الرقم في الصفحة
+  updateAllPhoneDisplays(currentProductKey, currentPhoneToReveal);
+  
+  adWatchInProgress = false;
+}
+
+// ===== إظهار رقم الهاتف الكامل =====
+function showFullPhoneNumber(phone, elementId, productKey) {
+  if (elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.innerHTML = phone;
+      element.className = 'phone-unlocked';
+      element.onclick = null;
+    }
+  }
+  
+  // تحديث في نافذة التفاصيل إذا كانت مفتوحة
+  const detailsContent = document.getElementById('detailsContent');
+  if (detailsContent && detailsContent.innerHTML.includes(productKey)) {
+    const phoneElements = detailsContent.querySelectorAll('.phone-reveal');
+    phoneElements.forEach(el => {
+      if (el.getAttribute('data-product-key') === productKey) {
+        el.innerHTML = phone;
+        el.className = 'phone-unlocked';
+        el.onclick = null;
+      }
+    });
+  }
+}
+
+// ===== تحديث جميع عروض أرقام الهاتف في الصفحة =====
+function updateAllPhoneDisplays(productKey, phoneNumber) {
+  // تحديث في البطاقات
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card => {
+    const phoneSpans = card.querySelectorAll('.phone-reveal');
+    phoneSpans.forEach(span => {
+      if (span.getAttribute('data-product-key') === productKey) {
+        span.innerHTML = phoneNumber;
+        span.className = 'phone-unlocked';
+        span.onclick = null;
+      }
+    });
+  });
+  
+  // تحديث في نافذة التفاصيل
+  const detailsDialog = document.getElementById('detailsDialog');
+  if (detailsDialog.style.display === 'block') {
+    const phoneSpans = detailsDialog.querySelectorAll('.phone-reveal');
+    phoneSpans.forEach(span => {
+      if (span.getAttribute('data-product-key') === productKey) {
+        span.innerHTML = phoneNumber;
+        span.className = 'phone-unlocked';
+        span.onclick = null;
+      }
+    });
+  }
+}
+
+// ===== تعديل دالة maskPhoneNumber لدعم النظام الجديد =====
+function maskPhoneNumber(phone, productKey = null, context = 'card') {
+  if (!phone || phone.length !== 11) return phone;
+  
+  // التحقق إذا كان الرقم مكشوفاً مسبقاً
+  if (productKey) {
+    const revealedPhones = JSON.parse(localStorage.getItem('revealedPhones') || '{}');
+    if (revealedPhones[productKey]) {
+      // إنشاء معرف فريد للعنصر
+      const elementId = `phone-${productKey}-${context}-${Date.now()}`;
+      return `<span id="${elementId}" class="phone-unlocked">${phone}</span>`;
+    }
+  }
+  
+  // إنشاء معرف فريد للعنصر
+  const elementId = `phone-${productKey || 'unknown'}-${context}-${Date.now()}`;
+  
+  // إرجاع رقم مقنع قابل للنقر
+  const masked = phone.substring(0, 4) + '****' + phone.substring(8);
+  return `<span id="${elementId}" class="phone-reveal" 
+           onclick="revealPhoneNumber('${phone}', '${productKey}', '${elementId}')"
+           data-product-key="${productKey}">
+           ${masked}
+         </span>`;
+}
+
+// ===== تعديل دالة loadProducts لدعم النظام الجديد =====
+// سيتم تحديث هذا الجزء في الأسفل حيث توجد دالة loadProducts الأصلية
 
 // ===== Progress Bar System =====
 class ProgressManager {
@@ -635,7 +970,7 @@ function applyBudget(){
   loadProducts();
 }
 
-// تحميل المنتجات
+// تحميل المنتجات - تم التحديث لدعم النظام الجديد
 function loadProducts(){
   const s = document.getElementById("search")?.value.toLowerCase() || '';
   const c = document.getElementById("cat")?.value || '';
@@ -673,11 +1008,11 @@ function loadProducts(){
           `<div class="seller">
             👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> 
             ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-            | ☎ ${maskPhoneNumber(p.phone)}
+            | ☎ ${maskPhoneNumber(p.phone, k, 'card')}
             <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
           `<div class="seller">
-            👤 ${p.seller} | ☎ ${maskPhoneNumber(p.phone)}
+            👤 ${p.seller} | ☎ ${maskPhoneNumber(p.phone, k, 'card')}
           </div>`;
         
         htmlCards.push({uid:p.uid,key:k,html:`
@@ -1002,7 +1337,7 @@ function save(k){
   });
 }
 
-// Product Details
+// Product Details - تم التحديث لدعم النظام الجديد
 function showDetails(k){
   progressManager.showCircularProgress();
   
@@ -1028,7 +1363,7 @@ function showDetails(k){
       <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
       ${statusText}
       ${sellerWithLink}
-      <p><strong>رقم الهاتف:</strong> ${maskPhoneNumber(p.phone)}</p>
+      <p><strong>رقم الهاتف:</strong> ${maskPhoneNumber(p.phone, k, 'details')}</p>
       <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
       <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
       ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
@@ -1157,10 +1492,7 @@ function escapeHTML(text) {
   return div.innerHTML;
 }
 
-function maskPhoneNumber(phone) {
-  if (!phone || phone.length !== 11) return phone;
-  return phone.substring(0, 4) + '****' + phone.substring(8);
-}
+// تم نقل دالة maskPhoneNumber للأعلى لدعم النظام الجديد
 
 function formatPrice(price) {
   return parseInt(price).toLocaleString('ar-SA');
@@ -1224,6 +1556,13 @@ document.addEventListener("DOMContentLoaded", function() {
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
       e.preventDefault();
+    }
+  });
+  
+  // تنظيف الفاصل الزمني عند إغلاق الصفحة
+  window.addEventListener('beforeunload', function() {
+    if (adCountdownInterval) {
+      clearInterval(adCountdownInterval);
     }
   });
 });
