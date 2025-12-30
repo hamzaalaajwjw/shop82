@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | a3len</title>
+    <style>
+        /* نفس الأنماط الأساسية لـ index.html */
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('font.ttf') format('truetype');
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'CustomFont', sans-serif;
+            background: #0f1115;
+            color: #e5e7eb;
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header */
+        .header {
+            background: #0b0d12;
+            padding: 15px 0;
+            border-bottom: 1px solid #1f2937;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-btn {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+        
+        .logo {
+            color: #38bdf8;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: #1c1f27;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 1px solid #374151;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #38bdf8;
+        }
+        
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            color: #38bdf8;
+            font-size: 36px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+        
+        /* Sections */
+        .section {
+            background: #1c1f27;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #374151;
+        }
+        
+        .section-title {
+            color: #38bdf8;
+            font-size: 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #374151;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #374151;
+        }
+        
+        th {
+            background: #1f2937;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background: rgba(56, 189, 248, 0.05);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-primary {
+            background: #38bdf8;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0ea5e9;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        /* Loading State */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: #38bdf8;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="back-btn">
+                    ← العودة للرئيسية
+                </a>
+                <div class="logo">a3len | لوحة التحكم</div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        ⟳ تحديث
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- الإحصائيات -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <span class="stat-number" id="totalUsers">0</span>
+                <span class="stat-label">إجمالي المستخدمين</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🛒</div>
+                <span class="stat-number" id="totalProducts">0</span>
+                <span class="stat-label">إجمالي الإعلانات</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <span class="stat-number" id="soldProducts">0</span>
+                <span class="stat-label">الإعلانات المباعة</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <span class="stat-number" id="todayProducts">0</span>
+                <span class="stat-label">إعلانات اليوم</span>
+            </div>
+        </div>
+
+        <!-- إدارة المستخدمين -->
+        <div class="section">
+            <h2 class="section-title">👥 إدارة المستخدمين</h2>
+            <div class="table-container">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>اسم المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>عدد الإعلانات</th>
+                            <th>حالة الحساب</th>
+                            <th>صلاحية المدير</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- سيتم ملؤها بالجافاسكريبت -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- إدارة الإعلانات -->
+        <div class="section">
+            <h2 class="section-title">🛒 إدارة الإعلانات</h2>
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>اسم القطعة</th>
+                            <th>السعر</th>
+                            <th>البائع</th>
+                            <th>الحالة</th>
+                            <th>التاريخ</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <!-- سيتم ملؤها بالجافاسكريبت -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+            authDomain: "a3len-3ad54.firebasestorage.app",
+            databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+            projectId: "a3len-3ad54",
+            storageBucket: "a3len-3ad54.firebasestorage.app",
+            messagingSenderId: "767338034080",
+            appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+        };
+        
+        // التحقق من التهيئة
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = firebase.database();
+        const auth = firebase.auth();
+        
+        // التحقق من صلاحية المستخدم
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                db.ref('users/' + user.uid).once('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData && userData.isAdmin) {
+                        // المستخدم مسؤول، تحميل البيانات
+                        loadStats();
+                        loadUsers();
+                        loadProducts();
+                    } else {
+                        // المستخدم ليس مسؤولاً، إعادة توجيه للصفحة الرئيسية
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
+                // المستخدم غير مسجل، إعادة توجيه لصفحة تسجيل الدخول
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // تحميل الإحصائيات
+        function loadStats() {
+            db.ref('users').once('value', (snapshot) => {
+                const users = snapshot.val();
+                const totalUsers = users ? Object.keys(users).length : 0;
+                document.getElementById('totalUsers').textContent = totalUsers;
+            });
+            
+            db.ref('products').once('value', (snapshot) => {
+                const products = snapshot.val();
+                let totalProducts = 0;
+                let soldProducts = 0;
+                let todayProducts = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (products) {
+                    Object.values(products).forEach(product => {
+                        totalProducts++;
+                        if (product.status === 'sold') {
+                            soldProducts++;
+                        }
+                        
+                        if (product.timestamp) {
+                            const productDate = new Date(product.timestamp);
+                            if (productDate >= today) {
+                                todayProducts++;
+                            }
+                        }
+                    });
+                }
+                
+                document.getElementById('totalProducts').textContent = totalProducts;
+                document.getElementById('soldProducts').textContent = soldProducts;
+                document.getElementById('todayProducts').textContent = todayProducts;
+            });
+        }
+        
+        // تحميل المستخدمين
+        function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">جاري التحميل...</td></tr>';
+            
+            db.ref('users').once('value', (snapshot) => {
+                const users = snapshot.val();
+                tbody.innerHTML = '';
+                
+                if (!users) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">لا يوجد مستخدمين</td></tr>';
+                    return;
+                }
+                
+                Object.entries(users).forEach(([userId, user]) => {
+                    const row = document.createElement('tr');
+                    
+                    const username = user.username || 'بدون اسم';
+                    const email = user.email || 'بدون بريد';
+                    const productCount = user.totalProducts || 0;
+                    const isAdmin = user.isAdmin ? 'نعم' : 'لا';
+                    const isVerified = user.isVerified ? '✓ موثّق' : 'غير موثّق';
+                    
+                    row.innerHTML = `
+                        <td>${username}</td>
+                        <td>${email}</td>
+                        <td>${productCount}</td>
+                        <td>${isVerified}</td>
+                        <td>${isAdmin}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="toggleAdmin('${userId}', ${user.isAdmin || false})">
+                                ${user.isAdmin ? 'سحب المدير' : 'منح المدير'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${userId}')">
+                                حذف
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            });
+        }
+        
+        // تحميل الإعلانات
+        function loadProducts() {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">جاري التحميل...</td></tr>';
+            
+            db.ref('products').once('value', (snapshot) => {
+                const products = snapshot.val();
+                tbody.innerHTML = '';
+                
+                if (!products) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">لا يوجد إعلانات</td></tr>';
+                    return;
+                }
+                
+                Object.entries(products).forEach(([productId, product]) => {
+                    const row = document.createElement('tr');
+                    
+                    const name = product.name || 'بدون اسم';
+                    const price = product.price ? `${parseInt(product.price).toLocaleString('ar-SA')} د.ع` : 'غير محدد';
+                    const seller = product.seller || 'غير معروف';
+                    const status = getStatusText(product.status || 'available');
+                    const date = product.timestamp ? formatDate(product.timestamp) : 'غير معروف';
+                    
+                    row.innerHTML = `
+                        <td>${name}</td>
+                        <td>${price}</td>
+                        <td>${seller}</td>
+                        <td>${status}</td>
+                        <td>${date}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editProduct('${productId}')">
+                                تعديل
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProductAdmin('${productId}')">
+                                حذف
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            });
+        }
+        
+        // تبديل صلاحية المدير
+        function toggleAdmin(userId, isCurrentlyAdmin) {
+            if (confirm(`هل أنت متأكد من ${isCurrentlyAdmin ? 'سحب صلاحية المدير' : 'منح صلاحية المدير'}؟`)) {
+                db.ref('users/' + userId).update({
+                    isAdmin: !isCurrentlyAdmin
+                }).then(() => {
+                    alert(`تم ${isCurrentlyAdmin ? 'سحب' : 'منح'} صلاحية المدير بنجاح`);
+                    loadUsers();
+                }).catch((error) => {
+                    console.error('Error updating admin status:', error);
+                    alert('حدث خطأ أثناء تحديث صلاحية المدير');
+                });
+            }
+        }
+        
+        // حذف مستخدم
+        function deleteUser(userId) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟ سيتم حذف جميع إعلاناته أيضاً.')) {
+                // حذف إعلانات المستخدم أولاً
+                db.ref('products').orderByChild('uid').equalTo(userId).once('value', (snapshot) => {
+                    const products = snapshot.val();
+                    if (products) {
+                        Object.keys(products).forEach(productId => {
+                            db.ref('products/' + productId).remove();
+                        });
+                    }
+                    
+                    // حذف المستخدم
+                    db.ref('users/' + userId).remove().then(() => {
+                        alert('تم حذف المستخدم وإعلاناته بنجاح');
+                        loadStats();
+                        loadUsers();
+                        loadProducts();
+                    }).catch((error) => {
+                        console.error('Error deleting user:', error);
+                        alert('حدث خطأ أثناء حذف المستخدم');
+                    });
+                });
+            }
+        }
+        
+        // حذف إعلان (من لوحة التحكم)
+        function deleteProductAdmin(productId) {
+            if (confirm('هل أنت متأكد من حذف هذا الإعلان؟')) {
+                db.ref('products/' + productId).remove().then(() => {
+                    alert('تم حذف الإعلان بنجاح');
+                    loadStats();
+                    loadProducts();
+                }).catch((error) => {
+                    console.error('Error deleting product:', error);
+                    alert('حدث خطأ أثناء حذف الإعلان');
+                });
+            }
+        }
+        
+        // تعديل إعلان
+        function editProduct(productId) {
+            window.location.href = `index.html?edit=${productId}`;
+        }
+        
+        // تحديث البيانات
+        function refreshData() {
+            loadStats();
+            loadUsers();
+            loadProducts();
+        }
+        
+        // دوال مساعدة
+        function getStatusText(status) {
+            const statuses = {
+                'available': 'متاح',
+                'sold': 'مباع',
+                'reserved': 'محجوز'
+            };
+            return statuses[status] || status;
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'غير معروف';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-SA');
+        }
+    </script>
+</body>
+</html>
