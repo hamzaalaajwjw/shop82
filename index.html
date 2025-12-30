@@ -461,7 +461,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   ">توسيع الوقت</button>
 </div>
 
-<!-- إضافة سكريبت الإعلان -->
+<!-- إضافة سكريبت الإعلان الخاص بـ a3len.store -->
 <script src="https://pl28361715.effectivegatecpm.com/21/5c/1e/215c1e533129b4f3fbaee542aa92dca9.js"></script>
 
 <!-- Firebase -->
@@ -498,7 +498,6 @@ let adWatchInProgress = false;
 let adCountdownInterval = null;
 let adWatchInterval = null;
 let adPopunderWindow = null;
-
 
 // ===== دالة كشف رقم الهاتف بعد الإعلان =====
 function revealPhoneNumber(phone, productKey, elementId) {
@@ -564,9 +563,9 @@ function watchAd() {
   // إظهار نافذة مشاهدة الإعلان
   showAdWatchDialog();
   
-  // محاولة فتح popunder
+  // فتح إعلان a3len.store بعد ثانية
   setTimeout(() => {
-    openPopunderAd();
+    openA3lenAd();
   }, 1000);
 }
 
@@ -593,62 +592,42 @@ function showAdWatchDialog() {
   }, 1000);
 }
 
-// ===== فتح popunder =====
-function openPopunderAd() {
+// ===== فتح إعلان a3len.store فقط =====
+function openA3lenAd() {
+  console.log("Attempting to open a3len.store ad...");
+  
   try {
-    // محاولة استخدام سكريبت الإعلان الموجود
+    // محاولة استخدام الدوال المختلفة من سكريبت a3len.store
     if (typeof effectivePopunder === 'function') {
-      console.log("Using effectivePopunder function");
+      console.log("Found effectivePopunder function, calling it...");
       effectivePopunder();
       return true;
     }
     
-    // محاولة استخدام a3len.store popunder
-    if (typeof a3lenPopunder === 'function') {
-      console.log("Using a3lenPopunder function");
-      a3lenPopunder();
+    // تحقق من وجود دوال أخرى محتملة
+    if (window.a3len && typeof window.a3len.showAd === 'function') {
+      console.log("Found a3len.showAd function, calling it...");
+      window.a3len.showAd();
       return true;
     }
     
-    // إذا لم توجد الدوال، افتح popunder يدوياً
-    console.log("Opening fallback popunder");
-    const randomAd = fallbackAds[Math.floor(Math.random() * fallbackAds.length)];
-    
-    // فتح نافذة جديدة
-    adPopunderWindow = window.open(
-      randomAd.url,
-      '_blank',
-      'width=800,height=600,scrollbars=yes,resizable=yes'
-    );
-    
-    // إضافة مؤقت لإغلاق النافذة تلقائياً بعد 5 ثواني
-    if (adPopunderWindow) {
-      setTimeout(() => {
-        try {
-          if (adPopunderWindow && !adPopunderWindow.closed) {
-            adPopunderWindow.close();
-          }
-        } catch (e) {
-          console.log("Could not close popunder window:", e);
-        }
-      }, 5000);
+    // إذا لم توجد دوال محددة، جرب فتح popunder يدوياً باستخدام الدوال العامة
+    if (typeof popunder === 'function') {
+      console.log("Found popunder function, calling it...");
+      popunder();
+      return true;
     }
     
-    return true;
+    // إذا فشلت جميع المحاولات، عرض رسالة
+    console.error("No a3len ad functions found!");
+    progressManager.showError("عذراً، لم يتم تحميل نظام الإعلانات. الرجاء المحاولة لاحقاً.");
+    closeAllAdDialogs();
+    return false;
     
   } catch (error) {
-    console.error("Error opening popunder:", error);
-    
-    // إذا فشل كل شيء، استخدم طريقة احتياطية
-    setTimeout(() => {
-      try {
-        // افتح في تاب جديد كبديل
-        window.open('https://www.google.com', '_blank');
-      } catch (e) {
-        console.log("Fallback also failed:", e);
-      }
-    }, 1000);
-    
+    console.error("Error opening a3len ad:", error);
+    progressManager.showError("حدث خطأ في تشغيل الإعلان");
+    closeAllAdDialogs();
     return false;
   }
 }
@@ -1712,10 +1691,16 @@ document.addEventListener("DOMContentLoaded", function() {
   
   // اختبار سكريبت الإعلان عند التحميل
   setTimeout(() => {
-    console.log("Ad script loaded, checking functions...");
-    console.log("effectivePopunder exists:", typeof effectivePopunder === 'function');
-    console.log("a3lenPopunder exists:", typeof a3lenPopunder === 'function');
-  }, 2000);
+    console.log("=== a3len.store Ad Script Check ===");
+    console.log("Script loaded from: https://pl28361715.effectivegatecpm.com/21/5c/1e/215c1e533129b4f3fbaee542aa92dca9.js");
+    console.log("effectivePopunder function exists:", typeof effectivePopunder === 'function');
+    console.log("popunder function exists:", typeof popunder === 'function');
+    console.log("window.a3len object exists:", typeof window.a3len !== 'undefined');
+    if (window.a3len) {
+      console.log("a3len.showAd function exists:", typeof window.a3len.showAd === 'function');
+    }
+    console.log("=== End of Check ===");
+  }, 3000);
 });
 </script>
 </body>
