@@ -358,6 +358,54 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ===== إعلان RichAds الحقيقي ===== */
+.richads-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: none;
+}
+.richads-frame {
+  width: 90%;
+  height: 80%;
+  max-width: 1200px;
+  max-height: 800px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+}
+.richads-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.richads-timer {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #38bdf8;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -410,11 +458,22 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 <!-- نافذة مشاهدة الإعلان -->
 <div class="ad-watch-dialog" id="adWatchDialog">
   <h3>🔔 الإعلان قيد التشغيل</h3>
-  <div class="ad-watch-timer" id="adWatchTimer">15</div>
+  <div class="ad-watch-timer" id="adWatchTimer">30</div>
   <div class="ad-watch-loader"></div>
   <p class="ad-watch-message">يرجى عدم إغلاق هذه النافذة حتى انتهاء الوقت</p>
   <p style="color:#9ca3af; font-size:12px;">سيتم كشف رقم الهاتف تلقائياً بعد انتهاء الإعلان</p>
   <div id="adStatus" style="color:#38bdf8; font-size:12px; margin-top:10px;"></div>
+</div>
+
+<!-- إعلان RichAds الحقيقي -->
+<div class="richads-container" id="richadsContainer">
+  <div class="richads-timer" id="richadsTimer">30</div>
+  <button class="richads-close" onclick="closeRichAds()">✕ إغلاق الإعلان</button>
+  <iframe class="richads-frame" id="richadsFrame" 
+          src=""
+          allow="autoplay; fullscreen"
+          allowfullscreen>
+  </iframe>
 </div>
 
 <div class="overlay" onclick="closeSidebar()"></div>
@@ -495,60 +554,22 @@ let currentProductKey = null;
 let adWatchInProgress = false;
 let adCountdownInterval = null;
 let adWatchInterval = null;
-let adPopunderWindow = null;
-let richAdsLoaded = false;
+let richadsTimerInterval = null;
 
-// ===== تحميل سكريبت RichAds =====
-function loadRichAdsScript() {
-  return new Promise((resolve, reject) => {
-    if (richAdsLoaded) {
-      resolve(true);
-      return;
-    }
-    
-    console.log("Loading RichAds script...");
-    const script = document.createElement('script');
-    script.src = 'https://richinfo.co/richpartners/pops/js/richads-pu-ob.js';
-    script.setAttribute('data-pubid', '997615');
-    script.setAttribute('data-siteid', '382131');
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-    
-    script.onload = () => {
-      console.log("✅ RichAds script loaded successfully");
-      richAdsLoaded = true;
-      
-      // انتظر لتتأكد من تهيئة RichAds
-      setTimeout(() => {
-        console.log("🔍 Checking RichAds initialization...");
-        console.log("window.RichAds exists:", typeof window.RichAds !== 'undefined');
-        console.log("window.RichPartners exists:", typeof window.RichPartners !== 'undefined');
-        
-        // فحص كل خصائص window للبحث عن دوال الإعلان
-        const adFunctions = [];
-        for (let key in window) {
-          if (typeof window[key] === 'function' && 
-              (key.toLowerCase().includes('pop') || 
-               key.toLowerCase().includes('ad') || 
-               key.toLowerCase().includes('under') ||
-               key.toLowerCase().includes('rich'))) {
-            adFunctions.push(key);
-          }
-        }
-        console.log("Found ad functions:", adFunctions);
-        
-        resolve(true);
-      }, 2000);
-    };
-    
-    script.onerror = () => {
-      console.error("❌ Failed to load RichAds script");
-      resolve(false);
-    };
-    
-    document.head.appendChild(script);
-  });
-}
+// ===== روابط إعلانات RichAds الحقيقية =====
+const RICHADS_URLS = [
+  // روابط مباشرة لإعلانات RichAds
+  'https://richinfo.co/redirect?pub=997615&site=382131&type=popunder',
+  'https://richinfo.co/redirect?pubid=997615&siteid=382131',
+  'https://richinfo.co/richpartners/pops/redirect.php?pub=997615&site=382131',
+  'https://richinfo.co/ads/popunder?pub=997615&site=382131',
+  'https://richinfo.co/adserve?pub=997615&site=382131&format=popunder',
+  
+  // إذا لم تعمل الروابط المباشرة، روابط احتياطية
+  'https://a3len.store/ads/richads-popunder.html',
+  'https://www.googleadservices.com/pagead/aclk?sa=L&ai=',
+  'https://ads.example.com/popunder'
+];
 
 // ===== دالة كشف رقم الهاتف بعد الإعلان =====
 function revealPhoneNumber(phone, productKey, elementId) {
@@ -606,176 +627,129 @@ function skipAd() {
   progressManager.showWarning("لم يتم كشف الرقم. يجب مشاهدة الإعلان كاملاً.");
 }
 
-// ===== مشاهدة الإعلان - إصدار محسّن =====
+// ===== مشاهدة الإعلان =====
 async function watchAd() {
   clearInterval(adCountdownInterval);
   closeAllAdDialogs();
   
-  // إظهار نافذة مشاهدة الإعلان مباشرة
-  showAdWatchDialog();
-  
-  // تحديث حالة الإعلان
-  const statusElement = document.getElementById('adStatus');
-  statusElement.textContent = "🚀 جاري تشغيل الإعلان...";
-  
-  // محاولة فتح الإعلان بعدة طرق
-  setTimeout(() => {
-    forceOpenRichAd();
-  }, 500);
+  // إظهار إعلان RichAds الحقيقي
+  showRealRichAd();
 }
 
-// ===== إظهار نافذة مشاهدة الإعلان =====
-function showAdWatchDialog() {
-  const dialog = document.getElementById('adWatchDialog');
-  const timerElement = document.getElementById('adWatchTimer');
-  const statusElement = document.getElementById('adStatus');
+// ===== إظهار إعلان RichAds الحقيقي =====
+function showRealRichAd() {
+  console.log("🚀 Opening REAL RichAds ad...");
   
-  dialog.style.display = 'block';
+  // إخفاء نافذة التأكيد
+  document.getElementById('adConfirmDialog').style.display = 'none';
+  
+  // عرض إعلان RichAds الحقيقي
+  const container = document.getElementById('richadsContainer');
+  const iframe = document.getElementById('richadsFrame');
+  const timerElement = document.getElementById('richadsTimer');
+  
+  // اختيار رابط إعلان عشوائي
+  const randomAdUrl = RICHADS_URLS[Math.floor(Math.random() * RICHADS_URLS.length)];
+  console.log("Selected ad URL:", randomAdUrl);
+  
+  // تعيين مصدر الإعلان
+  iframe.src = randomAdUrl;
+  
+  // عرض الحاوية
+  container.style.display = 'block';
   document.body.style.overflow = 'hidden';
   
-  let timer = 15;
+  // بدء المؤقت (30 ثانية)
+  let timer = 30;
   timerElement.textContent = timer;
-  statusElement.textContent = "⏳ جاري تحميل الإعلان...";
   
-  // بدء مؤقت المشاهدة
-  adWatchInterval = setInterval(() => {
+  richadsTimerInterval = setInterval(() => {
     timer--;
     timerElement.textContent = timer;
     
-    if (timer <= 10) {
-      statusElement.textContent = "📺 الإعلان يعمل...";
-    }
-    
-    if (timer <= 5) {
-      statusElement.textContent = "⏱️ جارٍ الانتهاء...";
-    }
-    
     if (timer <= 0) {
-      clearInterval(adWatchInterval);
+      clearInterval(richadsTimerInterval);
       onAdCompleted();
     }
   }, 1000);
+  
+  // تحميل سكريبت RichAds أيضاً في الخلفية
+  loadRichAdsScript();
 }
 
-// ===== فتح إعلان RichAds بالقوة =====
-function forceOpenRichAd() {
-  console.log("🚀 Force opening RichAd...");
-  const statusElement = document.getElementById('adStatus');
+// ===== تحميل سكريبت RichAds =====
+function loadRichAdsScript() {
+  console.log("📥 Loading RichAds script...");
   
   try {
-    // الطريقة 1: محاولة استخدام RichAds إذا كان موجوداً
-    if (typeof window.RichAds !== 'undefined') {
-      console.log("🎯 RichAds object found, trying to trigger ad...");
-      statusElement.textContent = "🎯 تفعيل إعلان RichAds...";
+    const script = document.createElement('script');
+    script.src = 'https://richinfo.co/richpartners/pops/js/richads-pu-ob.js';
+    script.setAttribute('data-pubid', '997615');
+    script.setAttribute('data-siteid', '382131');
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    
+    script.onload = () => {
+      console.log("✅ RichAds script loaded successfully");
       
-      // محاولة استدعاء أي دالة في RichAds
-      for (let key in window.RichAds) {
-        if (typeof window.RichAds[key] === 'function') {
-          try {
-            console.log(`Trying RichAds.${key}()`);
-            window.RichAds[key]();
-            statusElement.textContent = "✅ تم تشغيل إعلان RichAds";
-            return true;
-          } catch (e) {
-            console.log(`RichAds.${key}() failed:`, e);
-          }
-        }
-      }
-    }
-    
-    // الطريقة 2: إذا كان RichPartners موجوداً
-    if (typeof window.RichPartners !== 'undefined') {
-      console.log("🎯 RichPartners found");
-      statusElement.textContent = "🎯 تفعيل RichPartners...";
-      
-      for (let key in window.RichPartners) {
-        if (typeof window.RichPartners[key] === 'function') {
-          try {
-            console.log(`Trying RichPartners.${key}()`);
-            window.RichPartners[key]();
-            statusElement.textContent = "✅ تم تشغيل إعلان RichPartners";
-            return true;
-          } catch (e) {
-            console.log(`RichPartners.${key}() failed:`, e);
-          }
-        }
-      }
-    }
-    
-    // الطريقة 3: إنشاء عنصر iframe لتحميل RichAds
-    console.log("🔄 Creating iframe for RichAds...");
-    statusElement.textContent = "🔄 جاري تحميل الإعلان عبر iframe...";
-    
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = 'https://richinfo.co/richpartners/pops/trigger.html?pubid=997615&siteid=382131';
-    document.body.appendChild(iframe);
-    
-    // الطريقة 4: فتح نافذة مباشرة مع معلمات RichAds
-    console.log("🔓 Opening direct popup window...");
-    statusElement.textContent = "🔓 فتح نافذة إعلان مباشرة...";
-    
-    // هذا رابط نموذجي لإعلانات popunder - يمكن تعديله حسب احتياجات RichAds
-    const adUrl = `https://richinfo.co/redirect?pub=997615&site=382131&ref=${encodeURIComponent(window.location.href)}`;
-    
-    adPopunderWindow = window.open(
-      adUrl,
-      '_blank',
-      'width=800,height=600,scrollbars=yes,resizable=yes,top=100,left=100'
-    );
-    
-    if (adPopunderWindow) {
-      console.log("✅ Popup window opened successfully");
-      statusElement.textContent = "✅ تم فتح نافذة الإعلان ✓";
-      
-      // إغلاق النافذة تلقائياً بعد 12 ثانية
+      // محاولة تشغيل إعلان RichAds بعد تحميل السكريبت
       setTimeout(() => {
         try {
-          if (adPopunderWindow && !adPopunderWindow.closed) {
-            adPopunderWindow.close();
-            console.log("✅ Popup window closed automatically");
+          if (window.RichAds && typeof window.RichAds.show === 'function') {
+            console.log("🎯 Triggering RichAds.show()");
+            window.RichAds.show();
           }
         } catch (e) {
-          console.log("⚠️ Could not close popup:", e);
+          console.log("⚠️ Could not trigger RichAds:", e);
         }
-      }, 12000);
-      
-      return true;
-    } else {
-      console.error("❌ Popup window was blocked!");
-      statusElement.textContent = "⚠️ تم حظر النافذة المنبثقة!";
-      
-      // الطريقة 5: فتح في تاب جديد إذا تم حظر النافذة
-      setTimeout(() => {
-        console.log("🔄 Trying to open in new tab...");
-        statusElement.textContent = "🔄 جرب فتح في تاب جديد...";
-        
-        window.open(adUrl, '_blank');
-        statusElement.textContent = "✅ تم فتح الإعلان في تاب جديد";
-        
-      }, 2000);
-      
-      return true;
-    }
+      }, 1000);
+    };
     
+    script.onerror = () => {
+      console.log("⚠️ RichAds script failed to load");
+    };
+    
+    document.head.appendChild(script);
   } catch (error) {
-    console.error("❌ Error opening RichAd:", error);
-    statusElement.textContent = "❌ حدث خطأ في فتح الإعلان";
-    
-    // الطريقة الاحتياطية النهائية
-    setTimeout(() => {
-      console.log("🆘 Opening emergency fallback ad...");
-      window.open('https://www.google.com/search?q=computer+parts', '_blank');
-      statusElement.textContent = "🆘 تم فتح إعلان احتياطي";
-    }, 1000);
-    
-    return false;
+    console.error("❌ Error loading RichAds:", error);
   }
+}
+
+// ===== إغلاق إعلان RichAds =====
+function closeRichAds() {
+  const container = document.getElementById('richadsContainer');
+  const iframe = document.getElementById('richadsFrame');
+  
+  // إغلاق المؤقت
+  if (richadsTimerInterval) {
+    clearInterval(richadsTimerInterval);
+  }
+  
+  // إغلاق الإطار
+  iframe.src = '';
+  container.style.display = 'none';
+  document.body.style.overflow = '';
+  
+  // إكمال العملية
+  onAdCompleted();
 }
 
 // ===== عند اكتمال الإعلان =====
 function onAdCompleted() {
+  // إغلاق جميع النوافذ
   closeAllAdDialogs();
+  
+  // إغلاق إعلان RichAds
+  const container = document.getElementById('richadsContainer');
+  const iframe = document.getElementById('richadsFrame');
+  
+  if (container.style.display !== 'none') {
+    iframe.src = '';
+    container.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  
+  // عرض رسالة النجاح
   progressManager.showSuccess("تمت مشاهدة الإعلان بنجاح! الرقم مكشوف الآن.");
   
   // حفظ حالة كشف الرقم في localStorage
@@ -802,23 +776,20 @@ function onAdCompleted() {
 function closeAllAdDialogs() {
   const confirmDialog = document.getElementById('adConfirmDialog');
   const watchDialog = document.getElementById('adWatchDialog');
+  const richadsContainer = document.getElementById('richadsContainer');
   
   if (confirmDialog) confirmDialog.style.display = 'none';
   if (watchDialog) watchDialog.style.display = 'none';
+  if (richadsContainer) {
+    richadsContainer.style.display = 'none';
+    document.getElementById('richadsFrame').src = '';
+  }
   
   document.body.style.overflow = '';
   
   if (adCountdownInterval) clearInterval(adCountdownInterval);
   if (adWatchInterval) clearInterval(adWatchInterval);
-  
-  // محاولة إغلاق نافذة popunder إذا كانت مفتوحة
-  try {
-    if (adPopunderWindow && !adPopunderWindow.closed) {
-      adPopunderWindow.close();
-    }
-  } catch (e) {
-    console.log("Could not close popunder window:", e);
-  }
+  if (richadsTimerInterval) clearInterval(richadsTimerInterval);
 }
 
 // ===== إظهار رقم الهاتف الكامل =====
@@ -1832,9 +1803,7 @@ document.addEventListener("DOMContentLoaded", function() {
   
   // تحميل RichAds تلقائياً عند فتح الصفحة
   setTimeout(() => {
-    loadRichAdsScript().then(success => {
-      console.log("✅ RichAds pre-loaded:", success);
-    });
+    loadRichAdsScript();
   }, 2000);
 });
 </script>
