@@ -202,9 +202,12 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   cursor: pointer;
   transition: all 0.3s ease;
   display: inline-block;
+  color: #38bdf8;
+  text-decoration: underline dotted;
 }
 .phone-reveal:hover {
-  color: #38bdf8;
+  color: #0ea5e9;
+  text-decoration: underline;
 }
 .phone-reveal::after {
   content: "🔓 انقر لعرض الرقم بعد مشاهدة إعلان";
@@ -220,6 +223,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
+  z-index: 100;
 }
 .phone-reveal:hover::after {
   opacity: 1;
@@ -227,6 +231,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .phone-unlocked {
   color: #10b981 !important;
   cursor: default;
+  text-decoration: none !important;
 }
 .phone-unlocked:hover {
   color: #10b981 !important;
@@ -301,6 +306,58 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   color: #38bdf8;
   margin: 15px 0;
 }
+
+/* ===== نافذة مشاهدة الإعلان ===== */
+.ad-watch-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #0f1115;
+  color: #e5e7eb;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 2001;
+  display: none;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  border: 1px solid #374151;
+}
+.ad-watch-dialog h3 {
+  margin-top: 0;
+  color: #f59e0b;
+  margin-bottom: 15px;
+}
+.ad-watch-timer {
+  font-size: 32px;
+  font-weight: bold;
+  color: #f59e0b;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 10px;
+  border: 2px solid #f59e0b;
+}
+.ad-watch-message {
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 15px 0;
+}
+.ad-watch-loader {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #374151;
+  border-top: 5px solid #38bdf8;
+  border-radius: 50%;
+  margin: 20px auto;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -327,7 +384,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
         <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
         <circle class="progress-fill" cx="18" cy="18" r="16" 
                 stroke-dasharray="100" stroke-dashoffset="100"></circle>
-    </svg>
+</svg>
 </div>
 
 <div class="progress-overlay" id="progressOverlay">
@@ -348,6 +405,15 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     <button class="ad-confirm-btn secondary" onclick="skipAd()">تخطي</button>
     <button class="ad-confirm-btn primary" onclick="watchAd()" id="watchAdBtn" disabled>مشاهدة (5)</button>
   </div>
+</div>
+
+<!-- نافذة مشاهدة الإعلان -->
+<div class="ad-watch-dialog" id="adWatchDialog">
+  <h3>🔔 الإعلان قيد التشغيل</h3>
+  <div class="ad-watch-timer" id="adWatchTimer">10</div>
+  <div class="ad-watch-loader"></div>
+  <p class="ad-watch-message">يرجى عدم إغلاق هذه النافذة حتى انتهاء الوقت</p>
+  <p style="color:#9ca3af; font-size:12px;">سيتم كشف رقم الهاتف تلقائياً بعد انتهاء الإعلان</p>
 </div>
 
 <div class="overlay" onclick="closeSidebar()"></div>
@@ -430,6 +496,9 @@ let currentPhoneToReveal = null;
 let currentProductKey = null;
 let adWatchInProgress = false;
 let adCountdownInterval = null;
+let adWatchInterval = null;
+let adPopunderWindow = null;
+
 
 // ===== دالة كشف رقم الهاتف بعد الإعلان =====
 function revealPhoneNumber(phone, productKey, elementId) {
@@ -481,8 +550,7 @@ function showAdConfirmationDialog(elementId) {
 // ===== تخطي الإعلان =====
 function skipAd() {
   clearInterval(adCountdownInterval);
-  document.getElementById('adConfirmDialog').style.display = 'none';
-  document.body.style.overflow = '';
+  closeAllAdDialogs();
   adWatchInProgress = false;
   
   progressManager.showWarning("لم يتم كشف الرقم. يجب مشاهدة الإعلان كاملاً.");
@@ -491,59 +559,111 @@ function skipAd() {
 // ===== مشاهدة الإعلان =====
 function watchAd() {
   clearInterval(adCountdownInterval);
-  const dialog = document.getElementById('adConfirmDialog');
+  closeAllAdDialogs();
   
-  // إظهار تحميل
-  progressManager.showOverlay("جاري فتح الإعلان...", "يرجى الانتظار");
+  // إظهار نافذة مشاهدة الإعلان
+  showAdWatchDialog();
   
   // محاولة فتح popunder
-  try {
-    // هذه الدالة تأتي من سكريبت الإعلان
-    if (typeof effectivePopunder === 'function') {
-      effectivePopunder();
-    }
-    
-    // إخفاء نافذة التأكيد
-    dialog.style.display = 'none';
-    document.body.style.overflow = '';
-    
-    // بدء مؤقت لمراقبة الإعلان
-    setTimeout(() => {
-      checkAdCompletion();
-    }, 3000); // انتظر 3 ثواني لفتح الإعلان
-    
-  } catch (error) {
-    console.error("Error showing ad:", error);
-    progressManager.hideOverlay();
-    dialog.style.display = 'none';
-    document.body.style.overflow = '';
-    adWatchInProgress = false;
-    progressManager.showError("حدث خطأ في فتح الإعلان");
-  }
+  setTimeout(() => {
+    openPopunderAd();
+  }, 1000);
 }
 
-// ===== التحقق من اكتمال مشاهدة الإعلان =====
-function checkAdCompletion() {
-  // هنا يمكن إضافة منطق أكثر تعقيداً للتحقق من مشاهدة الإعلان
-  // حالياً نفترض أن الإعلان تمت مشاهدته بعد 5 ثواني
+// ===== إظهار نافذة مشاهدة الإعلان =====
+function showAdWatchDialog() {
+  const dialog = document.getElementById('adWatchDialog');
+  const timerElement = document.getElementById('adWatchTimer');
   
-  progressManager.updateOverlayText("جاري التحقق من الإعلان...", "يرجى عدم إغلاق النافذة");
+  dialog.style.display = 'block';
+  document.body.style.overflow = 'hidden';
   
-  setTimeout(() => {
-    // بعد 5 ثواني، نفترض أن الإعلان تمت مشاهدته
-    onAdCompleted();
-  }, 5000);
+  let timer = 10;
+  timerElement.textContent = timer;
+  
+  // بدء مؤقت المشاهدة
+  adWatchInterval = setInterval(() => {
+    timer--;
+    timerElement.textContent = timer;
+    
+    if (timer <= 0) {
+      clearInterval(adWatchInterval);
+      onAdCompleted();
+    }
+  }, 1000);
+}
+
+// ===== فتح popunder =====
+function openPopunderAd() {
+  try {
+    // محاولة استخدام سكريبت الإعلان الموجود
+    if (typeof effectivePopunder === 'function') {
+      console.log("Using effectivePopunder function");
+      effectivePopunder();
+      return true;
+    }
+    
+    // محاولة استخدام a3len.store popunder
+    if (typeof a3lenPopunder === 'function') {
+      console.log("Using a3lenPopunder function");
+      a3lenPopunder();
+      return true;
+    }
+    
+    // إذا لم توجد الدوال، افتح popunder يدوياً
+    console.log("Opening fallback popunder");
+    const randomAd = fallbackAds[Math.floor(Math.random() * fallbackAds.length)];
+    
+    // فتح نافذة جديدة
+    adPopunderWindow = window.open(
+      randomAd.url,
+      '_blank',
+      'width=800,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    // إضافة مؤقت لإغلاق النافذة تلقائياً بعد 5 ثواني
+    if (adPopunderWindow) {
+      setTimeout(() => {
+        try {
+          if (adPopunderWindow && !adPopunderWindow.closed) {
+            adPopunderWindow.close();
+          }
+        } catch (e) {
+          console.log("Could not close popunder window:", e);
+        }
+      }, 5000);
+    }
+    
+    return true;
+    
+  } catch (error) {
+    console.error("Error opening popunder:", error);
+    
+    // إذا فشل كل شيء، استخدم طريقة احتياطية
+    setTimeout(() => {
+      try {
+        // افتح في تاب جديد كبديل
+        window.open('https://www.google.com', '_blank');
+      } catch (e) {
+        console.log("Fallback also failed:", e);
+      }
+    }, 1000);
+    
+    return false;
+  }
 }
 
 // ===== عند اكتمال الإعلان =====
 function onAdCompleted() {
-  progressManager.showSuccess("تمت مشاهدة الإعلان بنجاح!");
+  closeAllAdDialogs();
+  progressManager.showSuccess("تمت مشاهدة الإعلان بنجاح! الرقم مكشوف الآن.");
   
   // حفظ حالة كشف الرقم في localStorage
   const revealedPhones = JSON.parse(localStorage.getItem('revealedPhones') || '{}');
   revealedPhones[currentProductKey] = {
     phone: currentPhoneToReveal,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    views: (revealedPhones[currentProductKey]?.views || 0) + 1
   };
   localStorage.setItem('revealedPhones', JSON.stringify(revealedPhones));
   
@@ -554,6 +674,31 @@ function onAdCompleted() {
   updateAllPhoneDisplays(currentProductKey, currentPhoneToReveal);
   
   adWatchInProgress = false;
+  currentPhoneToReveal = null;
+  currentProductKey = null;
+}
+
+// ===== إغلاق جميع نوافذ الإعلان =====
+function closeAllAdDialogs() {
+  const confirmDialog = document.getElementById('adConfirmDialog');
+  const watchDialog = document.getElementById('adWatchDialog');
+  
+  if (confirmDialog) confirmDialog.style.display = 'none';
+  if (watchDialog) watchDialog.style.display = 'none';
+  
+  document.body.style.overflow = '';
+  
+  if (adCountdownInterval) clearInterval(adCountdownInterval);
+  if (adWatchInterval) clearInterval(adWatchInterval);
+  
+  // محاولة إغلاق نافذة popunder إذا كانت مفتوحة
+  try {
+    if (adPopunderWindow && !adPopunderWindow.closed) {
+      adPopunderWindow.close();
+    }
+  } catch (e) {
+    console.log("Could not close popunder window:", e);
+  }
 }
 
 // ===== إظهار رقم الهاتف الكامل =====
@@ -564,6 +709,7 @@ function showFullPhoneNumber(phone, elementId, productKey) {
       element.innerHTML = phone;
       element.className = 'phone-unlocked';
       element.onclick = null;
+      element.style.cursor = 'default';
     }
   }
   
@@ -576,6 +722,7 @@ function showFullPhoneNumber(phone, elementId, productKey) {
         el.innerHTML = phone;
         el.className = 'phone-unlocked';
         el.onclick = null;
+        el.style.cursor = 'default';
       }
     });
   }
@@ -592,19 +739,21 @@ function updateAllPhoneDisplays(productKey, phoneNumber) {
         span.innerHTML = phoneNumber;
         span.className = 'phone-unlocked';
         span.onclick = null;
+        span.style.cursor = 'default';
       }
     });
   });
   
   // تحديث في نافذة التفاصيل
   const detailsDialog = document.getElementById('detailsDialog');
-  if (detailsDialog.style.display === 'block') {
+  if (detailsDialog && detailsDialog.style.display === 'block') {
     const phoneSpans = detailsDialog.querySelectorAll('.phone-reveal');
     phoneSpans.forEach(span => {
       if (span.getAttribute('data-product-key') === productKey) {
         span.innerHTML = phoneNumber;
         span.className = 'phone-unlocked';
         span.onclick = null;
+        span.style.cursor = 'default';
       }
     });
   }
@@ -612,7 +761,9 @@ function updateAllPhoneDisplays(productKey, phoneNumber) {
 
 // ===== تعديل دالة maskPhoneNumber لدعم النظام الجديد =====
 function maskPhoneNumber(phone, productKey = null, context = 'card') {
-  if (!phone || phone.length !== 11) return phone;
+  if (!phone || phone.length !== 11) {
+    return `<span>${phone || 'غير متوفر'}</span>`;
+  }
   
   // التحقق إذا كان الرقم مكشوفاً مسبقاً
   if (productKey) {
@@ -630,14 +781,11 @@ function maskPhoneNumber(phone, productKey = null, context = 'card') {
   // إرجاع رقم مقنع قابل للنقر
   const masked = phone.substring(0, 4) + '****' + phone.substring(8);
   return `<span id="${elementId}" class="phone-reveal" 
-           onclick="revealPhoneNumber('${phone}', '${productKey}', '${elementId}')"
+           onclick="event.stopPropagation(); revealPhoneNumber('${escapeHTML(phone)}', '${productKey}', '${elementId}')"
            data-product-key="${productKey}">
            ${masked}
          </span>`;
 }
-
-// ===== تعديل دالة loadProducts لدعم النظام الجديد =====
-// سيتم تحديث هذا الجزء في الأسفل حيث توجد دالة loadProducts الأصلية
 
 // ===== Progress Bar System =====
 class ProgressManager {
@@ -1492,8 +1640,6 @@ function escapeHTML(text) {
   return div.innerHTML;
 }
 
-// تم نقل دالة maskPhoneNumber للأعلى لدعم النظام الجديد
-
 function formatPrice(price) {
   return parseInt(price).toLocaleString('ar-SA');
 }
@@ -1561,10 +1707,15 @@ document.addEventListener("DOMContentLoaded", function() {
   
   // تنظيف الفاصل الزمني عند إغلاق الصفحة
   window.addEventListener('beforeunload', function() {
-    if (adCountdownInterval) {
-      clearInterval(adCountdownInterval);
-    }
+    closeAllAdDialogs();
   });
+  
+  // اختبار سكريبت الإعلان عند التحميل
+  setTimeout(() => {
+    console.log("Ad script loaded, checking functions...");
+    console.log("effectivePopunder exists:", typeof effectivePopunder === 'function');
+    console.log("a3lenPopunder exists:", typeof a3lenPopunder === 'function');
+  }, 2000);
 });
 </script>
 </body>
