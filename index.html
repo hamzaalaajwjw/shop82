@@ -292,7 +292,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     </div>
 </div>
 
-<div class="overlay" onclick="closeSidebar()"></div>
+<div class="overlay" onclick="closeSidebar()"></overlay>
 
 <div class="layout">
   <aside class="sidebar">
@@ -867,25 +867,31 @@ function loadProducts(){
         // الحصول على معلومات البائع
         let sellerInfo = p.seller || 'غير معروف';
         let isVerified = false;
+        let sellerUsername = '';
         
         if (p.uid) {
           db.ref('users/' + p.uid).once('value', (userSnap) => {
             const userData = userSnap.val();
             if (userData) {
               isVerified = userData.isVerified || false;
+              sellerUsername = userData.username || '';
             }
           });
         }
         
-        const sellerSection = userDisplayName ? 
+        // ===== استخدام الرابط الجديد a3len.store/profile/username =====
+        const sellerLink = sellerUsername ? 
+          `<a href="https://a3len.store/profile/${sellerUsername}" class="seller-link" target="_blank">
+            <span class="user-name-wrapper">
+              ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+              ${p.seller}
+            </span>
+          </a>` :
+          `<span class="seller-link">${p.seller}</span>`;
+        
+        const sellerSection = sellerUsername ? 
           `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">
-              <span class="user-name-wrapper">
-                ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-                ${p.seller}
-              </span>
-            </span> 
-            | ☎ ${p.phone}
+            👤 ${sellerLink} | ☎ ${p.phone}
             <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
           `<div class="seller">
@@ -1259,21 +1265,23 @@ function showDetails(k){
     // التحقق من توثيق البائع
     let isVerified = false;
     let sellerDisplayName = p.seller || 'غير معروف';
+    let sellerUsername = '';
     
     if (p.uid) {
       db.ref('users/' + p.uid).once('value', (userSnap) => {
         const userData = userSnap.val();
         if (userData) {
           isVerified = userData.isVerified || false;
+          sellerUsername = userData.username || '';
           
-          // تحديث عرض البائع بالمعلومات الجديدة
-          const sellerWithLink = userDisplayName ? 
-            `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">
+          // ===== استخدام الرابط الجديد a3len.store/profile/username =====
+          const sellerWithLink = sellerUsername ? 
+            `<p><strong>البائع:</strong> <a href="https://a3len.store/profile/${sellerUsername}" class="seller-link" target="_blank" style="font-weight:bold;">
               <span class="user-name-wrapper">
                 ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
                 ${p.seller}
               </span>
-            </span></p>
+            </a></p>
             <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
             `<p><strong>البائع:</strong> 
               <span class="user-name-wrapper">
@@ -1352,15 +1360,26 @@ function updateAuthUI() {
       isAdmin = userData && userData.isAdmin === true;
       const isVerified = userData && userData.isVerified === true;
       
+      // ===== استخدام الرابط الجديد في الملف الشخصي =====
+      const profileLink = userData && userData.username ? 
+        `<a href="https://a3len.store/profile/${userData.username}" class="profile-link" target="_blank">
+          <span class="user-name-wrapper">
+            ${isVerified ? '<span class="verified-badge">✓</span>' : ''}
+            ${displayName}
+            ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
+          </span>
+        </a>` :
+        `<span class="profile-link" onclick="viewMyProfile()">
+          <span class="user-name-wrapper">
+            ${isVerified ? '<span class="verified-badge">✓</span>' : ''}
+            ${displayName}
+            ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
+          </span>
+        </span>`;
+      
       authSection.innerHTML = `
         <div class="user-info">
-          <p class="profile-link" onclick="viewMyProfile()">
-            <span class="user-name-wrapper">
-              ${isVerified ? '<span class="verified-badge">✓</span>' : ''}
-              ${displayName}
-              ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
-            </span>
-          </p>
+          ${profileLink}
           <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
           <small style="color:#9ca3af; font-size:11px; display:block; margin:5px 0;">${userData ? userData.totalProducts || 0 : 0} إعلان</small>
           <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
@@ -1420,22 +1439,31 @@ function logoutUser() {
 
 // ===== دوال نظام الملف الشخصي =====
 function viewProfile(userId, sellerName) {
-  if (sellerName) {
-    localStorage.setItem('profileSellerName', sellerName);
-  }
-  
-  progressManager.showTopProgressBar();
-  setTimeout(() => {
-    window.location.href = `profile.html?id=${userId}`;
-  }, 300);
+  // الحصول على اسم المستخدم من قاعدة البيانات
+  db.ref('users/' + userId).once('value', (snapshot) => {
+    const userData = snapshot.val();
+    if (userData && userData.username) {
+      // ===== التوجيه إلى الرابط الجديد a3len.store/profile/username =====
+      window.open(`https://a3len.store/profile/${userData.username}`, '_blank');
+    } else {
+      // إذا لم يكن هناك اسم مستخدم، استخدام صفحة الملف الشخصي العادية
+      window.open(`profile.html?id=${userId}`, '_blank');
+    }
+  });
 }
 
 function viewMyProfile() {
   if (currentUser && currentUser.uid) {
-    progressManager.showTopProgressBar();
-    setTimeout(() => {
-      window.location.href = `profile.html?id=${currentUser.uid}`;
-    }, 300);
+    // الحصول على اسم المستخدم من قاعدة البيانات
+    db.ref('users/' + currentUser.uid).once('value', (snapshot) => {
+      const userData = snapshot.val();
+      if (userData && userData.username) {
+        // ===== التوجيه إلى الرابط الجديد a3len.store/profile/username =====
+        window.open(`https://a3len.store/profile/${userData.username}`, '_blank');
+      } else {
+        window.open(`profile.html?id=${currentUser.uid}`, '_blank');
+      }
+    });
   } else {
     progressManager.showError("يرجى تسجيل الدخول أولاً");
     setTimeout(() => {
