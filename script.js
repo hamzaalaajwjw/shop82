@@ -403,3 +403,10 @@ document.addEventListener("DOMContentLoaded",function(){
   `;
   document.head.appendChild(style);
 });
+
+
+// لإظهار التقدم الدائري
+document.getElementById('circularProgress').style.display = 'flex';
+
+// لإخفاء التقدم الدائري
+document.getElementById('circularProgress').style.display = 'none';
