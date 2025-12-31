@@ -301,48 +301,58 @@
             gap: 10px;
         }
         
-        /* ===== Slug Display ===== */
-        .profile-slug {
-            display: inline-block;
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: monospace;
-            margin: 5px 0;
-            direction: ltr;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+        /* ===== أزرار المتابعة المحسنة ===== */
+        .follow-btn {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 120px;
+            position: relative;
+            overflow: hidden;
         }
         
-        .profile-slug:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: #38bdf8;
+        .follow-btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
         
-        .copy-slug-btn {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            color: #38bdf8;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-right: 5px;
-            transition: all 0.2s;
+        .follow-btn:active {
+            transform: translateY(0);
         }
         
-        .copy-slug-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: #38bdf8;
+        .follow-btn.following {
+            background: linear-gradient(135deg, #10b981, #059669);
         }
         
-        .slug-copied {
-            background: rgba(16, 185, 129, 0.1) !important;
-            border-color: #10b981 !important;
-            color: #10b981 !important;
+        .follow-btn.following:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .follow-btn.following:hover::before {
+            content: 'إلغاء المتابعة';
+        }
+        
+        .follow-btn.following:hover span {
+            opacity: 0;
+        }
+        
+        .follow-btn .btn-text {
+            transition: opacity 0.3s ease;
+        }
+        
+        .follow-btn .btn-icon {
+            font-size: 16px;
         }
         
         /* Profile Header */
@@ -417,22 +427,23 @@
             margin-bottom: 10px;
         }
         
-        /* وصف المستخدم */
+        /* ===== وصف المستخدم مع زر التعديل ===== */
         .profile-bio-container {
             margin: 15px 0;
             position: relative;
             max-width: 600px;
+            background: rgba(31, 41, 55, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #374151;
         }
         
         .profile-bio {
             color: #d1d5db;
             line-height: 1.5;
-            background: rgba(31, 41, 55, 0.3);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #374151;
             font-size: 14px;
             word-wrap: break-word;
+            min-height: 24px;
         }
         
         .edit-bio-btn {
@@ -446,11 +457,12 @@
             padding: 4px 8px;
             font-size: 12px;
             cursor: pointer;
-            display: none;
+            transition: all 0.2s;
         }
         
         .edit-bio-btn:hover {
             background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-1px);
         }
         
         .profile-stats {
@@ -845,7 +857,7 @@
             font-size: 12px;
         }
         
-        .follow-btn {
+        .follow-btn.small {
             padding: 6px 12px;
             font-size: 12px;
             min-width: auto;
@@ -1171,6 +1183,12 @@
             .tab-content {
                 padding: 20px 0;
             }
+            
+            .edit-bio-btn {
+                position: static;
+                margin-top: 10px;
+                display: inline-block;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1346,15 +1364,7 @@
                         </h1>
                         <div class="profile-username" id="userName">@username</div>
                         
-                        <!-- Slug Display -->
-                        <div id="slugSection" style="margin: 10px 0;">
-                            <button class="copy-slug-btn" id="copySlugBtn" onclick="copyProfileSlug()">
-                                📋 نسخ الرابط
-                            </button>
-                            <span class="profile-slug" id="profileSlug">a3len.store/...</span>
-                        </div>
-                        
-                        <!-- وصف المستخدم -->
+                        <!-- وصف المستخدم مع زر التعديل -->
                         <div class="profile-bio-container">
                             <div class="profile-bio" id="userBio">لا يوجد وصف شخصي</div>
                             <button class="edit-bio-btn" id="editBioBtn" onclick="showBioEditor()">تعديل الوصف</button>
@@ -1380,8 +1390,10 @@
                         </div>
                         
                         <div class="profile-actions" id="profileActions">
-                            <button class="btn btn-primary" id="followButton" onclick="toggleFollow()">
-                                <span id="followText">متابعة</span>
+                            <!-- زر المتابعة المحسن -->
+                            <button class="follow-btn" id="followButton" onclick="toggleFollow()">
+                                <span class="btn-icon">+</span>
+                                <span class="btn-text" id="followText">متابعة</span>
                             </button>
                             <button class="btn btn-danger" id="blockButton" onclick="toggleBlockUser()">
                                 <span id="blockText">حظر</span>
@@ -1430,13 +1442,6 @@
                         <div class="contact-item">
                             <span class="contact-label">اسم المستخدم:</span>
                             <span class="contact-value" id="displayUsername">@username</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-label">الرابط الدائم:</span>
-                            <span class="contact-value">
-                                <span id="permanentLink">a3len.store/...</span>
-                                <a href="#" class="contact-link" onclick="copyProfileLink(); return false;">نسخ الرابط</a>
-                            </span>
                         </div>
                         <div class="contact-item">
                             <span class="contact-label">رقم الهاتف:</span>
@@ -1751,17 +1756,16 @@
                         checkFollowStatus();
                         checkBlockStatus();
                         
+                        // إظهار زر التعديل فقط للمستخدم نفسه
                         if (currentUserId === profileUserId) {
                             document.getElementById('addReviewSection').style.display = 'none';
                             document.getElementById('followButton').style.display = 'none';
                             document.getElementById('blockButton').style.display = 'none';
-                            document.getElementById('editBioBtn').style.display = 'block';
                         }
                     } else {
                         document.getElementById('followButton').style.display = 'none';
                         document.getElementById('blockButton').style.display = 'none';
                         document.getElementById('addReviewSection').style.display = 'none';
-                        document.getElementById('editBioBtn').style.display = 'none';
                         
                         if (userParam.type === 'slug') {
                             loadProfileBySlug(userParam.value);
@@ -1793,7 +1797,7 @@
                         <div style="text-align: center; padding: 50px 20px;">
                             <div style="font-size: 48px; margin-bottom: 20px;">😕</div>
                             <h2 style="color: #ef4444;">المستخدم غير موجود</h2>
-                            <p style="color: #9ca3af; margin-bottom: 20px;">a3len.store/${slug} غير موجود</p>
+                            <p style="color: #9ca3af; margin-bottom: 20px;">المستخدم غير موجود</p>
                             <button onclick="window.location.href='index.html'" 
                                     style="background: #38bdf8; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
                                 العودة للصفحة الرئيسية
@@ -1828,16 +1832,6 @@
                     document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
                     document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
                     
-                    // تحديث الـ Slug
-                    if (profileUsername) {
-                        const fullSlug = `a3len.store/${profileUsername}`;
-                        document.getElementById('profileSlug').textContent = fullSlug;
-                        document.getElementById('permanentLink').textContent = fullSlug;
-                        document.getElementById('slugSection').style.display = 'block';
-                    } else {
-                        document.getElementById('slugSection').style.display = 'none';
-                    }
-                    
                     if (userData.bio) {
                         document.getElementById('userBio').textContent = userData.bio;
                         currentUserBio = userData.bio;
@@ -1869,6 +1863,13 @@
                     if (profileUsername && !window.location.search.includes('slug=')) {
                         const newUrl = `${window.location.pathname}?slug=${profileUsername}`;
                         window.history.replaceState({}, '', newUrl);
+                    }
+                    
+                    // إظهار زر تعديل الوصف للمستخدم نفسه فقط
+                    if (currentUserId === userId) {
+                        document.getElementById('editBioBtn').style.display = 'block';
+                    } else {
+                        document.getElementById('editBioBtn').style.display = 'none';
                     }
                     
                     // إخفاء Skeleton وإظهار المحتوى الحقيقي
@@ -1942,39 +1943,6 @@
             });
         }
         
-        // Copy Profile Slug
-        function copyProfileSlug() {
-            const slug = document.getElementById('profileSlug').textContent;
-            const copyBtn = document.getElementById('copySlugBtn');
-            
-            navigator.clipboard.writeText(slug).then(() => {
-                copyBtn.innerHTML = '✓ تم النسخ';
-                copyBtn.classList.add('slug-copied');
-                
-                setTimeout(() => {
-                    copyBtn.innerHTML = '📋 نسخ الرابط';
-                    copyBtn.classList.remove('slug-copied');
-                }, 2000);
-                
-                profileProgress.showSuccess('تم نسخ الرابط إلى الحافظة');
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                profileProgress.showError('فشل نسخ الرابط');
-            });
-        }
-        
-        // Copy Profile Link
-        function copyProfileLink() {
-            const link = document.getElementById('permanentLink').textContent;
-            
-            navigator.clipboard.writeText(link).then(() => {
-                profileProgress.showSuccess('تم نسخ الرابط إلى الحافظة');
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                profileProgress.showError('فشل نسخ الرابط');
-            });
-        }
-        
         // Share Profile
         function shareProfile() {
             const profileUrl = window.location.href;
@@ -2005,31 +1973,17 @@
             });
         }
         
-        // Check Block Status
-        function checkBlockStatus() {
-            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                return;
-            }
-            
-            db.ref('blocks/' + currentUserId + '/' + profileUserId).once('value', (snapshot) => {
-                isBlocked = snapshot.exists();
-                updateBlockButton();
-            });
-        }
-        
         // Update Follow Button
         function updateFollowButton() {
             const followBtn = document.getElementById('followButton');
             const followText = document.getElementById('followText');
             
             if (isFollowing) {
-                followText.textContent = '✓ متابع';
-                followBtn.classList.remove('btn-primary');
-                followBtn.classList.add('btn-success');
+                followBtn.classList.add('following');
+                followBtn.innerHTML = '<span class="btn-icon">✓</span><span class="btn-text">متابَع</span>';
             } else {
-                followText.textContent = '+ متابعة';
-                followBtn.classList.remove('btn-success');
-                followBtn.classList.add('btn-primary');
+                followBtn.classList.remove('following');
+                followBtn.innerHTML = '<span class="btn-icon">+</span><span class="btn-text">متابعة</span>';
             }
         }
         
@@ -2060,7 +2014,6 @@
             const followingRef = db.ref('following/' + currentUserId + '/' + profileUserId);
             
             const followBtn = document.getElementById('followButton');
-            const followText = document.getElementById('followText');
             
             // إضافة حالة تحميل للزر
             followBtn.classList.add('loading');
@@ -2089,7 +2042,6 @@
                             }
                             
                             followBtn.classList.remove('loading');
-                            followText.textContent = '+ متابعة';
                             
                             profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
                             
@@ -2126,7 +2078,6 @@
                     document.getElementById('followersCount').textContent = currentFollowers + 1;
                     
                     followBtn.classList.remove('loading');
-                    followText.textContent = '✓ متابع';
                     
                     profileProgress.showSuccess('تمت المتابعة بنجاح');
                     
@@ -2297,20 +2248,19 @@
                             const followBtn = userCard.querySelector('.follow-btn');
                             if (followBtn) {
                                 if (isFollowingUser) {
-                                    followBtn.textContent = '✓ متابع';
-                                    followBtn.classList.remove('btn-outline');
-                                    followBtn.classList.add('btn-success');
+                                    followBtn.classList.add('following');
+                                    followBtn.innerHTML = '<span class="btn-icon">✓</span><span class="btn-text">متابَع</span>';
                                 } else {
-                                    followBtn.textContent = 'متابعة';
-                                    followBtn.classList.remove('btn-success');
-                                    followBtn.classList.add('btn-outline');
+                                    followBtn.classList.remove('following');
+                                    followBtn.innerHTML = '<span class="btn-icon">+</span><span class="btn-text">متابعة</span>';
                                 }
                             }
                         });
                         
                         followButtonHTML = `
-                            <button class="btn btn-outline follow-btn" onclick="event.stopPropagation(); toggleFollowListUser('${id}', this)">
-                                متابعة
+                            <button class="follow-btn small" onclick="event.stopPropagation(); toggleFollowListUser('${id}', this)">
+                                <span class="btn-icon">+</span>
+                                <span class="btn-text">متابعة</span>
                             </button>`;
                     }
                     
@@ -2352,7 +2302,18 @@
             button.classList.add('loading');
             button.innerHTML = '<span class="spinner"></span>';
             
-            if (button.textContent === 'متابعة') {
+            const isCurrentlyFollowing = button.classList.contains('following');
+            
+            if (isCurrentlyFollowing) {
+                followRef.remove().then(() => {
+                    followingRef.remove();
+                    
+                    updateFollowCounts(targetUserId, -1);
+                    
+                    button.classList.remove('loading', 'following');
+                    button.innerHTML = '<span class="btn-icon">+</span><span class="btn-text">متابعة</span>';
+                });
+            } else {
                 const followData = {
                     timestamp: Date.now(),
                     userId: currentUserId
@@ -2367,20 +2328,8 @@
                     updateFollowCounts(targetUserId, 1);
                     
                     button.classList.remove('loading');
-                    button.textContent = '✓ متابع';
-                    button.classList.remove('btn-outline');
-                    button.classList.add('btn-success');
-                });
-            } else {
-                followRef.remove().then(() => {
-                    followingRef.remove();
-                    
-                    updateFollowCounts(targetUserId, -1);
-                    
-                    button.classList.remove('loading');
-                    button.textContent = 'متابعة';
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-outline');
+                    button.classList.add('following');
+                    button.innerHTML = '<span class="btn-icon">✓</span><span class="btn-text">متابَع</span>';
                 });
             }
         }
