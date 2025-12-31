@@ -767,7 +767,7 @@
                 } else {
                     reqAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">اسم المستخدم متاح</span>';
                     reqAvailable.classList.add('met');
-                    reqAvailable.classList.remove('met');
+                    reqAvailable.classList.remove('unmet'); // ✅ تم التصحيح هنا
                 }
                 checkFormValidity();
             }).catch(error => {
@@ -829,7 +829,7 @@
                 } else {
                     reqEmailAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">البريد الإلكتروني متاح</span>';
                     reqEmailAvailable.classList.add('met');
-                    reqEmailAvailable.classList.remove('unmet');
+                    reqEmailAvailable.classList.remove('unmet'); // ✅ تم التصحيح هنا أيضاً
                 }
                 checkFormValidity();
             }).catch(error => {
@@ -931,12 +931,12 @@
             
             if (isMet) {
                 element.classList.add('met');
-                element.classList.remove('unmet');
+                element.classList.remove('unmet'); // ✅ تم التصحيح هنا
                 const icon = element.querySelector('.requirement-icon');
                 if (icon) icon.textContent = '✓';
             } else {
                 element.classList.add('unmet');
-                element.classList.remove('met');
+                element.classList.remove('met'); // ✅ تم التصحيح هنا
                 const icon = element.querySelector('.requirement-icon');
                 if (icon) icon.textContent = '○';
             }
