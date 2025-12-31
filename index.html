@@ -14,6 +14,30 @@
 }
 body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 
+/* ===== شارة التوثيق ===== */
+.verified-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #10b981;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.verified-icon {
+    font-size: 10px;
+    margin-left: 2px;
+}
+
+.user-name-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 /* ===== Budget Dialog ===== */
 .budget-btn {
   margin-left: 10px;
@@ -142,15 +166,6 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 }
 
 /* ===== إضافة أنماط جديدة للتحسينات ===== */
-.verified-badge {
-  background: #10b981;
-  color: white;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  margin-right: 5px;
-}
-
 .product-status {
   font-size: 12px;
   padding: 3px 8px;
@@ -223,6 +238,22 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .timer-disabled button {
   background: #6b7280 !important;
   cursor: not-allowed !important;
+}
+
+/* تحسينات للهاتف */
+@media (max-width: 768px) {
+    .user-name-wrapper {
+        flex-wrap: wrap;
+    }
+    
+    .verified-badge {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .seller-link {
+        font-size: 14px;
+    }
 }
 </style>
 </head>
@@ -833,10 +864,27 @@ function loadProducts(){
           statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
         }
         
+        // الحصول على معلومات البائع
+        let sellerInfo = p.seller || 'غير معروف';
+        let isVerified = false;
+        
+        if (p.uid) {
+          db.ref('users/' + p.uid).once('value', (userSnap) => {
+            const userData = userSnap.val();
+            if (userData) {
+              isVerified = userData.isVerified || false;
+            }
+          });
+        }
+        
         const sellerSection = userDisplayName ? 
           `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> 
-            ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">
+              <span class="user-name-wrapper">
+                ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+                ${p.seller}
+              </span>
+            </span> 
             | ☎ ${p.phone}
             <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
@@ -1208,26 +1256,75 @@ function showDetails(k){
       return;
     }
     
-    const sellerWithLink = userDisplayName ? 
-      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span>
-       ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>
-       <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
-      `<p><strong>البائع:</strong> ${p.seller} ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}</p>`;
+    // التحقق من توثيق البائع
+    let isVerified = false;
+    let sellerDisplayName = p.seller || 'غير معروف';
     
+    if (p.uid) {
+      db.ref('users/' + p.uid).once('value', (userSnap) => {
+        const userData = userSnap.val();
+        if (userData) {
+          isVerified = userData.isVerified || false;
+          
+          // تحديث عرض البائع بالمعلومات الجديدة
+          const sellerWithLink = userDisplayName ? 
+            `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">
+              <span class="user-name-wrapper">
+                ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+                ${p.seller}
+              </span>
+            </span></p>
+            <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
+            `<p><strong>البائع:</strong> 
+              <span class="user-name-wrapper">
+                ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+                ${p.seller}
+              </span>
+            </p>`;
+          
+          // تحديث المحتوى
+          const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
+          
+          const detailsContent = `
+            <h2>${escapeHTML(p.name)}</h2>
+            <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
+            <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+            ${statusText}
+            ${sellerWithLink}
+            <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
+            <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+            <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
+            ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
+            ${isAdmin ? `<p style="color:#8b5cf6; font-size:12px; margin-top:10px;">المعرف: ${k}</p>` : ""}
+          `;
+          
+          document.getElementById("detailsContent").innerHTML = detailsContent;
+        }
+      });
+    }
+    
+    // العرض الأولي بدون انتظار الاستعلام
     const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
     
-    document.getElementById("detailsContent").innerHTML = `
+    const initialContent = `
       <h2>${escapeHTML(p.name)}</h2>
       <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
       <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
       ${statusText}
-      ${sellerWithLink}
+      <p><strong>البائع:</strong> 
+        <span class="user-name-wrapper">
+          ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+          ${p.seller}
+        </span>
+      </p>
       <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
       <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
       <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
       ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
       ${isAdmin ? `<p style="color:#8b5cf6; font-size:12px; margin-top:10px;">المعرف: ${k}</p>` : ""}
     `;
+    
+    document.getElementById("detailsContent").innerHTML = initialContent;
     document.getElementById("detailsDialog").style.display="block";
     progressManager.hideCircularProgress();
   }).catch(error => {
@@ -1253,13 +1350,16 @@ function updateAuthUI() {
       const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
       
       isAdmin = userData && userData.isAdmin === true;
+      const isVerified = userData && userData.isVerified === true;
       
       authSection.innerHTML = `
         <div class="user-info">
           <p class="profile-link" onclick="viewMyProfile()">
-            👤 ${displayName}
-            ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
-            ${userData && userData.isVerified ? '<span class="verified-badge">✓</span>' : ''}
+            <span class="user-name-wrapper">
+              ${isVerified ? '<span class="verified-badge">✓</span>' : ''}
+              ${displayName}
+              ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
+            </span>
           </p>
           <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
           <small style="color:#9ca3af; font-size:11px; display:block; margin:5px 0;">${userData ? userData.totalProducts || 0 : 0} إعلان</small>
@@ -1341,6 +1441,17 @@ function viewMyProfile() {
     setTimeout(() => {
       window.location.href = 'login.html';
     }, 1500);
+  }
+}
+
+function showAdminPanel() {
+  if (isAdmin) {
+    progressManager.showTopProgressBar();
+    setTimeout(() => {
+      window.location.href = 'admin.html';
+    }, 300);
+  } else {
+    progressManager.showError("ليس لديك صلاحية الوصول");
   }
 }
 
