@@ -7,6 +7,40 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
+/* ===== أنماط إضافية للمشكلة ===== */
+.data-loaded {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ===== تحسين عرض البطاقات ===== */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.card {
+    background: #1f2937;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #374151;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    border-color: #38bdf8;
+}
+
 /* ===== Custom Font ===== */
 @font-face {
   font-family: 'CustomFont';
@@ -254,6 +288,51 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     .seller-link {
         font-size: 14px;
     }
+    
+    .cards {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        padding: 10px;
+    }
+}
+
+/* ===== Skeleton Loading ===== */
+.skeleton-card {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #374151;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Loading States ===== */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #374151;
+  border-top: 3px solid #38bdf8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -292,7 +371,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     </div>
 </div>
 
-<div class="overlay" onclick="closeSidebar()"></overlay>
+<div class="overlay" onclick="closeSidebar()"></div>
 
 <div class="layout">
   <aside class="sidebar">
@@ -363,6 +442,12 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.database();
 const analytics = firebase.analytics();
+
+// ===== إضافة متغيرات التحكم في البيانات =====
+let productsRef = null;
+let productsListener = null;
+let allProducts = [];
+let isProductsLoaded = false;
 
 // ===== Progress Bar System =====
 class ProgressManager {
@@ -570,6 +655,14 @@ let sessionWarning = null;
 const SESSION_DURATION = 60 * 60 * 1000;
 const SESSION_WARNING = 5 * 60 * 1000;
 
+// ===== دالة لوقف الاستماع للتحديثات =====
+function stopProductsListener() {
+    if (productsListener) {
+        productsListener();
+        productsListener = null;
+    }
+}
+
 // ===== دالة تحذير الأمان =====
 function showSecurityWarning(message) {
     const content = document.getElementById('content');
@@ -590,7 +683,7 @@ function showSecurityWarning(message) {
 function checkPublishPermission() {
     if (!userUID) {
         canPublish = true;
-        return true;
+        return Promise.resolve(true);
     }
     
     progressManager.showCircularProgress();
@@ -764,6 +857,7 @@ function extendSession() {
 }
 
 function handleSessionTimeout() {
+    stopProductsListener();
     if (currentUser && !currentUser.isAnonymous) {
         auth.signOut().then(() => {
             showSecurityWarning("انتهت جلسة العمل. تم تسجيل الخروج لأسباب أمنية.");
@@ -786,16 +880,17 @@ function closeSidebar(){
   document.querySelector(".overlay").classList.remove("active");
 }
 
-// الصفحة الرئيسية
+// ===== الصفحة الرئيسية مع إدارة البيانات المحلية =====
 function showHome(){
+  stopProductsListener(); // إيقاف أي مستمع سابق
   closeSidebar();
   progressManager.showTopProgressBar();
   
   setTimeout(() => {
     document.getElementById("content").innerHTML = `
       <div class="search-bar">
-        <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()" maxlength="50">
-        <select id="cat" onchange="loadProducts()">
+        <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="filterAndDisplayProducts()" maxlength="50">
+        <select id="cat" onchange="filterAndDisplayProducts()">
           <option value="">كل الأقسام</option>
           ${categories.map(c=>`<option>${c}</option>`).join("")}
         </select>
@@ -804,38 +899,20 @@ function showHome(){
       <div class="cards" id="products"></div>
       <div id="pagination" style="text-align:center;margin:20px"></div>
     `;
-    loadProducts();
-    progressManager.hideTopProgressBar();
+    
+    // إذا كانت البيانات محملة مسبقاً، عرضها مباشرة
+    if (isProductsLoaded && allProducts.length > 0) {
+      filterAndDisplayProducts();
+      progressManager.hideTopProgressBar();
+    } else {
+      // تحميل البيانات لأول مرة
+      loadProducts();
+    }
   }, 300);
 }
 
-// Budget Dialog
-function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
-function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
-function applyBudget(){
-  const val = parseFloat(document.getElementById("maxBudget").value);
-  
-  if (isNaN(val) || val < 0) {
-    progressManager.showError("يرجى إدخال قيمة ميزانية صحيحة");
-    return;
-  }
-  
-  if (val > 10000000) {
-    progressManager.showError("القيمة المدخلة كبيرة جداً");
-    return;
-  }
-  
-  budget = val;
-  closeBudget();
-  loadProducts();
-}
-
-// تحميل المنتجات
-function loadProducts(){
-  const s = document.getElementById("search")?.value.toLowerCase() || '';
-  const c = document.getElementById("cat")?.value || '';
-  
-  // عرض Skeleton Loading
+// ===== تحميل المنتجات مرة واحدة مع الاستماع للتحديثات =====
+function loadProducts() {
   const productsContainer = document.getElementById('products');
   if (productsContainer) {
     productsContainer.innerHTML = progressManager.createSkeletonCards(6);
@@ -843,103 +920,33 @@ function loadProducts(){
   
   progressManager.showTopProgressBar();
   
-  db.ref("products").once("value", snap=>{
+  // إيقاف أي مستمع سابق
+  stopProductsListener();
+  
+  // البدء بالاستماع للتحديثات في الوقت الحقيقي
+  productsRef = db.ref("products");
+  productsListener = productsRef.on("value", snap => {
     const d = snap.val() || {};
-    let htmlCards = [];
-
-    Object.keys(d).forEach(k=>{
+    allProducts = [];
+    
+    Object.keys(d).forEach(k => {
       const p = d[k];
       
       if (!p || !p.name || !p.price) {
         return;
       }
       
-      const price = parseFloat(p.price) || 0;
-      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        if(budget && price > budget) return;
-        
-        const status = p.status || 'available';
-        let statusBadge = '';
-        if (status !== 'available') {
-          statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
-        }
-        
-        // الحصول على معلومات البائع
-        let sellerInfo = p.seller || 'غير معروف';
-        let isVerified = false;
-        let sellerUsername = '';
-        
-        if (p.uid) {
-          db.ref('users/' + p.uid).once('value', (userSnap) => {
-            const userData = userSnap.val();
-            if (userData) {
-              isVerified = userData.isVerified || false;
-              sellerUsername = userData.username || '';
-            }
-          });
-        }
-        
-        // ===== استخدام الرابط الجديد a3len.store/profile/username =====
-        const sellerLink = sellerUsername ? 
-          `<a href="https://a3len.store/profile/${sellerUsername}" class="seller-link" target="_blank">
-            <span class="user-name-wrapper">
-              ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-              ${p.seller}
-            </span>
-          </a>` :
-          `<span class="seller-link">${p.seller}</span>`;
-        
-        const sellerSection = sellerUsername ? 
-          `<div class="seller">
-            👤 ${sellerLink} | ☎ ${p.phone}
-            <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
-          </div>` :
-          `<div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
-          </div>`;
-        
-        htmlCards.push({uid:p.uid,key:k,html:`
-          <div class="card" onclick="showDetails('${k}')">
-            <h3>${escapeHTML(p.name)}</h3>
-            <span class="price">${formatPrice(p.price)} د.ع</span>
-            ${statusBadge}
-            <div class="meta">
-              <span>${p.category || 'غير محدد'}</span>
-              <span>${p.province || 'غير محدد'}</span>
-              <span>توصيل: ${p.delivery || 'لا'}</span>
-            </div>
-            ${sellerSection}
-            <div class="actions">
-              ${(p.uid===userUID || isAdmin)?`
-              <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
-            </div>
-          </div>
-        `});
-      }
+      allProducts.push({
+        key: k,
+        ...p,
+        uid: p.uid || null
+      });
     });
-
-    if(userUID){
-      htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
-    }
-
-    const totalPages = Math.ceil(htmlCards.length / postsPerPage);
-    if(currentPage > totalPages) currentPage = 1;
-    const start = (currentPage-1)*postsPerPage;
-    const pageItems = htmlCards.slice(start, start+postsPerPage);
-
-    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
     
-    if (productsContainer) {
-      productsContainer.style.opacity = '0';
-      setTimeout(() => {
-        productsContainer.innerHTML = finalHTML;
-        productsContainer.style.opacity = '1';
-        renderPagination(totalPages);
-        progressManager.hideTopProgressBar();
-      }, 300);
-    }
-  }).catch(error => {
+    isProductsLoaded = true;
+    filterAndDisplayProducts();
+    progressManager.hideTopProgressBar();
+  }, error => {
     console.error("Error loading products:", error);
     if (productsContainer) {
       productsContainer.innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
@@ -947,6 +954,118 @@ function loadProducts(){
     progressManager.hideTopProgressBar();
     progressManager.showError("خطأ في تحميل الإعلانات");
   });
+}
+
+// ===== تصفية وعرض المنتجات من البيانات المحلية =====
+function filterAndDisplayProducts() {
+  const s = document.getElementById("search")?.value.toLowerCase() || '';
+  const c = document.getElementById("cat")?.value || '';
+  
+  let filteredProducts = allProducts.filter(p => {
+    if (!p || !p.name) return false;
+    
+    // الفلترة حسب البحث
+    if (s && !p.name.toLowerCase().includes(s)) return false;
+    
+    // الفلترة حسب القسم
+    if (c && p.category !== c) return false;
+    
+    // الفلترة حسب الميزانية
+    if (budget) {
+      const price = parseFloat(p.price) || 0;
+      if (price > budget) return false;
+    }
+    
+    return true;
+  });
+  
+  // ترتيب المنتجات الخاصة بالمستخدم أولاً
+  if (userUID) {
+    filteredProducts.sort((a, b) => {
+      if (a.uid === userUID && b.uid !== userUID) return -1;
+      if (a.uid !== userUID && b.uid === userUID) return 1;
+      return 0;
+    });
+  }
+  
+  // تطبيق الترقيم
+  const totalPages = Math.ceil(filteredProducts.length / postsPerPage);
+  if (currentPage > totalPages) currentPage = 1;
+  const start = (currentPage - 1) * postsPerPage;
+  const pageItems = filteredProducts.slice(start, start + postsPerPage);
+  
+  // إنشاء HTML للبطاقات
+  const htmlCards = pageItems.map(p => createProductCardHTML(p));
+  const finalHTML = htmlCards.join("") || "<p class='empty'>لا توجد إعلانات</p>";
+  
+  const productsContainer = document.getElementById('products');
+  if (productsContainer) {
+    productsContainer.style.opacity = '0';
+    setTimeout(() => {
+      productsContainer.innerHTML = finalHTML;
+      productsContainer.style.opacity = '1';
+      renderPagination(totalPages);
+    }, 300);
+  }
+}
+
+// ===== إنشاء بطاقة المنتج =====
+function createProductCardHTML(p) {
+  const price = parseFloat(p.price) || 0;
+  const status = p.status || 'available';
+  let statusBadge = '';
+  
+  if (status !== 'available') {
+    statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
+  }
+  
+  // الحصول على معلومات البائع
+  let isVerified = false;
+  let sellerUsername = '';
+  
+  if (p.uid) {
+    // هذه معلومات مخزنة محلياً إذا كانت متاحة
+    isVerified = p.isVerified || false;
+    sellerUsername = p.username || '';
+  }
+  
+  // استخدام الرابط الجديد a3len.store/profile/username
+  const sellerLink = sellerUsername ? 
+    `<a href="https://a3len.store/profile/${sellerUsername}" class="seller-link" target="_blank">
+      <span class="user-name-wrapper">
+        ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+        ${p.seller}
+      </span>
+    </a>` :
+    `<span class="seller-link">${p.seller}</span>`;
+  
+  const sellerSection = sellerUsername ? 
+    `<div class="seller">
+      👤 ${sellerLink} | ☎ ${p.phone}
+      <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
+    </div>` :
+    `<div class="seller">
+      👤 ${p.seller} | ☎ ${p.phone}
+    </div>`;
+  
+  return `
+    <div class="card" onclick="showDetails('${p.key}')">
+      <h3>${escapeHTML(p.name)}</h3>
+      <span class="price">${formatPrice(p.price)} د.ع</span>
+      ${statusBadge}
+      <div class="meta">
+        <span>${p.category || 'غير محدد'}</span>
+        <span>${p.province || 'غير محدد'}</span>
+        <span>توصيل: ${p.delivery || 'لا'}</span>
+      </div>
+      ${sellerSection}
+      <div class="actions">
+        ${(p.uid === userUID || isAdmin) ? `
+        <button class="edit" onclick="editProduct('${p.key}');event.stopPropagation();">تعديل</button>
+        <button class="del" onclick="deleteProduct('${p.key}');event.stopPropagation();">حذف</button>` : ""}
+      </div>
+    </div>
+  `;
 }
 
 // Render Pagination Buttons
@@ -975,7 +1094,28 @@ function renderPagination(total){
 
 function goPage(p){
   currentPage = p;
-  loadProducts();
+  filterAndDisplayProducts();
+}
+
+// Budget Dialog
+function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
+function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
+function applyBudget(){
+  const val = parseFloat(document.getElementById("maxBudget").value);
+  
+  if (isNaN(val) || val < 0) {
+    progressManager.showError("يرجى إدخال قيمة ميزانية صحيحة");
+    return;
+  }
+  
+  if (val > 10000000) {
+    progressManager.showError("القيمة المدخلة كبيرة جداً");
+    return;
+  }
+  
+  budget = val;
+  closeBudget();
+  filterAndDisplayProducts();
 }
 
 // حذف / تعديل / نشر
@@ -1016,7 +1156,6 @@ function deleteProduct(k){
     
     db.ref("products/"+k).remove().then(() => {
       progressManager.showSuccess("تم حذف الإعلان بنجاح");
-      loadProducts();
       
       if (userUID) {
         db.ref("userActivity/" + userUID).push().set({
@@ -1057,6 +1196,7 @@ function editProduct(k){
 
 // ===== تعديل دالة showPublish لدعم نظام المؤقت =====
 async function showPublish(p=null,k=null){
+  stopProductsListener(); // إيقاف المستمع أثناء النشر
   closeSidebar();
   
   progressManager.showTopProgressBar();
@@ -1416,6 +1556,7 @@ function updateAuthUI() {
 }
 
 function logoutUser() {
+  stopProductsListener(); // إيقاف المستمع عند تسجيل الخروج
   if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
     progressManager.showOverlay("جاري تسجيل الخروج...", "انتظر قليلاً");
     
@@ -1425,6 +1566,8 @@ function logoutUser() {
         userDisplayName = null;
         userFullName = null;
         isAdmin = false;
+        isProductsLoaded = false;
+        allProducts = [];
         updateAuthUI();
         showHome();
         progressManager.showSuccess("تم تسجيل الخروج بنجاح");
@@ -1474,6 +1617,7 @@ function viewMyProfile() {
 
 function showAdminPanel() {
   if (isAdmin) {
+    stopProductsListener(); // إيقاف المستمع عند الانتقال للوحة التحكم
     progressManager.showTopProgressBar();
     setTimeout(() => {
       window.location.href = 'admin.html';
@@ -1535,6 +1679,8 @@ auth.onAuthStateChanged((user) => {
     userDisplayName = null;
     userFullName = null;
     isAdmin = false;
+    isProductsLoaded = false;
+    allProducts = [];
     updateAuthUI();
   }
 });
@@ -1561,6 +1707,11 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
       e.preventDefault();
     }
+  });
+  
+  // إيقاف المستمع عند إغلاق الصفحة
+  window.addEventListener('beforeunload', function() {
+    stopProductsListener();
   });
 });
 </script>
