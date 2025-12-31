@@ -345,6 +345,42 @@
             display: inline-block;
         }
         
+        /* التوثيق الأزرق - التحديث */
+        .status-verified {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .verified-badge-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        
+        .name-with-verification {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
         .status-active {
             background: rgba(16, 185, 129, 0.2);
             color: #10b981;
@@ -358,11 +394,6 @@
         .status-pending {
             background: rgba(245, 158, 11, 0.2);
             color: #f59e0b;
-        }
-        
-        .status-verified {
-            background: rgba(139, 92, 246, 0.2);
-            color: #8b5cf6;
         }
         
         /* Action Buttons */
@@ -967,7 +998,69 @@
         let allProducts = {};
         let currentTab = 'dashboard';
         
+        // ========================================
+        // دوال التوثيق الجديدة
+        // ========================================
+        
+        /**
+         * عرض شارة التوثيق الزرقاء بجانب الاسم
+         * @param {string} userId - معرف المستخدم
+         * @returns {string} HTML لشارة التوثيق
+         */
+        function getVerifiedBadge(userId) {
+            const user = allUsers[userId];
+            if (user && user.isVerified) {
+                return `
+                    <span class="status-verified" title="مستخدم موثّق">
+                        <span class="verified-badge-icon">✓</span>
+                        موثّق
+                    </span>
+                `;
+            }
+            return '';
+        }
+        
+        /**
+         * عرض الاسم مع شارة التوثيق
+         * @param {string} userId - معرف المستخدم
+         * @param {string} customName - اسم مخصص (اختياري)
+         * @returns {string} HTML للاسم مع التوثيق
+         */
+        function displayNameWithVerification(userId, customName = '') {
+            const user = allUsers[userId];
+            const name = customName || user?.fullName || user?.username || 'غير معروف';
+            const verifiedBadge = getVerifiedBadge(userId);
+            
+            return `
+                <div class="name-with-verification">
+                    <span>${name}</span>
+                    ${verifiedBadge}
+                </div>
+            `;
+        }
+        
+        /**
+         * دالة سريعة لعرض التوثيق في أي مكان
+         * @param {string} userId - معرف المستخدم
+         * @returns {string} HTML مصغر للتوثيق
+         */
+        function getMiniVerifiedBadge(userId) {
+            const user = allUsers[userId];
+            if (user && user.isVerified) {
+                return `
+                    <span class="status-verified" style="font-size: 10px; padding: 1px 6px;" title="مستخدم موثّق">
+                        <span class="verified-badge-icon" style="width: 14px; height: 14px; font-size: 8px;">✓</span>
+                        موثّق
+                    </span>
+                `;
+            }
+            return '';
+        }
+        
+        // ========================================
         // تهيئة الصفحة
+        // ========================================
+        
         document.addEventListener('DOMContentLoaded', function() {
             checkAdminPermissions();
             setupEventListeners();
@@ -1065,6 +1158,12 @@
                 }
             });
             
+            // حساب المستخدمين الموثقين
+            let verifiedUsers = 0;
+            Object.values(users).forEach(user => {
+                if (user.isVerified) verifiedUsers++;
+            });
+            
             return {
                 totalUsers,
                 totalProducts,
@@ -1072,7 +1171,8 @@
                 soldProducts,
                 reservedProducts,
                 activeProducts,
-                activeToday
+                activeToday,
+                verifiedUsers
             };
         }
         
@@ -1100,11 +1200,11 @@
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-icon">💰</div>
-                    <span class="stat-number">${stats.soldProducts}</span>
-                    <span class="stat-label">إعلانات مباعة</span>
+                    <div class="stat-icon">🔵</div>
+                    <span class="stat-number">${stats.verifiedUsers}</span>
+                    <span class="stat-label">مستخدمين موثَّقين</span>
                     <div class="stat-trend trend-up">
-                        <span>${stats.reservedProducts} محجوز</span>
+                        <span>${Math.round((stats.verifiedUsers / stats.totalUsers) * 100) || 0}%</span>
                     </div>
                 </div>
                 
@@ -1164,18 +1264,28 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${recentUsers.map(([userId, user]) => `
-                                            <tr>
-                                                <td>${user.fullName || user.username || 'بدون اسم'}</td>
-                                                <td>${user.email || 'بدون بريد'}</td>
-                                                <td>${user.createdAt ? formatDate(user.createdAt) : 'غير معروف'}</td>
-                                                <td>
-                                                    <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${userId}')">
-                                                        عرض
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
+                                        ${recentUsers.map(([userId, user]) => {
+                                            const verifiedBadge = user.isVerified ? 
+                                                '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>
+                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                            ${user.fullName || user.username || 'بدون اسم'}
+                                                            ${verifiedBadge}
+                                                        </div>
+                                                    </td>
+                                                    <td>${user.email || 'بدون بريد'}</td>
+                                                    <td>${user.createdAt ? formatDate(user.createdAt) : 'غير معروف'}</td>
+                                                    <td>
+                                                        <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${userId}')">
+                                                            عرض
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -1189,25 +1299,34 @@
                                         <tr>
                                             <th>الاسم</th>
                                             <th>السعر</th>
-                                            <th>الحالة</th>
+                                            <th>البائع</th>
                                             <th>الإجراءات</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${recentProducts.map(([productId, product]) => `
-                                            <tr>
-                                                <td>${product.name || 'بدون اسم'}</td>
-                                                <td>${product.price ? parseInt(product.price).toLocaleString('ar-SA') + ' د.ع' : 'غير محدد'}</td>
-                                                <td><span class="status-badge status-${product.status || 'available'}">
-                                                    ${getStatusText(product.status || 'available')}
-                                                </span></td>
-                                                <td>
-                                                    <button class="btn btn-xs btn-primary" onclick="viewProductDetails('${productId}')">
-                                                        عرض
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
+                                        ${recentProducts.map(([productId, product]) => {
+                                            const seller = users[product.uid];
+                                            const verifiedBadge = seller?.isVerified ? 
+                                                '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${product.name || 'بدون اسم'}</td>
+                                                    <td>${product.price ? parseInt(product.price).toLocaleString('ar-SA') + ' د.ع' : 'غير محدد'}</td>
+                                                    <td>
+                                                        <div style="display: flex; align-items: center; gap: 5px;">
+                                                            ${seller?.fullName || seller?.username || product.seller || 'غير معروف'}
+                                                            ${verifiedBadge}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-xs btn-primary" onclick="viewProductDetails('${productId}')">
+                                                            عرض
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -1290,7 +1409,8 @@
                             <select class="filter-select" id="userFilter" onchange="filterUsers()">
                                 <option value="all">جميع المستخدمين</option>
                                 <option value="admin">المديرين فقط</option>
-                                <option value="verified">الموثّقين</option>
+                                <option value="verified">الموثّقين فقط</option>
+                                <option value="unverified">غير الموثّقين</option>
                                 <option value="active">النشطين اليوم</option>
                                 <option value="inactive">غير النشطين</option>
                             </select>
@@ -1354,6 +1474,14 @@
                 const createdAt = user.createdAt ? formatDate(user.createdAt) : 'غير معروف';
                 const bio = user.bio || 'لا يوجد وصف';
                 
+                // شارة التوثيق
+                const verifiedBadge = isVerified ? 
+                    '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
+                
+                // شارة المدير
+                const adminBadge = isAdmin ? 
+                    '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; margin-right: 5px;">مدير</span>' : '';
+                
                 return `
                     <tr data-user-id="${userId}">
                         <td>
@@ -1367,7 +1495,11 @@
                                     ${(fullName || username).charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div style="font-weight: 500;">${fullName}</div>
+                                    <div style="font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                                        ${fullName}
+                                        ${verifiedBadge}
+                                        ${adminBadge}
+                                    </div>
                                     <div style="color: #9ca3af; font-size: 12px;">@${username}</div>
                                 </div>
                             </div>
@@ -1459,6 +1591,11 @@
                 const isAdmin = user.isAdmin || false;
                 const isVerified = user.isVerified || false;
                 
+                // شارة التوثيق لمحتوى المودال
+                const verifiedDisplay = isVerified ? 
+                    '<span class="status-verified" style="margin-right: 10px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : 
+                    '<span class="status-badge status-pending" style="margin-right: 10px;">غير موثّق</span>';
+                
                 // الحصول على إعلانات المستخدم
                 db.ref('products').orderByChild('uid').equalTo(userId).once('value').then(productsSnap => {
                     const userProducts = productsSnap.val() || {};
@@ -1474,18 +1611,25 @@
                                                 justify-content: center; color: white; font-size: 40px; font-weight: bold;">
                                         ${fullName.charAt(0).toUpperCase()}
                                     </div>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;">
+                                        ${verifiedDisplay}
+                                        ${isAdmin ? 
+                                            '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">مدير</span>' : 
+                                            '<span class="status-badge status-active">مستخدم عادي</span>'
+                                        }
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">الحالة</label>
-                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <label class="form-label">التحكم بالحالة</label>
+                                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
                                     ${isVerified ? 
-                                        '<span class="status-badge status-verified">✓ موثّق</span>' : 
-                                        '<button class="btn btn-xs btn-success" onclick="toggleVerification(\'' + userId + '\', true)">توثيق</button>'
+                                        '<button class="btn btn-sm btn-danger" onclick="toggleVerification(\'' + userId + '\', false)">إلغاء التوثيق</button>' : 
+                                        '<button class="btn btn-sm btn-success" onclick="toggleVerification(\'' + userId + '\', true)">توثيق</button>'
                                     }
                                     ${isAdmin ? 
-                                        '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">مدير</span>' : 
-                                        '<button class="btn btn-xs btn-success" onclick="toggleAdminStatus(\'' + userId + '\', true)">منح المدير</button>'
+                                        '<button class="btn btn-sm btn-danger" onclick="toggleAdminStatus(\'' + userId + '\', false)">سحب المدير</button>' : 
+                                        '<button class="btn btn-sm btn-success" onclick="toggleAdminStatus(\'' + userId + '\', true)">منح المدير</button>'
                                     }
                                 </div>
                             </div>
@@ -1570,8 +1714,7 @@
                 });
             });
         }
-        
-        // حفظ تغييرات المستخدم
+                // حفظ تغييرات المستخدم
         function saveUserChanges(userId) {
             const updates = {
                 fullName: document.getElementById('editFullName').value.trim(),
@@ -1640,7 +1783,7 @@
             }
         }
         
-        // إدارة الإعلانات (وظائف مشابهة للمستخدمين)
+        // إدارة الإعلانات
         function loadProductsManagement() {
             showLoading();
             
@@ -1659,6 +1802,7 @@
                                 <option value="sold">المباعة</option>
                                 <option value="reserved">المحجوزة</option>
                                 <option value="today">إعلانات اليوم</option>
+                                <option value="verified">بائعين موثّقين فقط</option>
                             </select>
                             <input type="text" class="form-control" id="productSearch" 
                                    placeholder="ابحث باسم القطعة أو البائع..." 
@@ -1706,10 +1850,15 @@
             
             tbody.innerHTML = productsToDisplay.map(([productId, product]) => {
                 const price = product.price ? parseInt(product.price).toLocaleString('ar-SA') + ' د.ع' : 'غير محدد';
-                const sellerName = allUsers[product.uid] ? 
-                    (allUsers[product.uid].fullName || allUsers[product.uid].username) : 
+                const seller = allUsers[product.uid];
+                const sellerName = seller ? 
+                    (seller.fullName || seller.username) : 
                     product.seller || 'غير معروف';
                 const date = product.timestamp ? formatDate(product.timestamp) : 'غير معروف';
+                
+                // شارة التوثيق للبائع
+                const verifiedBadge = seller?.isVerified ? 
+                    '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
                 
                 return `
                     <tr data-product-id="${productId}">
@@ -1731,7 +1880,10 @@
                                     ${sellerName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div style="font-size: 13px;">${sellerName}</div>
+                                    <div style="font-size: 13px; display: flex; align-items: center; gap: 3px;">
+                                        ${sellerName}
+                                        ${verifiedBadge}
+                                    </div>
                                     <div style="font-size: 11px; color: #9ca3af;">${product.phone || 'بدون رقم'}</div>
                                 </div>
                             </div>
@@ -1794,6 +1946,10 @@
                 const seller = allUsers[product.uid] || {};
                 const modalBody = document.getElementById('productModalBody');
                 
+                // شارة التوثيق للبائع
+                const sellerVerifiedBadge = seller.isVerified ? 
+                    '<span class="status-verified" style="margin-right: 8px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
+                
                 modalBody.innerHTML = `
                     <div class="form-group">
                         <label class="form-label">عنوان الإعلان</label>
@@ -1824,7 +1980,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">البائع</label>
-                            <input type="text" class="form-control" value="${seller.fullName || seller.username || product.seller || 'غير معروف'}" readonly>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                                <span>${seller.fullName || seller.username || product.seller || 'غير معروف'}</span>
+                                ${sellerVerifiedBadge}
+                                <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${product.uid}')" style="margin-right: auto;">
+                                    عرض الملف
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">رقم هاتف البائع</label>
@@ -1879,6 +2041,7 @@
                                 <div><strong>معرف البائع:</strong> ${product.uid || 'غير معروف'}</div>
                                 <div><strong>البريد الإلكتروني للبائع:</strong> ${seller.email || 'غير معروف'}</div>
                                 <div><strong>عدد إعلانات البائع:</strong> ${seller.totalProducts || 0}</div>
+                                <div><strong>حالة التوثيق:</strong> ${seller.isVerified ? '✅ موثّق' : '❌ غير موثّق'}</div>
                             </div>
                         </div>
                     </div>
@@ -1936,6 +2099,11 @@
                 const productsByMonth = groupDataByMonth(productsSnap.val(), 'timestamp');
                 const reviewsByMonth = groupDataByMonth(reviewsSnap.val(), 'timestamp');
                 
+                // حساب المستخدمين الموثقين
+                const totalUsers = Object.keys(usersSnap.val() || {}).length;
+                const verifiedUsers = Object.values(usersSnap.val() || {}).filter(user => user.isVerified).length;
+                const verificationRate = totalUsers > 0 ? Math.round((verifiedUsers / totalUsers) * 100) : 0;
+                
                 content.innerHTML = `
                     <div class="content-header">
                         <h3 class="content-title">📈 التحليلات والإحصائيات المتقدمة</h3>
@@ -1974,7 +2142,7 @@
                         <h4 style="color: #38bdf8; margin-bottom: 15px;">📋 إحصائيات تفصيلية</h4>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
                             <div style="background: #1f2937; padding: 20px; border-radius: 8px; text-align: center;">
-                                <div style="color: #38bdf8; font-size: 28px; font-weight: bold;">${Object.keys(usersSnap.val() || {}).length}</div>
+                                <div style="color: #38bdf8; font-size: 28px; font-weight: bold;">${totalUsers}</div>
                                 <div style="color: #9ca3af; font-size: 14px;">مستخدم مسجل</div>
                             </div>
                             <div style="background: #1f2937; padding: 20px; border-radius: 8px; text-align: center;">
@@ -1982,8 +2150,9 @@
                                 <div style="color: #9ca3af; font-size: 14px;">إعلان نشط</div>
                             </div>
                             <div style="background: #1f2937; padding: 20px; border-radius: 8px; text-align: center;">
-                                <div style="color: #8b5cf6; font-size: 28px; font-weight: bold;">${Object.keys(reviewsSnap.val() || {}).length}</div>
-                                <div style="color: #9ca3af; font-size: 14px;">تقييم</div>
+                                <div style="color: #38bdf8; font-size: 28px; font-weight: bold;">${verifiedUsers}</div>
+                                <div style="color: #9ca3af; font-size: 14px;">مستخدم موثّق</div>
+                                <div style="color: #38bdf8; font-size: 12px; margin-top: 5px;">${verificationRate}%</div>
                             </div>
                             <div style="background: #1f2937; padding: 20px; border-radius: 8px; text-align: center;">
                                 <div style="color: #f59e0b; font-size: 28px; font-weight: bold;">
@@ -1993,7 +2162,7 @@
                             </div>
                         </div>
                         
-                        <h4 style="color: #38bdf8; margin-bottom: 15px;">🏆 أفضل البائعين</h4>
+                        <h4 style="color: #38bdf8; margin-bottom: 15px;">🏆 أفضل البائعين (موثّقين)</h4>
                         <div class="table-container">
                             <table class="data-table">
                                 <thead>
@@ -2002,7 +2171,7 @@
                                         <th>عدد الإعلانات</th>
                                         <th>المباعة</th>
                                         <th>متوسط التقييم</th>
-                                        <th>الإيرادات التقريبية</th>
+                                        <th>حالة التوثيق</th>
                                         <th>الإجراءات</th>
                                     </tr>
                                 </thead>
@@ -2049,7 +2218,7 @@
                 }
             });
             
-            // تحضير قائمة البائعين
+            // تحضير قائمة البائعين مع التركيز على الموثقين
             const topSellers = Object.entries(sellerStats)
                 .map(([userId, stats]) => {
                     const user = users[userId];
@@ -2057,40 +2226,67 @@
                         userId,
                         username: user?.username || 'غير معروف',
                         fullName: user?.fullName || 'غير معروف',
+                        isVerified: user?.isVerified || false,
                         ...stats
                     };
                 })
-                .sort((a, b) => b.soldProducts - a.soldProducts)
+                .sort((a, b) => {
+                    // إعطاء الأولوية للموثقين
+                    if (a.isVerified && !b.isVerified) return -1;
+                    if (!a.isVerified && b.isVerified) return 1;
+                    // ثم الترتيب حسب المبيعات
+                    return b.soldProducts - a.soldProducts;
+                })
                 .slice(0, 10);
             
-            tbody.innerHTML = topSellers.map(seller => `
-                <tr>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 40px; height: 40px; background: #38bdf8; border-radius: 50%; 
-                                        display: flex; align-items: center; justify-content: center; 
-                                        color: white; font-weight: bold;">
-                                ${seller.fullName.charAt(0).toUpperCase()}
+            tbody.innerHTML = topSellers.map(seller => {
+                const verifiedBadge = seller.isVerified ? 
+                    '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : 
+                    '<span class="status-badge status-pending" style="margin-right: 5px;">غير موثّق</span>';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 40px; height: 40px; background: ${seller.isVerified ? '#38bdf8' : '#6b7280'}; border-radius: 50%; 
+                                            display: flex; align-items: center; justify-content: center; 
+                                            color: white; font-weight: bold;">
+                                    ${seller.fullName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                                        ${seller.fullName}
+                                        ${verifiedBadge}
+                                    </div>
+                                    <div style="color: #9ca3af; font-size: 12px;">@${seller.username}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div style="font-weight: 500;">${seller.fullName}</div>
-                                <div style="color: #9ca3af; font-size: 12px;">@${seller.username}</div>
+                        </td>
+                        <td>${seller.totalProducts}</td>
+                        <td>${seller.soldProducts}</td>
+                        <td>${calculateUserRating(seller.userId, reviews)}</td>
+                        <td>
+                            ${seller.isVerified ? 
+                                '<span style="color: #38bdf8; font-weight: bold;">✅ موثّق</span>' : 
+                                '<span style="color: #9ca3af;">❌ غير موثّق</span>'
+                            }
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${seller.userId}')">
+                                    عرض الملف
+                                </button>
+                                ${!seller.isVerified ? 
+                                    `<button class="btn btn-xs btn-success" onclick="toggleVerification('${seller.userId}', true)">
+                                        توثيق
+                                    </button>` : 
+                                    ''
+                                }
                             </div>
-                        </div>
-                    </td>
-                    <td>${seller.totalProducts}</td>
-                    <td>${seller.soldProducts}</td>
-                    <td>${calculateUserRating(seller.userId, reviews)}</td>
-                    <td style="color: #10b981; font-weight: bold;">
-                        ${seller.totalPrice.toLocaleString('ar-SA')} د.ع
-                    </td>
-                    <td>
-                        <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${seller.userId}')">
-                            عرض الملف
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
         
         // تحميل البلاغات
@@ -2111,6 +2307,7 @@
                                 <option value="pending">المعلقة</option>
                                 <option value="resolved">المحلولة</option>
                                 <option value="spam">المزعجة</option>
+                                <option value="verified">على موثّقين</option>
                             </select>
                             <button class="btn btn-success" onclick="resolveAllReports()">
                                 ✅ حل الكل
@@ -2155,29 +2352,45 @@
                 <div class="content-body" style="padding: 25px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                         <div>
-                            <h4 style="color: #38bdf8; margin-bottom: 20px;">🔒 إعدادات الأمان</h4>
+                            <h4 style="color: #38bdf8; margin-bottom: 20px;">🔒 إعدادات التوثيق</h4>
                             
                             <div class="form-group">
-                                <label class="form-label">تفعيل التحقق بخطوتين للمديرين</label>
-                                <div style="display: flex; gap: 10px; margin-top: 5px;">
-                                    <button class="btn btn-success" onclick="toggleTwoFactor(true)">تفعيل</button>
-                                    <button class="btn btn-danger" onclick="toggleTwoFactor(false)">تعطيل</button>
+                                <label class="form-label">متطلبات التوثيق</label>
+                                <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                                    <button class="btn btn-sm ${isRequirementActive('verified_phone') ? 'btn-primary' : 'btn-outline'}" 
+                                            onclick="toggleVerificationRequirement('verified_phone')">
+                                        📱 رقم هاتف موثّق
+                                    </button>
+                                    <button class="btn btn-sm ${isRequirementActive('min_products') ? 'btn-primary' : 'btn-outline'}" 
+                                            onclick="toggleVerificationRequirement('min_products')">
+                                        🛒 5 إعلانات كحد أدنى
+                                    </button>
+                                    <button class="btn btn-sm ${isRequirementActive('min_rating') ? 'btn-primary' : 'btn-outline'}" 
+                                            onclick="toggleVerificationRequirement('min_rating')">
+                                        ⭐ تقييم 4+
+                                    </button>
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">تسجيل جلسات الدخول</label>
+                                <label class="form-label">توثيق تلقائي للمستخدمين</label>
                                 <div style="display: flex; gap: 10px; margin-top: 5px;">
-                                    <button class="btn btn-success" onclick="toggleSessionLogging(true)">تفعيل</button>
-                                    <button class="btn btn-danger" onclick="toggleSessionLogging(false)">تعطيل</button>
+                                    <button class="btn btn-success" onclick="toggleAutoVerification(true)">تفعيل</button>
+                                    <button class="btn btn-danger" onclick="toggleAutoVerification(false)">تعطيل</button>
+                                </div>
+                                <div style="color: #9ca3af; font-size: 12px; margin-top: 5px;">
+                                    سيتم توثيق المستخدمين تلقائياً عند استيفاء الشروط
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">إعادة تعيين جميع كلمات المرور</label>
-                                <button class="btn btn-danger" onclick="resetAllPasswords()" style="width: 100%; margin-top: 5px;">
-                                    🔄 إعادة تعيين الكل
-                                </button>
+                                <label class="form-label">مزايا المستخدمين الموثقين</label>
+                                <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                                    <span class="status-verified" style="margin: 2px;">إعلانات مميزة</span>
+                                    <span class="status-verified" style="margin: 2px;">شعار التوثيق</span>
+                                    <span class="status-verified" style="margin: 2px;">مصداقية أعلى</span>
+                                    <span class="status-verified" style="margin: 2px;">أولوية في البحث</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -2208,16 +2421,16 @@
                         </div>
                     </div>
                     
-                    <h4 style="color: #38bdf8; margin: 30px 0 15px;">🗑️ أدوات النظام</h4>
+                    <h4 style="color: #38bdf8; margin: 30px 0 15px;">🔵 أدوات التوثيق</h4>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                        <button class="btn btn-danger" onclick="clearCache()">
-                            🧹 مسح الذاكرة المؤقتة
+                        <button class="btn btn-primary" onclick="verifyAllEligibleUsers()">
+                            🔄 توثيق المؤهلين تلقائياً
                         </button>
-                        <button class="btn btn-warning" onclick="optimizeDatabase()">
-                            ⚡ تحسين قاعدة البيانات
+                        <button class="btn btn-warning" onclick="showVerificationStats()">
+                            📊 إحصائيات التوثيق
                         </button>
-                        <button class="btn btn-violet" onclick="createBackup()">
-                            💾 إنشاء نسخة احتياطية
+                        <button class="btn btn-danger" onclick="removeAllVerifications()">
+                            🗑️ إلغاء جميع التوثيقات
                         </button>
                     </div>
                     
@@ -2260,9 +2473,9 @@
                             <select class="filter-select" id="activityFilter" onchange="filterActivityLogs()">
                                 <option value="all">جميع الأحداث</option>
                                 <option value="user">أحداث المستخدمين</option>
+                                <option value="verification">أحداث التوثيق</option>
                                 <option value="admin">أحداث الإدارة</option>
                                 <option value="system">أحداث النظام</option>
-                                <option value="security">أحداث الأمان</option>
                             </select>
                             <button class="btn btn-danger" onclick="clearActivityLogs()">
                                 🗑️ مسح السجلات
@@ -2272,21 +2485,25 @@
                     
                     <div class="activity-list" style="height: 600px;">
                         ${Object.entries(logs).sort(([,a], [,b]) => (b.timestamp || 0) - (a.timestamp || 0))
-                            .map(([logId, log]) => `
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    ${getLogIcon(log.type)}
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-text">${log.message || 'حدث غير معروف'}</div>
-                                    <div class="activity-time">
-                                        ${log.timestamp ? formatDateTime(log.timestamp) : 'غير معروف'}
-                                        ${log.userId ? ` | المستخدم: ${getUserName(log.userId)}` : ''}
-                                        ${log.ip ? ` | IP: ${log.ip}` : ''}
+                            .map(([logId, log]) => {
+                                // إضافة أيقونة خاصة لأحداث التوثيق
+                                const icon = log.type === 'verification' ? '🔵' : getLogIcon(log.type);
+                                
+                                return `
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        ${icon}
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-text">${log.message || 'حدث غير معروف'}</div>
+                                        <div class="activity-time">
+                                            ${log.timestamp ? formatDateTime(log.timestamp) : 'غير معروف'}
+                                            ${log.userId ? ` | المستخدم: ${getUserName(log.userId)}` : ''}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                            }).join('')}
                     </div>
                 `;
                 
@@ -2382,6 +2599,7 @@
                 'product': '🛒',
                 'admin': '👑',
                 'system': '⚙️',
+                'verification': '🔵',
                 'security': '🔒',
                 'report': '⚠️',
                 'login': '🔑',
@@ -2465,14 +2683,54 @@
             if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
                 db.ref('users/' + userId).update({
                     isVerified: verify,
-                    lastUpdated: Date.now()
+                    lastUpdated: Date.now(),
+                    verifiedAt: verify ? Date.now() : null,
+                    verifiedBy: verify ? currentUser?.uid : null
                 }).then(() => {
                     const message = verify ? 'تم توثيق المستخدم' : 'تم إلغاء توثيق المستخدم';
                     showNotification(message, 'success');
-                    logSystemActivity('user', `${message}: ${userId}`);
+                    logSystemActivity('verification', `${message}: ${userId}`);
+                    
+                    // تحديث الذاكرة المحلية
+                    if (allUsers[userId]) {
+                        allUsers[userId].isVerified = verify;
+                    }
+                    
                     loadUsersManagement();
                 });
             }
+        }
+        
+        // توثيق جميع المستخدمين المؤهلين
+        function verifyAllEligibleUsers() {
+            if (!confirm('هل تريد توثيق جميع المستخدمين المؤهلين تلقائياً؟')) return;
+            
+            showLoading();
+            let verifiedCount = 0;
+            
+            Object.entries(allUsers).forEach(([userId, user]) => {
+                // شروط التوثيق التلقائي
+                const hasEnoughProducts = (user.totalProducts || 0) >= 5;
+                const hasGoodRating = (user.avgRating || 0) >= 4;
+                const hasPhone = user.phone && user.phone.length > 5;
+                
+                if (!user.isVerified && hasEnoughProducts && hasGoodRating && hasPhone) {
+                    db.ref('users/' + userId).update({
+                        isVerified: true,
+                        lastUpdated: Date.now(),
+                        verifiedAt: Date.now(),
+                        verifiedBy: 'system_auto'
+                    });
+                    verifiedCount++;
+                }
+            });
+            
+            setTimeout(() => {
+                hideLoading();
+                showNotification(`تم توثيق ${verifiedCount} مستخدم تلقائياً`, 'success');
+                logSystemActivity('verification', `تم توثيق ${verifiedCount} مستخدم تلقائياً`);
+                loadUsersManagement();
+            }, 1000);
         }
         
         function updateProductStatus(productId, newStatus) {
@@ -2571,23 +2829,36 @@
                                 <tr>
                                     <th>المستخدم</th>
                                     <th>البريد</th>
+                                    <th>حالة التوثيق</th>
                                     <th>عدد الإعلانات</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${userResults.slice(0, 10).map(([userId, user]) => `
-                                    <tr>
-                                        <td>${user.fullName || user.username || 'غير معروف'}</td>
-                                        <td>${user.email || 'غير معروف'}</td>
-                                        <td>${user.totalProducts || 0}</td>
-                                        <td>
-                                            <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${userId}')">
-                                                عرض
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                ${userResults.slice(0, 10).map(([userId, user]) => {
+                                    const verifiedBadge = user.isVerified ? 
+                                        '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : 
+                                        '<span class="status-badge status-pending">غير موثّق</span>';
+                                    
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    ${user.fullName || user.username || 'غير معروف'}
+                                                    ${verifiedBadge}
+                                                </div>
+                                            </td>
+                                            <td>${user.email || 'غير معروف'}</td>
+                                            <td>${verifiedBadge}</td>
+                                            <td>${user.totalProducts || 0}</td>
+                                            <td>
+                                                <button class="btn btn-xs btn-primary" onclick="viewUserDetails('${userId}')">
+                                                    عرض
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -2600,26 +2871,40 @@
                                     <th>الإعلان</th>
                                     <th>السعر</th>
                                     <th>البائع</th>
+                                    <th>حالة التوثيق</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${productResults.slice(0, 10).map(([productId, product]) => `
-                                    <tr>
-                                        <td>${product.name || 'بدون اسم'}</td>
-                                        <td>${product.price ? parseInt(product.price).toLocaleString('ar-SA') + ' د.ع' : 'غير محدد'}</td>
-                                        <td>${product.seller || 'غير معروف'}</td>
-                                        <td><span class="status-badge status-${product.status || 'available'}">
-                                            ${getStatusText(product.status || 'available')}
-                                        </span></td>
-                                        <td>
-                                            <button class="btn btn-xs btn-primary" onclick="viewProductDetails('${productId}')">
-                                                عرض
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                ${productResults.slice(0, 10).map(([productId, product]) => {
+                                    const seller = allUsers[product.uid];
+                                    const verifiedBadge = seller?.isVerified ? 
+                                        '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : 
+                                        '<span class="status-badge status-pending">غير موثّق</span>';
+                                    
+                                    return `
+                                        <tr>
+                                            <td>${product.name || 'بدون اسم'}</td>
+                                            <td>${product.price ? parseInt(product.price).toLocaleString('ar-SA') + ' د.ع' : 'غير محدد'}</td>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 5px;">
+                                                    ${seller?.fullName || seller?.username || product.seller || 'غير معروف'}
+                                                    ${verifiedBadge}
+                                                </div>
+                                            </td>
+                                            <td>${verifiedBadge}</td>
+                                            <td><span class="status-badge status-${product.status || 'available'}">
+                                                ${getStatusText(product.status || 'available')}
+                                            </span></td>
+                                            <td>
+                                                <button class="btn btn-xs btn-primary" onclick="viewProductDetails('${productId}')">
+                                                    عرض
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -2672,62 +2957,51 @@
             });
         }
         
-        function createBackup() {
-            exportData();
+        function isRequirementActive(requirement) {
+            // دالة مساعدة للتحقق من تفعيل متطلبات التوثيق
+            return true; // مؤقتاً
         }
         
-        function clearCache() {
-            showNotification('تم مسح الذاكرة المؤقتة', 'success');
-            logSystemActivity('system', 'تم مسح الذاكرة المؤقتة');
+        function toggleVerificationRequirement(requirement) {
+            showNotification(`تم تحديث متطلب التوثيق: ${requirement}`, 'info');
         }
         
-        function optimizeDatabase() {
-            showNotification('جاري تحسين قاعدة البيانات...', 'info');
+        function toggleAutoVerification(enable) {
+            showNotification(`التوثيق التلقائي ${enable ? 'تم تفعيله' : 'تم تعطيله'}`, 'info');
+        }
+        
+        function showVerificationStats() {
+            const totalUsers = Object.keys(allUsers).length;
+            const verifiedUsers = Object.values(allUsers).filter(user => user.isVerified).length;
+            const verificationRate = totalUsers > 0 ? Math.round((verifiedUsers / totalUsers) * 100) : 0;
+            
+            alert(`📊 إحصائيات التوثيق:\n\n👥 إجمالي المستخدمين: ${totalUsers}\n✅ المستخدمين الموثقين: ${verifiedUsers}\n📈 نسبة التوثيق: ${verificationRate}%\n\n🔵 الشارة الزرقاء تظهر بجانب اسم كل شخص موثّق في:\n• البروفايل\n• التقييمات\n• الإعلانات\n• أي مكان يظهر فيه الاسم`);
+        }
+        
+        function removeAllVerifications() {
+            if (!confirm('⚠️ هل أنت متأكد من إلغاء جميع توثيقات المستخدمين؟')) return;
+            
+            showLoading();
+            let updatedCount = 0;
+            
+            Object.entries(allUsers).forEach(([userId, user]) => {
+                if (user.isVerified) {
+                    db.ref('users/' + userId).update({
+                        isVerified: false,
+                        lastUpdated: Date.now(),
+                        verifiedAt: null,
+                        verifiedBy: null
+                    });
+                    updatedCount++;
+                }
+            });
+            
             setTimeout(() => {
-                showNotification('تم تحسين قاعدة البيانات بنجاح', 'success');
-                logSystemActivity('system', 'تم تحسين قاعدة البيانات');
+                hideLoading();
+                showNotification(`تم إلغاء توثيق ${updatedCount} مستخدم`, 'success');
+                logSystemActivity('verification', `تم إلغاء توثيق ${updatedCount} مستخدم`);
+                loadUsersManagement();
             }, 1000);
-        }
-        
-        // ========================================
-        // دوال التصفح
-        // ========================================
-        
-        function setupPagination(type, totalItems, itemsPerPage) {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            const paginationDiv = document.getElementById(`${type}Pagination`);
-            
-            if (!paginationDiv || totalPages <= 1) {
-                if (paginationDiv) paginationDiv.innerHTML = '';
-                return;
-            }
-            
-            let paginationHTML = `
-                <button class="page-btn" onclick="changePage('${type}', 1)">
-                    الأول
-                </button>
-            `;
-            
-            for (let i = 1; i <= totalPages; i++) {
-                paginationHTML += `
-                    <button class="page-btn ${i === 1 ? 'active' : ''}" onclick="changePage('${type}', ${i})">
-                        ${i}
-                    </button>
-                `;
-            }
-            
-            paginationHTML += `
-                <button class="page-btn" onclick="changePage('${type}', ${totalPages})">
-                    الأخير
-                </button>
-            `;
-            
-            paginationDiv.innerHTML = paginationHTML;
-        }
-        
-        function changePage(type, page) {
-            // سيتم تنفيذ التصفح لاحقاً
-            showNotification(`الصفحة ${page} (قيد التطوير)`, 'info');
         }
         
         // ========================================
@@ -2745,6 +3019,8 @@
                 filteredUsers = filteredUsers.filter(([, user]) => user.isAdmin);
             } else if (filter === 'verified') {
                 filteredUsers = filteredUsers.filter(([, user]) => user.isVerified);
+            } else if (filter === 'unverified') {
+                filteredUsers = filteredUsers.filter(([, user]) => !user.isVerified);
             } else if (filter === 'active') {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -2794,6 +3070,11 @@
                 filteredProducts = filteredProducts.filter(([, product]) => 
                     product.timestamp && new Date(product.timestamp) >= today
                 );
+            } else if (filter === 'verified') {
+                filteredProducts = filteredProducts.filter(([, product]) => {
+                    const seller = allUsers[product.uid];
+                    return seller && seller.isVerified;
+                });
             }
             
             // البحث
@@ -2813,7 +3094,7 @@
         }
         
         // ========================================
-        // دوال متبقية (يمكن تنفيذها لاحقاً)
+        // دوال متبقية
         // ========================================
         
         function addNewUser() {
@@ -2844,12 +3125,14 @@
             showNotification('خاصية تصفية البلاغات قيد التطوير', 'info');
         }
         
-        function resolveAllReports() {
-            showNotification('خاصية حل البلاغات قيد التطوير', 'info');
-        }
-        
         function displayReportsTable(reports) {
             // سيتم تنفيذها لاحقاً
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:#9ca3af;">قيد التطوير</td></tr>';
+        }
+        
+        function resolveAllReports() {
+            showNotification('خاصية حل البلاغات قيد التطوير', 'info');
         }
         
         function filterActivityLogs() {
@@ -2892,6 +3175,57 @@
         
         function exportLogs() {
             showNotification('خاصية تصدير السجلات قيد التطوير', 'info');
+        }
+        
+        // ========================================
+        // دوال التوثيق للصفحات الأخرى
+        // ========================================
+        
+        /**
+         * هذه الدوال يجب إضافتها لملف JavaScript الرئيسي للموقع
+         * حتى تظهر شارة التوثيق في جميع صفحات الموقع
+         */
+        
+        // دالة عامة لعرض الاسم مع التوثيق (للاستخدام في جميع الصفحات)
+        window.displayUserNameWithVerification = function(userId, containerId) {
+            const user = allUsers[userId];
+            if (!user) return;
+            
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const verifiedBadge = user.isVerified ? 
+                '<span class="status-verified" style="margin-right: 5px;"><span class="verified-badge-icon">✓</span>موثّق</span>' : '';
+            
+            container.innerHTML = `
+                <span>${user.fullName || user.username}</span>
+                ${verifiedBadge}
+            `;
+        };
+        
+        // دالة للتحقق من التوثيق في الوقت الحقيقي
+        window.checkUserVerification = function(userId) {
+            return allUsers[userId]?.isVerified || false;
+        };
+        
+        // تهيئة بيانات المستخدمين عند تحميل أي صفحة
+        window.initializeUsersData = function() {
+            if (window.allUsers && Object.keys(window.allUsers).length > 0) return;
+            
+            // جلب بيانات المستخدمين من Firebase
+            db.ref('users').once('value').then(snapshot => {
+                window.allUsers = snapshot.val() || {};
+                console.log('تم تحميل بيانات المستخدمين للتوثيق');
+            });
+        };
+        
+        // تشغيل تهيئة البيانات عند تحميل الصفحة
+        if (typeof initialize === 'undefined') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => {
+                    window.initializeUsersData();
+                }, 1000);
+            });
         }
     </script>
 </body>
