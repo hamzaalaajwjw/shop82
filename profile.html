@@ -25,18 +25,18 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 15px;
         }
         
-        /* Progress Bar System للملف الشخصي */
+        /* Progress Bar System */
         .top-progress-bar {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 3px;
+            height: 4px;
             background: transparent;
             z-index: 9999;
             display: none;
@@ -77,7 +77,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 9998;
-            background: rgba(15, 17, 21, 0.9);
+            background: rgba(15, 17, 21, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 50%;
             padding: 20px;
@@ -113,7 +113,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 17, 21, 0.85);
+            background: rgba(15, 17, 21, 0.95);
             backdrop-filter: blur(5px);
             z-index: 9997;
             display: none;
@@ -132,13 +132,17 @@
         .progress-overlay-content {
             text-align: center;
             max-width: 300px;
-            padding: 20px;
+            padding: 30px;
+            background: #1c1f27;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .progress-overlay-spinner {
             width: 60px;
             height: 60px;
-            border: 3px solid rgba(56, 189, 248, 0.2);
+            border: 4px solid rgba(56, 189, 248, 0.2);
             border-top-color: #38bdf8;
             border-radius: 50%;
             margin: 0 auto 20px;
@@ -157,7 +161,7 @@
             font-size: 13px;
         }
 
-        /* Skeleton Loading للملف الشخصي */
+        /* Skeleton Loading */
         .skeleton-card {
             background: #1c1f27;
             padding: 15px;
@@ -198,17 +202,9 @@
             animation: skeletonWave 1.5s infinite;
         }
 
-        .skeleton-text.short {
-            width: 60%;
-        }
-
-        .skeleton-text.medium {
-            width: 80%;
-        }
-
-        .skeleton-text.long {
-            width: 100%;
-        }
+        .skeleton-text.short { width: 60%; }
+        .skeleton-text.medium { width: 80%; }
+        .skeleton-text.long { width: 100%; }
 
         @keyframes skeletonPulse {
             0%, 100% { opacity: 1; }
@@ -224,40 +220,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Button Loading State */
-        .btn.loading {
-            position: relative;
-            color: transparent !important;
-            pointer-events: none;
-        }
-
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        /* Progress States */
-        .progress-success {
-            background: linear-gradient(90deg, #10b981, #059669) !important;
-        }
-
-        .progress-error {
-            background: linear-gradient(90deg, #ef4444, #dc2626) !important;
-        }
-
-        .progress-warning {
-            background: linear-gradient(90deg, #f59e0b, #d97706) !important;
-        }
-
         /* Header */
         .header {
             background: #0b0d12;
@@ -266,28 +228,33 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            backdrop-filter: blur(10px);
         }
         
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .back-btn {
             color: #38bdf8;
             text-decoration: none;
             font-size: 16px;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 10px 16px;
+            border-radius: 8px;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
         }
         
         .back-btn:hover {
-            background: rgba(56, 189, 248, 0.1);
+            background: rgba(56, 189, 248, 0.2);
+            transform: translateX(-3px);
         }
         
         .logo {
@@ -299,20 +266,31 @@
         .header-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
         /* Profile Header */
         .profile-header {
             background: linear-gradient(135deg, #1c1f27 0%, #111827 100%);
-            padding: 25px 0;
+            padding: 30px 0;
             border-bottom: 1px solid #374151;
             position: relative;
+        }
+        
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7);
         }
         
         .profile-info {
             display: flex;
             align-items: center;
-            gap: 25px;
+            gap: 30px;
             flex-wrap: wrap;
         }
         
@@ -321,189 +299,218 @@
         }
         
         .avatar {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             background: linear-gradient(135deg, #38bdf8, #0ea5e9);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 48px;
             font-weight: bold;
             color: white;
             flex-shrink: 0;
-            border: 3px solid #0f1115;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 4px solid #0f1115;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
         
         .verified-badge {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            bottom: 10px;
+            right: 10px;
             background: #10b981;
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            border: 2px solid #0f1115;
+            font-size: 16px;
+            border: 3px solid #0f1115;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         
         .profile-details {
             flex: 1;
-            min-width: 250px;
+            min-width: 300px;
         }
         
         .profile-name {
             color: #e5e7eb;
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 5px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         
         .profile-username {
-            color: #9ca3af;
-            font-size: 18px;
+            color: #38bdf8;
+            font-size: 20px;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .profile-link-display {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #38bdf8;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            border: 1px solid rgba(56, 189, 248, 0.3);
         }
         
         /* وصف المستخدم */
         .profile-bio-container {
-            margin: 15px 0;
+            margin: 20px 0;
             position: relative;
-            max-width: 600px;
+            max-width: 700px;
         }
         
         .profile-bio {
             color: #d1d5db;
-            line-height: 1.5;
-            background: rgba(31, 41, 55, 0.3);
-            padding: 12px;
-            border-radius: 8px;
+            line-height: 1.6;
+            background: rgba(31, 41, 55, 0.5);
+            padding: 15px;
+            border-radius: 10px;
             border: 1px solid #374151;
-            font-size: 14px;
+            font-size: 15px;
             word-wrap: break-word;
+            min-height: 80px;
         }
         
         .edit-bio-btn {
             position: absolute;
-            top: 5px;
-            left: 5px;
-            background: rgba(56, 189, 248, 0.1);
+            top: 10px;
+            left: 10px;
+            background: rgba(56, 189, 248, 0.15);
             color: #38bdf8;
             border: 1px solid #38bdf8;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
             cursor: pointer;
-            display: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
         }
         
         .edit-bio-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
+            background: rgba(56, 189, 248, 0.25);
+            transform: translateY(-2px);
         }
         
         .profile-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 20px 0;
+            gap: 15px;
+            margin: 25px 0;
         }
         
         .stat-item {
-            background: rgba(31, 41, 55, 0.5);
-            border-radius: 8px;
-            padding: 15px;
+            background: rgba(31, 41, 55, 0.7);
+            border-radius: 10px;
+            padding: 20px;
             text-align: center;
-            transition: transform 0.2s;
+            transition: all 0.3s;
             cursor: pointer;
+            border: 1px solid #374151;
         }
         
         .stat-item:hover {
-            transform: translateY(-2px);
-            background: rgba(31, 41, 55, 0.8);
+            transform: translateY(-5px);
+            background: rgba(31, 41, 55, 0.9);
+            border-color: #38bdf8;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
         .stat-number {
             color: #38bdf8;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             display: block;
+            margin-bottom: 5px;
         }
         
         .stat-label {
             color: #9ca3af;
-            font-size: 12px;
+            font-size: 14px;
             margin-top: 5px;
             display: block;
         }
         
         .profile-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 25px;
             flex-wrap: wrap;
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            min-width: 120px;
+            gap: 10px;
+            min-width: 140px;
         }
         
         .btn-primary {
-            background: #38bdf8;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #0ea5e9;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
         }
         
         .btn-secondary {
-            background: rgba(56, 189, 248, 0.1);
+            background: rgba(56, 189, 248, 0.15);
             color: #38bdf8;
             border: 1px solid #38bdf8;
         }
         
         .btn-secondary:hover {
-            background: rgba(56, 189, 248, 0.2);
+            background: rgba(56, 189, 248, 0.25);
         }
         
         .btn-success {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
         
         .btn-success:hover {
-            background: #059669;
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
         }
         
         .btn-danger {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
         
         .btn-danger:hover {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
         }
         
         .btn-outline {
@@ -515,6 +522,7 @@
         .btn-outline:hover {
             background: #1f2937;
             color: #e5e7eb;
+            border-color: #4b5563;
         }
         
         /* Tabs */
@@ -524,6 +532,7 @@
             position: sticky;
             top: 60px;
             z-index: 99;
+            backdrop-filter: blur(10px);
         }
         
         .tabs-container {
@@ -533,22 +542,22 @@
         }
         
         .tab {
-            padding: 15px 20px;
+            padding: 18px 25px;
             color: #9ca3af;
             text-decoration: none;
             font-size: 16px;
             font-weight: 500;
             white-space: nowrap;
             border-bottom: 3px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         
         .tab:hover {
             color: #e5e7eb;
-            background: rgba(56, 189, 248, 0.05);
+            background: rgba(56, 189, 248, 0.08);
         }
         
         .tab.active {
@@ -560,7 +569,7 @@
         /* Tab Content */
         .tab-content {
             display: none;
-            padding: 25px 0;
+            padding: 30px 0;
             animation: fadeIn 0.3s ease;
         }
         
@@ -569,132 +578,136 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Reviews Section */
         .reviews-section {
             background: #1c1f27;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #374151;
         }
         
         .section-title {
             color: #38bdf8;
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         .rating-summary {
-            background: rgba(31, 41, 55, 0.5);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: rgba(31, 41, 55, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
             flex-wrap: wrap;
+            border: 1px solid #374151;
         }
         
         .average-rating {
             text-align: center;
-            min-width: 120px;
+            min-width: 150px;
         }
         
         .rating-number {
             color: #f59e0b;
-            font-size: 48px;
+            font-size: 56px;
             font-weight: bold;
             line-height: 1;
         }
         
         .rating-stars {
             color: #f59e0b;
-            font-size: 20px;
-            margin: 10px 0;
+            font-size: 24px;
+            margin: 15px 0;
             direction: ltr;
         }
         
         .rating-count {
             color: #9ca3af;
-            font-size: 14px;
+            font-size: 15px;
         }
         
         .rating-bars {
             flex: 1;
-            min-width: 250px;
+            min-width: 300px;
         }
         
         .rating-bar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 8px 0;
+            gap: 15px;
+            margin: 10px 0;
         }
         
         .bar-label {
             color: #9ca3af;
-            width: 60px;
+            width: 70px;
             font-size: 14px;
         }
         
         .bar-container {
             flex: 1;
-            height: 8px;
+            height: 10px;
             background: #374151;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
         }
         
         .bar-fill {
             height: 100%;
-            background: #f59e0b;
-            border-radius: 4px;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            border-radius: 5px;
+            transition: width 1s ease;
         }
         
         .review-card {
             background: #1f2937;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
             border: 1px solid #374151;
-            transition: transform 0.2s;
+            transition: all 0.3s;
         }
         
         .review-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
             border-color: #38bdf8;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
         .review-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
         
         .reviewer-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
         
         .reviewer-avatar {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, #8b5cf6, #7c3aed);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: bold;
             color: white;
         }
@@ -704,6 +717,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: 16px;
         }
         
         .reviewer-name:hover {
@@ -712,57 +726,61 @@
         
         .review-date {
             color: #9ca3af;
-            font-size: 12px;
+            font-size: 13px;
+            margin-top: 3px;
         }
         
         .review-comment {
             color: #d1d5db;
-            line-height: 1.6;
-            padding-top: 15px;
+            line-height: 1.7;
+            padding-top: 20px;
             border-top: 1px solid #374151;
+            font-size: 15px;
         }
         
         /* Follow Section */
         .follow-section {
             background: #1c1f27;
-            border-radius: 10px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #374151;
         }
         
         .follow-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
         }
         
         .follow-card {
             background: #1f2937;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 20px;
             border: 1px solid #374151;
-            transition: all 0.2s;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
             cursor: pointer;
         }
         
         .follow-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
             border-color: #38bdf8;
             background: #2d3748;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
         .follow-avatar {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, #38bdf8, #0ea5e9);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             color: white;
             flex-shrink: 0;
@@ -776,15 +794,16 @@
         .follow-name {
             color: #e5e7eb;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-size: 17px;
         }
         
         .follow-username {
             color: #9ca3af;
-            font-size: 13px;
+            font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -792,26 +811,26 @@
         
         .follow-stats {
             display: flex;
-            gap: 10px;
-            margin-top: 5px;
+            gap: 15px;
+            margin-top: 8px;
         }
         
         .follow-stat {
             color: #6b7280;
-            font-size: 12px;
+            font-size: 13px;
         }
         
         .follow-btn {
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 8px 16px;
+            font-size: 13px;
             min-width: auto;
         }
         
         /* Add Review Section */
         .add-review-section {
             background: #1c1f27;
-            border-radius: 10px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 30px;
             margin-bottom: 30px;
             border: 1px solid #374151;
         }
@@ -819,83 +838,93 @@
         .rating-input {
             direction: ltr;
             text-align: right;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .rating-input .star {
-            font-size: 32px;
+            font-size: 40px;
             color: #4b5563;
             cursor: pointer;
-            transition: color 0.2s, transform 0.2s;
-            margin: 0 3px;
+            transition: all 0.3s;
+            margin: 0 5px;
         }
         
         .rating-input .star:hover {
-            transform: scale(1.2);
+            transform: scale(1.3);
+            color: #f59e0b;
         }
         
         .rating-input .star.active {
             color: #f59e0b;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
         }
         
         .comment-input {
             width: 100%;
             background: #1f2937;
             border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 20px;
             color: #e5e7eb;
             font-family: inherit;
             resize: vertical;
-            min-height: 100px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            min-height: 120px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            transition: all 0.3s;
         }
         
         .comment-input:focus {
             outline: none;
             border-color: #38bdf8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
         }
         
         .submit-btn {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             font-size: 16px;
         }
         
         /* Contact Info */
         .contact-section {
             background: #1c1f27;
-            border-radius: 10px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 30px;
             margin-bottom: 30px;
+            border: 1px solid #374151;
         }
         
         .contact-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
         }
         
         .contact-item {
             background: #1f2937;
-            border-radius: 8px;
-            padding: 15px;
-            border-left: 3px solid #38bdf8;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #38bdf8;
+            transition: all 0.3s;
+        }
+        
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
         .contact-label {
             color: #9ca3af;
-            font-size: 13px;
-            margin-bottom: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
             display: block;
         }
         
         .contact-value {
             color: #e5e7eb;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 500;
             word-break: break-all;
         }
@@ -904,8 +933,8 @@
             color: #38bdf8;
             text-decoration: none;
             display: inline-block;
-            margin-top: 5px;
-            font-size: 13px;
+            margin-top: 8px;
+            font-size: 14px;
         }
         
         .contact-link:hover {
@@ -915,82 +944,106 @@
         /* Products Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
         }
         
         .product-card {
             background: #1f2937;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid #374151;
-            transition: all 0.2s;
+            transition: all 0.3s;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
         
         .product-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
             border-color: #38bdf8;
             background: #2d3748;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover::before {
+            transform: translateX(0);
         }
         
         .product-image {
             width: 100%;
-            height: 150px;
+            height: 180px;
             background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            border-radius: 6px;
-            margin-bottom: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 56px;
             color: white;
         }
         
         .product-name {
             color: #e5e7eb;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            line-height: 1.4;
         }
         
         .product-price {
             color: #38bdf8;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         
         .product-meta {
             display: flex;
             justify-content: space-between;
             color: #9ca3af;
-            font-size: 12px;
-            margin-top: 10px;
+            font-size: 13px;
+            margin-top: 15px;
         }
         
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 50px 20px;
+            padding: 60px 20px;
             color: #9ca3af;
         }
         
         .empty-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 64px;
+            margin-bottom: 25px;
             opacity: 0.5;
         }
         
         .empty-text {
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #d1d5db;
         }
         
         .empty-subtext {
-            font-size: 14px;
+            font-size: 15px;
             color: #6b7280;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
         
         /* Bio Editor Modal */
@@ -1000,56 +1053,69 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
         }
         
         .modal {
             background: #1c1f27;
-            border-radius: 12px;
-            padding: 25px;
+            border-radius: 15px;
+            padding: 30px;
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
             border: 1px solid #374151;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
         }
         
         .modal-title {
             color: #38bdf8;
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 22px;
+            margin-bottom: 25px;
             text-align: center;
         }
         
         .bio-editor {
             width: 100%;
-            min-height: 120px;
+            min-height: 150px;
             background: #1f2937;
             border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 20px;
             color: #e5e7eb;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 15px;
             resize: vertical;
             margin-bottom: 15px;
+            transition: all 0.3s;
         }
         
         .bio-editor:focus {
             outline: none;
             border-color: #38bdf8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
         }
         
         .char-count {
             text-align: left;
             color: #9ca3af;
-            font-size: 12px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 25px;
         }
         
         .char-count.warning {
@@ -1062,26 +1128,60 @@
         
         .modal-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-end;
         }
         
+        /* Loading State */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: #38bdf8;
+            animation: spin 0.8s ease-in-out infinite;
+            display: inline-block;
+        }
+        
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .container {
-                padding: 0 10px;
+                max-width: 100%;
+                padding: 0 20px;
             }
             
+            .profile-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .follow-grid,
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
             .profile-info {
                 flex-direction: column;
                 text-align: center;
-                gap: 20px;
+                gap: 25px;
             }
             
             .avatar {
-                width: 80px;
-                height: 80px;
-                font-size: 32px;
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+            
+            .verified-badge {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
             }
             
             .profile-details {
@@ -1089,8 +1189,19 @@
                 min-width: auto;
             }
             
+            .profile-name {
+                font-size: 28px;
+                justify-content: center;
+            }
+            
+            .profile-username {
+                font-size: 18px;
+                justify-content: center;
+            }
+            
             .profile-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
+                gap: 12px;
             }
             
             .profile-actions {
@@ -1098,7 +1209,7 @@
             }
             
             .btn {
-                min-width: 140px;
+                min-width: 160px;
             }
             
             .follow-grid,
@@ -1109,7 +1220,7 @@
             .rating-summary {
                 flex-direction: column;
                 text-align: center;
-                gap: 15px;
+                gap: 20px;
             }
             
             .tabs {
@@ -1121,26 +1232,26 @@
             }
             
             .profile-header {
-                padding: 20px 0;
+                padding: 25px 0;
             }
             
             .tab-content {
-                padding: 20px 0;
+                padding: 25px 0;
             }
         }
         
         @media (max-width: 480px) {
-            .profile-stats {
-                grid-template-columns: 1fr;
+            .container {
+                padding: 0 15px;
             }
             
             .profile-name {
                 font-size: 24px;
-                justify-content: center;
             }
             
             .profile-actions {
                 flex-direction: column;
+                width: 100%;
             }
             
             .btn {
@@ -1148,30 +1259,91 @@
             }
             
             .header-content {
-                flex-wrap: wrap;
-                gap: 10px;
+                flex-direction: column;
+                gap: 15px;
             }
             
             .header-actions {
                 width: 100%;
                 justify-content: center;
             }
+            
+            .rating-summary {
+                padding: 20px;
+            }
+            
+            .rating-number {
+                font-size: 48px;
+            }
+            
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab {
+                padding: 15px 20px;
+                font-size: 14px;
+            }
         }
         
-        /* Loading State */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
+        /* Success/Error Messages */
+        .alert-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
         }
         
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(56, 189, 248, 0.3);
-            border-radius: 50%;
-            border-top-color: #38bdf8;
-            animation: spin 1s ease-in-out infinite;
-            display: inline-block;
+        .alert-message.show {
+            transform: translateX(0);
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Copy Link Button */
+        .copy-link-btn {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid #38bdf8;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+        
+        .copy-link-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+        
+        .copy-link-btn.copied {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
         }
     </style>
 </head>
@@ -1203,17 +1375,20 @@
         </div>
     </div>
 
+    <!-- Alert Messages -->
+    <div id="alertContainer"></div>
+
     <!-- Header -->
     <div class="header">
         <div class="container">
             <div class="header-content">
                 <a href="index.html" class="back-btn">
-                    ← رجوع
+                    ← رجوع للصفحة الرئيسية
                 </a>
                 <div class="logo">a3len</div>
                 <div class="header-actions">
                     <button class="btn btn-outline" onclick="shareProfile()">
-                        مشاركة
+                        📤 مشاركة الملف الشخصي
                     </button>
                 </div>
             </div>
@@ -1221,7 +1396,7 @@
     </div>
 
     <!-- Skeleton Loading أثناء التحميل -->
-    <div id="skeletonLoading" style="display: none;">
+    <div id="skeletonLoading">
         <div class="profile-header">
             <div class="container">
                 <div class="profile-info">
@@ -1229,25 +1404,25 @@
                         <div class="skeleton-avatar"></div>
                     </div>
                     <div class="profile-details">
-                        <div class="skeleton-text long" style="height: 30px; margin-bottom: 10px;"></div>
-                        <div class="skeleton-text medium" style="height: 20px; margin-bottom: 15px;"></div>
+                        <div class="skeleton-text long" style="height: 36px; margin-bottom: 15px;"></div>
+                        <div class="skeleton-text medium" style="height: 24px; margin-bottom: 20px;"></div>
                         
                         <div class="profile-stats">
                             <div class="stat-item">
-                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
-                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                                <div class="skeleton-text" style="height: 32px; width: 50px; margin: 0 auto 8px;"></div>
+                                <div class="skeleton-text short" style="height: 14px; margin: 0 auto;"></div>
                             </div>
                             <div class="stat-item">
-                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
-                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                                <div class="skeleton-text" style="height: 32px; width: 50px; margin: 0 auto 8px;"></div>
+                                <div class="skeleton-text short" style="height: 14px; margin: 0 auto;"></div>
                             </div>
                             <div class="stat-item">
-                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
-                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                                <div class="skeleton-text" style="height: 32px; width: 50px; margin: 0 auto 8px;"></div>
+                                <div class="skeleton-text short" style="height: 14px; margin: 0 auto;"></div>
                             </div>
                             <div class="stat-item">
-                                <div class="skeleton-text" style="height: 24px; width: 40px; margin: 0 auto 5px;"></div>
-                                <div class="skeleton-text short" style="height: 12px; margin: 0 auto;"></div>
+                                <div class="skeleton-text" style="height: 32px; width: 50px; margin: 0 auto 8px;"></div>
+                                <div class="skeleton-text short" style="height: 14px; margin: 0 auto;"></div>
                             </div>
                         </div>
                     </div>
@@ -1258,29 +1433,29 @@
         <div class="tabs">
             <div class="container">
                 <div class="tabs-container">
-                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
-                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
-                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
-                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
-                    <div class="skeleton-text" style="width: 80px; height: 20px; margin: 15px 20px;"></div>
+                    <div class="skeleton-text" style="width: 90px; height: 22px; margin: 18px 25px;"></div>
+                    <div class="skeleton-text" style="width: 90px; height: 22px; margin: 18px 25px;"></div>
+                    <div class="skeleton-text" style="width: 90px; height: 22px; margin: 18px 25px;"></div>
+                    <div class="skeleton-text" style="width: 90px; height: 22px; margin: 18px 25px;"></div>
+                    <div class="skeleton-text" style="width: 90px; height: 22px; margin: 18px 25px;"></div>
                 </div>
             </div>
         </div>
 
-        <div class="container" style="padding: 25px 0;">
+        <div class="container" style="padding: 30px 0;">
             <div class="skeleton-card">
-                <div class="skeleton-line" style="height: 20px; width: 70%"></div>
-                <div class="skeleton-line" style="height: 16px; width: 40%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 60%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 50%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 80%"></div>
+                <div class="skeleton-line" style="height: 24px; width: 70%"></div>
+                <div class="skeleton-line" style="height: 18px; width: 40%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 60%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 50%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 80%"></div>
             </div>
             <div class="skeleton-card">
-                <div class="skeleton-line" style="height: 20px; width: 70%"></div>
-                <div class="skeleton-line" style="height: 16px; width: 40%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 60%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 50%"></div>
-                <div class="skeleton-line" style="height: 12px; width: 80%"></div>
+                <div class="skeleton-line" style="height: 24px; width: 70%"></div>
+                <div class="skeleton-line" style="height: 18px; width: 40%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 60%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 50%"></div>
+                <div class="skeleton-line" style="height: 14px; width: 80%"></div>
             </div>
         </div>
     </div>
@@ -1302,12 +1477,23 @@
                         </h1>
                         <div class="profile-username" id="userName">@username</div>
                         
+                        <!-- رابط الملف الشخصي -->
+                        <div class="profile-link-display" id="profileLinkDisplay">
+                            <span>رابط الملف الشخصي:</span>
+                            <code id="profileLinkCode">https://a3len.store/profile/username</code>
+                            <button class="copy-link-btn" id="copyLinkBtn" onclick="copyProfileLink()">نسخ الرابط</button>
+                        </div>
+                        
                         <!-- وصف المستخدم -->
                         <div class="profile-bio-container">
                             <div class="profile-bio" id="userBio">لا يوجد وصف شخصي</div>
-                            <button class="edit-bio-btn" id="editBioBtn" onclick="showBioEditor()">تعديل الوصف</button>
+                            <button class="edit-bio-btn" id="editBioBtn" onclick="showBioEditor()" style="display: none;">
+                                <span>✏️</span>
+                                تعديل الوصف
+                            </button>
                         </div>
                         
+                        <!-- إحصائيات -->
                         <div class="profile-stats">
                             <div class="stat-item" onclick="showTab('products')">
                                 <span class="stat-number" id="productsCount">0</span>
@@ -1327,12 +1513,16 @@
                             </div>
                         </div>
                         
+                        <!-- أزرار الإجراءات -->
                         <div class="profile-actions" id="profileActions">
                             <button class="btn btn-primary" id="followButton" onclick="toggleFollow()">
-                                <span id="followText">متابعة</span>
+                                <span id="followText">+ متابعة</span>
                             </button>
-                            <button class="btn btn-danger" id="blockButton" onclick="toggleBlockUser()">
-                                <span id="blockText">حظر</span>
+                            <button class="btn btn-secondary" onclick="sendMessage()">
+                                💬 إرسال رسالة
+                            </button>
+                            <button class="btn btn-outline" onclick="reportUser()">
+                                ⚠️ الإبلاغ
                             </button>
                         </div>
                     </div>
@@ -1373,19 +1563,42 @@
             <!-- Info Tab -->
             <div id="infoTab" class="tab-content active">
                 <div class="contact-section">
-                    <h2 class="section-title">📞 معلومات الاتصال</h2>
+                    <h2 class="section-title">📞 معلومات الاتصال والتفاصيل</h2>
                     <div class="contact-grid">
                         <div class="contact-item">
                             <span class="contact-label">اسم المستخدم:</span>
                             <span class="contact-value" id="displayUsername">@username</span>
                         </div>
                         <div class="contact-item">
+                            <span class="contact-label">الاسم الكامل:</span>
+                            <span class="contact-value" id="displayFullName">جارٍ التحميل...</span>
+                        </div>
+                        <div class="contact-item">
                             <span class="contact-label">رقم الهاتف:</span>
-                            <span class="contact-value" id="displayPhone">جارٍ التحميل...</span>
+                            <span class="contact-value" id="displayPhone">غير متوفر</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">البريد الإلكتروني:</span>
+                            <span class="contact-value" id="displayEmail">محمي للخصوصية</span>
                         </div>
                         <div class="contact-item">
                             <span class="contact-label">تاريخ الانضمام:</span>
                             <span class="contact-value" id="joinDate">جارٍ التحميل...</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">آخر ظهور:</span>
+                            <span class="contact-value" id="lastActive">جارٍ التحميل...</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">الحالة:</span>
+                            <span class="contact-value" id="accountStatus">
+                                <span style="color:#10b981">●</span> نشط
+                            </span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">موقعك الحالي:</span>
+                            <span class="contact-value" id="userLocation">غير محدد</span>
+                            <button class="contact-link" onclick="updateLocation()">تحديث الموقع</button>
                         </div>
                     </div>
                 </div>
@@ -1400,7 +1613,11 @@
                         <span class="star" data-rating="4">☆</span>
                         <span class="star" data-rating="5">☆</span>
                     </div>
-                    <textarea class="comment-input" id="commentInput" placeholder="اكتب تعليقك هنا (اختياري)..."></textarea>
+                    <textarea class="comment-input" id="commentInput" 
+                              placeholder="اكتب تعليقك هنا (اختياري)... يمكنك كتابة تجربتك مع هذا البائع، جودة المنتجات، سرعة الرد، وغيرها من التفاصيل."></textarea>
+                    <div style="color:#9ca3af; font-size:13px; margin-bottom:15px;">
+                        ملاحظة: التقييمات تساعد الآخرين في اتخاذ قرارات أفضل
+                    </div>
                     <button class="btn btn-primary submit-btn" id="submitReviewBtn" onclick="submitReview()">
                         إرسال التقييم
                     </button>
@@ -1410,16 +1627,21 @@
             <!-- Products Tab -->
             <div id="productsTab" class="tab-content">
                 <div class="section-title">🛒 إعلانات المستخدم</div>
-                <div id="userProducts" class="empty-state">
-                    <div class="empty-icon">🛒</div>
-                    <div class="empty-text">جارٍ تحميل الإعلانات...</div>
+                <div style="color:#9ca3af; margin-bottom:20px; font-size:14px;">
+                    جميع الإعلانات التي نشرها هذا المستخدم
+                </div>
+                <div id="userProducts">
+                    <div class="empty-state">
+                        <div class="empty-icon">🛒</div>
+                        <div class="empty-text">جارٍ تحميل الإعلانات...</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Reviews Tab -->
             <div id="reviewsTab" class="tab-content">
                 <div class="reviews-section">
-                    <h2 class="section-title">⭐ التقييمات</h2>
+                    <h2 class="section-title">⭐ التقييمات والمراجعات</h2>
                     
                     <div class="rating-summary">
                         <div class="average-rating">
@@ -1446,6 +1668,9 @@
             <div id="followersTab" class="tab-content">
                 <div class="follow-section">
                     <h2 class="section-title">👥 المتابعون</h2>
+                    <div style="color:#9ca3af; margin-bottom:20px; font-size:14px;">
+                        المستخدمين الذين يتابعون هذا الحساب
+                    </div>
                     <div id="followersList">
                         <div class="empty-state">
                             <div class="empty-icon">👥</div>
@@ -1459,6 +1684,9 @@
             <div id="followingTab" class="tab-content">
                 <div class="follow-section">
                     <h2 class="section-title">👣 المتابعة</h2>
+                    <div style="color:#9ca3af; margin-bottom:20px; font-size:14px;">
+                        الحسابات التي يتابعها هذا المستخدم
+                    </div>
                     <div id="followingList">
                         <div class="empty-state">
                             <div class="empty-icon">👣</div>
@@ -1471,14 +1699,16 @@
     </div>
 
     <!-- Bio Editor Modal -->
-    <div id="bioEditorModal" class="modal-overlay" style="display: none;">
+    <div id="bioEditorModal" class="modal-overlay">
         <div class="modal">
-            <h3 class="modal-title">تعديل الوصف الشخصي</h3>
-            <textarea class="bio-editor" id="bioEditor" placeholder="اكتب وصفك الشخصي هنا (حد أقصى 70 حرفاً)..." maxlength="70"></textarea>
-            <div class="char-count" id="charCount">0/70</div>
+            <h3 class="modal-title">✏️ تعديل الوصف الشخصي</h3>
+            <textarea class="bio-editor" id="bioEditor" 
+                      placeholder="اكتب وصفك الشخصي هنا... تحدث عن نفسك، اهتماماتك، أو أي معلومات تريد مشاركتها (حد أقصى 250 حرفاً)" 
+                      maxlength="250"></textarea>
+            <div class="char-count" id="charCount">0/250</div>
             <div class="modal-actions">
                 <button class="btn btn-outline" onclick="closeBioEditor()">إلغاء</button>
-                <button class="btn btn-primary" onclick="saveBio()">حفظ</button>
+                <button class="btn btn-primary" onclick="saveBio()">حفظ التغييرات</button>
             </div>
         </div>
     </div>
@@ -1487,6 +1717,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
     <script>
         // Firebase Config
@@ -1507,8 +1738,9 @@
         
         const db = firebase.database();
         const auth = firebase.auth();
+        const analytics = firebase.analytics();
         
-        // Progress Manager للملف الشخصي
+        // ===== Progress Manager للملف الشخصي =====
         class ProfileProgressManager {
             constructor() {
                 this.progressBar = document.getElementById('profileProgressBar');
@@ -1607,173 +1839,264 @@
             }
             
             showSuccess(message = 'تم بنجاح!') {
-                this.progressLine.className = 'progress-bar-line progress-success';
-                this.updateOverlayText(message, '');
-                
-                setTimeout(() => {
-                    this.hideOverlay();
-                    this.hideProgressBar();
-                }, 1500);
+                this.showAlert(message, 'success');
             }
             
             showError(message = 'حدث خطأ!') {
-                this.progressLine.className = 'progress-bar-line progress-error';
-                this.updateOverlayText(message, 'الرجاء المحاولة مرة أخرى');
-                
-                setTimeout(() => {
-                    this.hideOverlay();
-                    this.hideProgressBar();
-                }, 2000);
+                this.showAlert(message, 'error');
             }
             
             showWarning(message = 'تحذير!') {
-                this.progressLine.className = 'progress-bar-line progress-warning';
-                this.updateOverlayText(message, '');
+                this.showAlert(message, 'warning');
+            }
+            
+            showAlert(message, type = 'info') {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertId = 'alert-' + Date.now();
                 
+                const alertDiv = document.createElement('div');
+                alertDiv.id = alertId;
+                alertDiv.className = `alert-message alert-${type}`;
+                
+                let icon = 'ℹ️';
+                if (type === 'success') icon = '✅';
+                if (type === 'error') icon = '❌';
+                if (type === 'warning') icon = '⚠️';
+                
+                alertDiv.innerHTML = `
+                    <span>${icon}</span>
+                    <span>${message}</span>
+                `;
+                
+                alertContainer.appendChild(alertDiv);
+                
+                // إظهار التنبيه
                 setTimeout(() => {
-                    this.hideOverlay();
-                    this.hideProgressBar();
-                }, 1500);
+                    alertDiv.classList.add('show');
+                }, 10);
+                
+                // إخفاء التنبيه بعد 5 ثوان
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 300);
+                }, 5000);
             }
         }
         
         // تهيئة Progress Manager
         const profileProgress = new ProfileProgressManager();
         
-        // متغيرات عامة
+        // ===== متغيرات عامة =====
         let currentUserId = null;
         let profileUserId = null;
+        let profileUsername = null;
+        let profileUserData = null;
         let currentUserRating = 0;
         let isFollowing = false;
         let isBlocked = false;
         let currentUserBio = '';
+        let profileLink = '';
         
-        // Get user ID from URL
+        // ===== Get user ID from URL =====
         function getUserIdFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
-        }
-        
-        // Initialize Page
-        document.addEventListener('DOMContentLoaded', function() {
-            profileUserId = getUserIdFromURL();
+            const userId = urlParams.get('id');
             
-            if (!profileUserId) {
+            if (!userId) {
+                // البحث عن المستخدم باستخدام username إذا كان في الرابط
+                const username = urlParams.get('username');
+                if (username) {
+                    return findUserByUsername(username);
+                }
+                
                 window.location.href = 'index.html';
-                return;
+                return Promise.reject('لم يتم تحديد مستخدم');
             }
             
-            // إظهار Skeleton أولاً
-            document.getElementById('skeletonLoading').style.display = 'block';
-            profileProgress.showProgressBar();
-            
-            // التحقق من تسجيل الدخول بعد تأخير بسيط
-            setTimeout(() => {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        loadProfileData(profileUserId);
-                        checkFollowStatus();
-                        checkBlockStatus();
-                        
-                        if (currentUserId === profileUserId) {
-                            document.getElementById('addReviewSection').style.display = 'none';
-                            document.getElementById('followButton').style.display = 'none';
-                            document.getElementById('blockButton').style.display = 'none';
-                            document.getElementById('editBioBtn').style.display = 'block';
-                        }
-                    } else {
-                        document.getElementById('followButton').style.display = 'none';
-                        document.getElementById('blockButton').style.display = 'none';
-                        document.getElementById('addReviewSection').style.display = 'none';
-                        document.getElementById('editBioBtn').style.display = 'none';
-                        loadProfileData(profileUserId);
-                    }
-                });
-                
-                setupRatingStars();
-                showTab('info');
-                setupBioEditor();
-            }, 500);
-        });
+            return Promise.resolve(userId);
+        }
         
-        // Load Profile Data مع Progress
-        function loadProfileData(userId) {
-            profileProgress.updateOverlayText('جاري تحميل بيانات الملف الشخصي...', 'انتظر قليلاً');
-            
-            db.ref('users/' + userId).once('value', (snapshot) => {
-                const userData = snapshot.val();
-                if (userData) {
-                    const displayName = userData.fullName || userData.username || 'مستخدم';
-                    document.getElementById('fullNameText').textContent = displayName;
-                    document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
-                    document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
-                    
-                    if (userData.bio) {
-                        document.getElementById('userBio').textContent = userData.bio;
-                        currentUserBio = userData.bio;
-                    } else {
-                        document.getElementById('userBio').textContent = 'لا يوجد وصف شخصي';
-                        currentUserBio = '';
+        // ===== البحث عن المستخدم باستخدام username =====
+        function findUserByUsername(username) {
+            return new Promise((resolve, reject) => {
+                db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
+                    if (!snapshot.exists()) {
+                        reject('المستخدم غير موجود');
+                        return;
                     }
                     
-                    document.getElementById('bioEditor').value = currentUserBio;
-                    updateCharCount();
-                    
-                    if (userData.isAdmin) {
-                        document.getElementById('adminBadge').style.display = 'inline-block';
+                    const users = snapshot.val();
+                    for (const userId in users) {
+                        if (users[userId].username === username) {
+                            resolve(userId);
+                            return;
+                        }
                     }
                     
-                    if (userData.isVerified) {
-                        document.getElementById('verifiedBadge').style.display = 'block';
-                    }
-                    
-                    const firstLetter = displayName.charAt(0).toUpperCase();
-                    document.getElementById('userAvatar').textContent = firstLetter;
-                    
-                    updateStatsFromUserData(userData);
-                    
-                    const joinDate = userData.joinDate || formatDate(userData.createdAt) || 'غير معروف';
-                    document.getElementById('joinDate').textContent = joinDate;
-                    
-                    // إخفاء Skeleton وإظهار المحتوى الحقيقي
-                    setTimeout(() => {
-                        document.getElementById('skeletonLoading').style.display = 'none';
-                        document.getElementById('realContent').style.display = 'block';
-                        profileProgress.hideProgressBar();
-                    }, 300);
-                    
-                    fetchUserPhoneNumber(userId);
-                    calculateUserRating(userId);
-                    loadFollowersList(userId);
-                    loadFollowingList(userId);
-                    loadUserProducts(userId);
-                    
-                } else {
-                    document.getElementById('fullNameText').textContent = 'مستخدم غير موجود';
-                    document.getElementById('userName').textContent = '@unknown';
-                    
-                    setTimeout(() => {
-                        document.getElementById('skeletonLoading').style.display = 'none';
-                        document.getElementById('realContent').style.display = 'block';
-                        profileProgress.hideProgressBar();
-                        profileProgress.showError('المستخدم غير موجود');
-                    }, 300);
-                    
-                    showTab('info');
-                }
-            }).catch(error => {
-                console.error('Error loading profile:', error);
-                setTimeout(() => {
-                    document.getElementById('skeletonLoading').style.display = 'none';
-                    document.getElementById('realContent').style.display = 'block';
-                    profileProgress.hideProgressBar();
-                    profileProgress.showError('حدث خطأ في تحميل الملف الشخصي');
-                }, 300);
+                    reject('المستخدم غير موجود');
+                }).catch(error => {
+                    reject('حدث خطأ في البحث');
+                });
             });
         }
         
-        // Update Stats from User Data
+        // ===== Initialize Page =====
+        document.addEventListener('DOMContentLoaded', function() {
+            profileProgress.showOverlay('جاري تحميل الملف الشخصي...', 'انتظر قليلاً');
+            
+            // إخفاء Skeleton أولاً
+            document.getElementById('skeletonLoading').style.display = 'none';
+            
+            // التحقق من تسجيل الدخول
+            auth.onAuthStateChanged(async (user) => {
+                try {
+                    // الحصول على معرف المستخدم من URL
+                    profileUserId = await getUserIdFromURL();
+                    
+                    if (user) {
+                        currentUserId = user.uid;
+                        
+                        // تحميل بيانات الملف الشخصي
+                        await loadProfileData(profileUserId);
+                        
+                        // التحقق من المتابعة والحظر
+                        if (currentUserId !== profileUserId) {
+                            await checkFollowStatus();
+                            await checkBlockStatus();
+                            
+                            // إظهار أزرار المتابعة والحظر
+                            document.getElementById('followButton').style.display = 'flex';
+                        } else {
+                            // إخفاء أزرار المتابعة والحظر وإظهار زر تعديل الوصف
+                            document.getElementById('followButton').style.display = 'none';
+                            document.getElementById('editBioBtn').style.display = 'flex';
+                            document.getElementById('addReviewSection').style.display = 'none';
+                        }
+                    } else {
+                        // تحميل بيانات الملف الشخصي للزوار
+                        await loadProfileData(profileUserId);
+                        
+                        // إخفاء أزرار الإجراءات للزوار
+                        document.getElementById('followButton').style.display = 'none';
+                        document.getElementById('addReviewSection').style.display = 'none';
+                        document.getElementById('editBioBtn').style.display = 'none';
+                    }
+                    
+                    // إعداد التبويبات
+                    setupRatingStars();
+                    setupBioEditor();
+                    showTab('info');
+                    
+                    // إظهار المحتوى الحقيقي
+                    document.getElementById('realContent').style.display = 'block';
+                    profileProgress.hideOverlay();
+                    
+                } catch (error) {
+                    console.error('Error initializing profile:', error);
+                    profileProgress.showError(error || 'حدث خطأ في تحميل الملف الشخصي');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }
+            });
+        });
+        
+        // ===== Load Profile Data =====
+        async function loadProfileData(userId) {
+            return new Promise((resolve, reject) => {
+                db.ref('users/' + userId).once('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    if (!userData) {
+                        reject('المستخدم غير موجود');
+                        return;
+                    }
+                    
+                    profileUserData = userData;
+                    profileUsername = userData.username;
+                    
+                    // تحديث واجهة المستخدم
+                    updateProfileUI(userData);
+                    
+                    // تحديث الإحصائيات
+                    updateStatsFromUserData(userData);
+                    
+                    // تحميل البيانات الإضافية
+                    Promise.all([
+                        fetchUserPhoneNumber(userId),
+                        calculateUserRating(userId),
+                        loadFollowersList(userId),
+                        loadFollowingList(userId),
+                        loadUserProducts(userId)
+                    ]).then(() => {
+                        resolve();
+                    }).catch(error => {
+                        console.error('Error loading additional data:', error);
+                        resolve(); // نكمل حتى لو حدث خطأ في البيانات الإضافية
+                    });
+                    
+                }).catch(error => {
+                    console.error('Error loading profile:', error);
+                    reject('حدث خطأ في تحميل بيانات المستخدم');
+                });
+            });
+        }
+        
+        // ===== Update Profile UI =====
+        function updateProfileUI(userData) {
+            // الاسم الكامل
+            const displayName = userData.fullName || userData.username || 'مستخدم';
+            document.getElementById('fullNameText').textContent = displayName;
+            document.getElementById('displayFullName').textContent = displayName;
+            
+            // اسم المستخدم
+            document.getElementById('userName').textContent = '@' + (userData.username || 'unknown');
+            document.getElementById('displayUsername').textContent = '@' + (userData.username || 'unknown');
+            
+            // الوصف الشخصي
+            currentUserBio = userData.bio || '';
+            document.getElementById('userBio').textContent = currentUserBio || 'لا يوجد وصف شخصي';
+            document.getElementById('bioEditor').value = currentUserBio;
+            updateCharCount();
+            
+            // رابط الملف الشخصي
+            profileLink = userData.profileLink || `https://a3len.store/profile/${userData.username}`;
+            document.getElementById('profileLinkCode').textContent = profileLink;
+            
+            // توثيق وإدارة
+            if (userData.isVerified) {
+                document.getElementById('verifiedBadge').style.display = 'flex';
+            }
+            
+            if (userData.isAdmin) {
+                document.getElementById('adminBadge').style.display = 'inline-block';
+            }
+            
+            // الصورة الرمزية
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            document.getElementById('userAvatar').textContent = firstLetter;
+            
+            // التاريخ والموقع
+            document.getElementById('joinDate').textContent = userData.joinDate || 'غير معروف';
+            document.getElementById('lastActive').textContent = userData.lastActive ? formatTimeAgo(userData.lastActive) : 'غير معروف';
+            document.getElementById('userLocation').textContent = userData.location || 'غير محدد';
+            
+            // حالة الحساب
+            const statusElement = document.getElementById('accountStatus');
+            if (userData.accountStatus === 'active') {
+                statusElement.innerHTML = '<span style="color:#10b981">●</span> نشط';
+            } else if (userData.accountStatus === 'suspended') {
+                statusElement.innerHTML = '<span style="color:#ef4444">●</span> موقوف';
+            } else {
+                statusElement.innerHTML = '<span style="color:#f59e0b">●</span> غير نشط';
+            }
+        }
+        
+        // ===== Update Stats =====
         function updateStatsFromUserData(userData) {
             document.getElementById('productsCount').textContent = userData.totalProducts || 0;
             document.getElementById('followersCount').textContent = userData.followersCount || 0;
@@ -1781,60 +2104,70 @@
             document.getElementById('totalReviews').textContent = userData.totalReviews || 0;
         }
         
-        // Fetch User Phone Number from Posts
+        // ===== Fetch User Phone Number =====
         function fetchUserPhoneNumber(userId) {
-            db.ref('products').orderByChild('uid').equalTo(userId).limitToLast(1).once('value', (snapshot) => {
-                const products = snapshot.val();
-                let phoneNumber = 'غير متوفر';
-                
-                if (products) {
-                    const product = Object.values(products)[0];
-                    if (product.phone) {
-                        phoneNumber = product.phone;
-                    }
-                }
-                
-                document.getElementById('displayPhone').textContent = phoneNumber;
-                
-                if (phoneNumber === 'غير متوفر') {
-                    db.ref('users/' + userId).once('value', (userSnapshot) => {
-                        const userData = userSnapshot.val();
-                        if (userData && userData.phone) {
-                            document.getElementById('displayPhone').textContent = userData.phone;
+            return new Promise((resolve) => {
+                db.ref('products').orderByChild('uid').equalTo(userId).limitToLast(1).once('value', (snapshot) => {
+                    const products = snapshot.val();
+                    let phoneNumber = 'غير متوفر';
+                    
+                    if (products) {
+                        const product = Object.values(products)[0];
+                        if (product && product.phone) {
+                            phoneNumber = product.phone;
                         }
-                    });
-                }
+                    }
+                    
+                    document.getElementById('displayPhone').textContent = phoneNumber;
+                    resolve();
+                }).catch(() => {
+                    document.getElementById('displayPhone').textContent = 'غير متوفر';
+                    resolve();
+                });
             });
         }
         
-        // Check Follow Status
+        // ===== Check Follow Status =====
         function checkFollowStatus() {
-            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                return;
-            }
-            
-            db.ref('followers/' + profileUserId + '/' + currentUserId).once('value', (snapshot) => {
-                isFollowing = snapshot.exists();
-                updateFollowButton();
+            return new Promise((resolve) => {
+                if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
+                    resolve();
+                    return;
+                }
+                
+                db.ref('followers/' + profileUserId + '/' + currentUserId).once('value', (snapshot) => {
+                    isFollowing = snapshot.exists();
+                    updateFollowButton();
+                    resolve();
+                }).catch(() => {
+                    resolve();
+                });
             });
         }
         
-        // Check Block Status
+        // ===== Check Block Status =====
         function checkBlockStatus() {
-            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                return;
-            }
-            
-            db.ref('blocks/' + currentUserId + '/' + profileUserId).once('value', (snapshot) => {
-                isBlocked = snapshot.exists();
-                updateBlockButton();
+            return new Promise((resolve) => {
+                if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
+                    resolve();
+                    return;
+                }
+                
+                db.ref('blocks/' + currentUserId + '/' + profileUserId).once('value', (snapshot) => {
+                    isBlocked = snapshot.exists();
+                    resolve();
+                }).catch(() => {
+                    resolve();
+                });
             });
         }
         
-        // Update Follow Button
+        // ===== Update Follow Button =====
         function updateFollowButton() {
             const followBtn = document.getElementById('followButton');
             const followText = document.getElementById('followText');
+            
+            if (!followBtn) return;
             
             if (isFollowing) {
                 followText.textContent = '✓ متابع';
@@ -1847,26 +2180,15 @@
             }
         }
         
-        // Update Block Button
-        function updateBlockButton() {
-            const blockBtn = document.getElementById('blockButton');
-            const blockText = document.getElementById('blockText');
-            
-            if (isBlocked) {
-                blockText.textContent = '✓ محظور';
-                blockBtn.classList.remove('btn-danger');
-                blockBtn.classList.add('btn-success');
-            } else {
-                blockText.textContent = 'حظر';
-                blockBtn.classList.remove('btn-success');
-                blockBtn.classList.add('btn-danger');
-            }
-        }
-        
-        // Toggle Follow مع Progress
-        function toggleFollow() {
+        // ===== Toggle Follow =====
+        async function toggleFollow() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
                 profileProgress.showError('لا يمكنك متابعة نفسك');
+                return;
+            }
+            
+            if (isBlocked) {
+                profileProgress.showError('لا يمكنك متابعة مستخدم محظور');
                 return;
             }
             
@@ -1874,192 +2196,565 @@
             const followingRef = db.ref('following/' + currentUserId + '/' + profileUserId);
             
             const followBtn = document.getElementById('followButton');
-            const followText = document.getElementById('followText');
-            
-            // إضافة حالة تحميل للزر
             followBtn.classList.add('loading');
-            followBtn.innerHTML = '<span class="spinner"></span>';
             
-            if (isFollowing) {
-                followRef.once('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        followRef.remove().then(() => {
-                            followingRef.remove();
-                            
-                            db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                                return (current || 1) - 1;
-                            });
-                            
-                            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                                return (current || 1) - 1;
-                            });
-                            
-                            isFollowing = false;
-                            updateFollowButton();
-                            
-                            let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
-                            if (currentFollowers > 0) {
-                                document.getElementById('followersCount').textContent = currentFollowers - 1;
-                            }
-                            
-                            followBtn.classList.remove('loading');
-                            followText.textContent = '+ متابعة';
-                            
-                            profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
-                            
-                            if (document.getElementById('followersTab').classList.contains('active')) {
-                                loadFollowersList(profileUserId);
-                            }
-                        });
-                    }
-                });
-            } else {
-                const followData = {
-                    timestamp: Date.now(),
-                    userId: currentUserId
-                };
-                
-                followRef.set(followData).then(() => {
-                    followingRef.set({
+            try {
+                if (isFollowing) {
+                    // إلغاء المتابعة
+                    await followRef.remove();
+                    await followingRef.remove();
+                    
+                    await updateFollowCounts(-1);
+                    
+                    isFollowing = false;
+                    profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
+                    
+                } else {
+                    // متابعة جديدة
+                    const followData = {
+                        timestamp: Date.now(),
+                        userId: currentUserId
+                    };
+                    
+                    await followRef.set(followData);
+                    await followingRef.set({
                         timestamp: Date.now(),
                         userId: profileUserId
                     });
                     
-                    db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                        return (current || 0) + 1;
-                    });
-                    
-                    db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                        return (current || 0) + 1;
-                    });
+                    await updateFollowCounts(1);
                     
                     isFollowing = true;
-                    updateFollowButton();
-                    
-                    let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
-                    document.getElementById('followersCount').textContent = currentFollowers + 1;
-                    
-                    followBtn.classList.remove('loading');
-                    followText.textContent = '✓ متابع';
-                    
                     profileProgress.showSuccess('تمت المتابعة بنجاح');
                     
-                    if (document.getElementById('followersTab').classList.contains('active')) {
-                        loadFollowersList(profileUserId);
-                    }
-                });
+                    // تسجيل النشاط
+                    await db.ref("userActivity/" + currentUserId).push().set({
+                        type: 'followed_user',
+                        targetId: profileUserId,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                updateFollowButton();
+                
+            } catch (error) {
+                console.error('Error toggling follow:', error);
+                profileProgress.showError('حدث خطأ أثناء المتابعة');
+            } finally {
+                followBtn.classList.remove('loading');
+                
+                // تحديث قائمة المتابعين إذا كانت مفتوحة
+                if (document.getElementById('followersTab').classList.contains('active')) {
+                    loadFollowersList(profileUserId);
+                }
             }
         }
         
-        // Toggle Block User مع Progress
-        function toggleBlockUser() {
-            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
-                profileProgress.showError('لا يمكنك حظر نفسك');
+        // ===== Update Follow Counts =====
+        function updateFollowCounts(change) {
+            return Promise.all([
+                db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
+                    return Math.max(0, (current || 0) + change);
+                }),
+                db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
+                    return Math.max(0, (current || 0) + change);
+                })
+            ]).then(() => {
+                // تحديث العرض
+                db.ref('users/' + profileUserId + '/followersCount').once('value', (snap) => {
+                    document.getElementById('followersCount').textContent = snap.val() || 0;
+                });
+            });
+        }
+        
+        // ===== Send Message =====
+        function sendMessage() {
+            if (!currentUserId) {
+                profileProgress.showError('يجب تسجيل الدخول لإرسال رسالة');
+                setTimeout(() => {
+                    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+                }, 1500);
                 return;
             }
             
-            const blockRef = db.ref('blocks/' + currentUserId + '/' + profileUserId);
-            const blockBtn = document.getElementById('blockButton');
+            if (currentUserId === profileUserId) {
+                profileProgress.showError('لا يمكنك إرسال رسالة لنفسك');
+                return;
+            }
             
-            blockBtn.classList.add('loading');
-            blockBtn.innerHTML = '<span class="spinner"></span>';
-            profileProgress.showOverlay('جاري المعالجة...', 'انتظر قليلاً');
+            const message = prompt('اكتب رسالتك إلى ' + (profileUserData?.fullName || profileUsername || 'هذا المستخدم') + ':');
             
-            blockRef.once('value', (snapshot) => {
-                const currentlyBlocked = snapshot.exists();
+            if (message && message.trim()) {
+                profileProgress.showOverlay('جاري إرسال الرسالة...', 'انتظر قليلاً');
                 
-                if (currentlyBlocked) {
-                    if (confirm('هل تريد إلغاء حظر هذا المستخدم؟')) {
-                        blockRef.remove().then(() => {
-                            isBlocked = false;
-                            updateBlockButton();
-                            blockBtn.classList.remove('loading');
-                            profileProgress.showSuccess('تم إلغاء حظر المستخدم');
-                        });
-                    } else {
-                        blockBtn.classList.remove('loading');
+                const messageData = {
+                    senderId: currentUserId,
+                    receiverId: profileUserId,
+                    message: message.trim(),
+                    timestamp: Date.now(),
+                    read: false
+                };
+                
+                db.ref('messages/' + profileUserId + '/' + currentUserId).push().set(messageData)
+                    .then(() => {
+                        profileProgress.showSuccess('تم إرسال الرسالة بنجاح');
+                    })
+                    .catch(error => {
+                        console.error('Error sending message:', error);
+                        profileProgress.showError('حدث خطأ في إرسال الرسالة');
+                    })
+                    .finally(() => {
                         profileProgress.hideOverlay();
-                    }
-                } else {
-                    if (confirm('هل أنت متأكد من حظر هذا المستخدم؟ سيتم إعادتك للصفحة الرئيسية.')) {
-                        blockRef.set({
-                            timestamp: Date.now(),
-                            reason: 'بواسطة المستخدم'
-                        }).then(() => {
-                            isBlocked = true;
-                            updateBlockButton();
-                            blockBtn.classList.remove('loading');
-                            profileProgress.showSuccess('تم حظر المستخدم بنجاح');
-                            
-                            // العودة إلى الصفحة الرئيسية بعد 1.5 ثانية
-                            setTimeout(() => {
-                                window.location.href = 'index.html';
-                            }, 1500);
+                    });
+            }
+        }
+        
+        // ===== Report User =====
+        function reportUser() {
+            if (!currentUserId) {
+                profileProgress.showError('يجب تسجيل الدخول للإبلاغ');
+                setTimeout(() => {
+                    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+                }, 1500);
+                return;
+            }
+            
+            if (currentUserId === profileUserId) {
+                profileProgress.showError('لا يمكنك الإبلاغ عن نفسك');
+                return;
+            }
+            
+            const reason = prompt('سبب الإبلاغ عن ' + (profileUserData?.fullName || profileUsername || 'هذا المستخدم') + ':\n\n1. محتوى غير لائق\n2. احتيال\n3. مضايقة\n4. آخر');
+            
+            if (reason && reason.trim()) {
+                const confirmReport = confirm('هل أنت متأكد من الإبلاغ عن هذا المستخدم؟');
+                
+                if (confirmReport) {
+                    profileProgress.showOverlay('جاري الإبلاغ...', 'انتظر قليلاً');
+                    
+                    const reportData = {
+                        reporterId: currentUserId,
+                        reportedId: profileUserId,
+                        reason: reason.trim(),
+                        timestamp: Date.now(),
+                        status: 'pending'
+                    };
+                    
+                    db.ref('reports/' + profileUserId + '/' + currentUserId).set(reportData)
+                        .then(() => {
+                            profileProgress.showSuccess('تم الإبلاغ بنجاح، شكراً لمساعدتك في الحفاظ على مجتمع آمن');
+                        })
+                        .catch(error => {
+                            console.error('Error reporting user:', error);
+                            profileProgress.showError('حدث خطأ في الإبلاغ');
+                        })
+                        .finally(() => {
+                            profileProgress.hideOverlay();
                         });
-                    } else {
-                        blockBtn.classList.remove('loading');
-                        profileProgress.hideOverlay();
-                    }
                 }
+            }
+        }
+        
+        // ===== Setup Rating Stars =====
+        function setupRatingStars() {
+            const stars = document.querySelectorAll('#ratingInput .star');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    currentUserRating = rating;
+                    
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.textContent = '★';
+                            s.classList.add('active');
+                        } else {
+                            s.textContent = '☆';
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+                
+                // تأثير التمرير
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.style.color = '#f59e0b';
+                        }
+                    });
+                });
+                
+                star.addEventListener('mouseout', function() {
+                    stars.forEach((s, index) => {
+                        if (index < currentUserRating) {
+                            s.style.color = '#f59e0b';
+                        } else {
+                            s.style.color = '#4b5563';
+                        }
+                    });
+                });
             });
         }
         
-        // Load Followers List مع Progress
-        function loadFollowersList(userId) {
-            const followersList = document.getElementById('followersList');
-            followersList.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">جاري التحميل...</div></div>';
+        // ===== Submit Review =====
+        async function submitReview() {
+            if (!currentUserId) {
+                profileProgress.showError('يجب تسجيل الدخول لإضافة تقييم');
+                setTimeout(() => {
+                    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+                }, 1500);
+                return;
+            }
             
-            db.ref('followers/' + userId).once('value', (snapshot) => {
-                const followers = snapshot.val();
+            if (currentUserId === profileUserId) {
+                profileProgress.showError('لا يمكنك تقييم نفسك');
+                return;
+            }
+            
+            if (currentUserRating === 0) {
+                profileProgress.showError('الرجاء اختيار تقييم من 1 إلى 5 نجوم');
+                return;
+            }
+            
+            const comment = document.getElementById('commentInput').value.trim();
+            const reviewRef = db.ref('reviews/' + profileUserId + '/' + currentUserId);
+            const submitBtn = document.getElementById('submitReviewBtn');
+            
+            submitBtn.classList.add('loading');
+            profileProgress.showOverlay('جاري إرسال التقييم...', 'انتظر قليلاً');
+            
+            try {
+                // التحقق من وجود تقييم سابق
+                const existingReview = await reviewRef.once('value');
+                if (existingReview.exists()) {
+                    throw new Error('لقد قمت بتقييم هذا المستخدم من قبل');
+                }
                 
-                if (!followers) {
+                const reviewData = {
+                    rating: currentUserRating,
+                    comment: comment,
+                    reviewerId: currentUserId,
+                    timestamp: Date.now(),
+                    targetId: profileUserId
+                };
+                
+                await reviewRef.set(reviewData);
+                
+                // تحديث إحصائيات التقييم
+                await updateReviewStats();
+                
+                // إعادة تعيين الحقول
+                document.getElementById('commentInput').value = '';
+                currentUserRating = 0;
+                
+                const stars = document.querySelectorAll('#ratingInput .star');
+                stars.forEach(star => {
+                    star.textContent = '☆';
+                    star.classList.remove('active');
+                });
+                
+                profileProgress.showSuccess('تم إرسال تقييمك بنجاح');
+                
+                // تحديث التقييمات
+                await calculateUserRating(profileUserId);
+                
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                profileProgress.showError(error.message || 'حدث خطأ في إرسال التقييم');
+            } finally {
+                submitBtn.classList.remove('loading');
+                profileProgress.hideOverlay();
+            }
+        }
+        
+        // ===== Update Review Stats =====
+        function updateReviewStats() {
+            return db.ref('users/' + profileUserId + '/totalReviews').transaction((current) => {
+                return (current || 0) + 1;
+            }).then(() => {
+                // تحديث العداد في الواجهة
+                db.ref('users/' + profileUserId + '/totalReviews').once('value', (snap) => {
+                    document.getElementById('totalReviews').textContent = snap.val() || 0;
+                });
+            });
+        }
+        
+        // ===== Calculate User Rating =====
+        function calculateUserRating(userId) {
+            return new Promise((resolve) => {
+                db.ref('reviews/' + userId).once('value', (snapshot) => {
+                    const reviews = snapshot.val();
+                    
+                    if (!reviews) {
+                        // إعداد القيم الافتراضية
+                        document.getElementById('averageRating').textContent = '0.0';
+                        document.getElementById('ratingStars').innerHTML = '☆☆☆☆☆';
+                        document.getElementById('ratingCount').textContent = 'من 0 تقييم';
+                        document.getElementById('ratingBars').innerHTML = `
+                            <div class="rating-bar">
+                                <span class="bar-label">5 نجوم</span>
+                                <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                                <span>0%</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">4 نجوم</span>
+                                <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                                <span>0%</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">3 نجوم</span>
+                                <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                                <span>0%</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">نجمتان</span>
+                                <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                                <span>0%</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">نجمة</span>
+                                <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
+                                <span>0%</span>
+                            </div>
+                        `;
+                        
+                        loadUserReviews(userId);
+                        resolve();
+                        return;
+                    }
+                    
+                    const reviewArray = Object.values(reviews);
+                    const totalReviews = reviewArray.length;
+                    
+                    let totalRating = 0;
+                    const ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+                    
+                    reviewArray.forEach(review => {
+                        totalRating += review.rating || 0;
+                        if (review.rating >= 1 && review.rating <= 5) {
+                            ratingDistribution[review.rating]++;
+                        }
+                    });
+                    
+                    const averageRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : '0.0';
+                    
+                    // تحديث الواجهة
+                    document.getElementById('averageRating').textContent = averageRating;
+                    document.getElementById('ratingCount').textContent = `من ${totalReviews} تقييم`;
+                    
+                    updateRatingStars(averageRating);
+                    updateRatingBars(ratingDistribution, totalReviews);
+                    
+                    loadUserReviews(userId);
+                    resolve();
+                    
+                }).catch(error => {
+                    console.error('Error calculating rating:', error);
+                    resolve();
+                });
+            });
+        }
+        
+        // ===== Update Rating Stars =====
+        function updateRatingStars(rating) {
+            const ratingStars = document.getElementById('ratingStars');
+            const stars = Math.round(parseFloat(rating));
+            
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= stars) {
+                    starsHTML += '★';
+                } else {
+                    starsHTML += '☆';
+                }
+            }
+            ratingStars.innerHTML = starsHTML;
+        }
+        
+        // ===== Update Rating Bars =====
+        function updateRatingBars(distribution, totalReviews) {
+            const ratingBars = document.getElementById('ratingBars');
+            let barsHTML = '';
+            
+            for (let i = 5; i >= 1; i--) {
+                const count = distribution[i] || 0;
+                const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+                
+                barsHTML += `
+                    <div class="rating-bar">
+                        <span class="bar-label">${i} نجوم</span>
+                        <div class="bar-container"><div class="bar-fill" style="width: ${percentage}%"></div></div>
+                        <span>${percentage}%</span>
+                    </div>
+                `;
+            }
+            
+            ratingBars.innerHTML = barsHTML;
+        }
+        
+        // ===== Load User Reviews =====
+        function loadUserReviews(userId) {
+            db.ref('reviews/' + userId).once('value', (snapshot) => {
+                const reviews = snapshot.val();
+                const reviewsList = document.getElementById('reviewsList');
+                
+                if (!reviews) {
+                    reviewsList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⭐</div>
+                            <div class="empty-text">لا توجد تقييمات</div>
+                            <div class="empty-subtext">كن أول من يقيم هذا المستخدم</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const reviewArray = Object.entries(reviews).map(([reviewId, review]) => ({
+                    id: reviewId,
+                    ...review
+                })).sort((a, b) => b.timestamp - a.timestamp);
+                
+                reviewsList.innerHTML = '';
+                
+                const reviewerPromises = reviewArray.map(review => 
+                    db.ref('users/' + review.reviewerId).once('value').then(snap => ({
+                        ...review,
+                        reviewerData: snap.val()
+                    }))
+                );
+                
+                Promise.all(reviewerPromises).then(reviewsWithData => {
+                    if (reviewsWithData.length === 0) {
+                        reviewsList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">⭐</div>
+                                <div class="empty-text">لا توجد تقييمات</div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    reviewsWithData.forEach(review => {
+                        const reviewerName = review.reviewerData ? 
+                            (review.reviewerData.fullName || review.reviewerData.username || 'مستخدم مجهول') : 
+                            'مستخدم مجهول';
+                        
+                        const firstLetter = reviewerName.charAt(0).toUpperCase();
+                        const date = formatTimeAgo(review.timestamp);
+                        
+                        let starsHTML = '';
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= review.rating) {
+                                starsHTML += '★';
+                            } else {
+                                starsHTML += '☆';
+                            }
+                        }
+                        
+                        const reviewCard = document.createElement('div');
+                        reviewCard.className = 'review-card';
+                        reviewCard.innerHTML = `
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">${firstLetter}</div>
+                                    <div>
+                                        <div class="reviewer-name" onclick="viewUserProfile('${review.reviewerId}')">
+                                            ${reviewerName}
+                                        </div>
+                                        <div class="review-date">${date}</div>
+                                    </div>
+                                </div>
+                                <div class="rating-stars" style="direction: ltr; color: #f59e0b; font-size: 20px;">
+                                    ${starsHTML}
+                                </div>
+                            </div>
+                            ${review.comment ? `
+                                <div class="review-comment">${review.comment}</div>
+                            ` : '<div class="review-comment" style="color:#9ca3af; font-style:italic;">لا يوجد تعليق</div>'}
+                        `;
+                        
+                        reviewsList.appendChild(reviewCard);
+                    });
+                });
+            });
+        }
+        
+        // ===== Load Followers List =====
+        function loadFollowersList(userId) {
+            return new Promise((resolve) => {
+                const followersList = document.getElementById('followersList');
+                followersList.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">جاري التحميل...</div></div>';
+                
+                db.ref('followers/' + userId).once('value', (snapshot) => {
+                    const followers = snapshot.val();
+                    
+                    if (!followers) {
+                        followersList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">👥</div>
+                                <div class="empty-text">لا يوجد متابعين</div>
+                                <div class="empty-subtext">لم يتابع هذا المستخدم أحد بعد</div>
+                            </div>
+                        `;
+                        resolve();
+                        return;
+                    }
+                    
+                    const followerIds = Object.keys(followers);
+                    loadUsersList(followerIds, followersList, 'followers');
+                    resolve();
+                    
+                }).catch(() => {
                     followersList.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-icon">👥</div>
-                            <div class="empty-text">لا يوجد متابعين</div>
-                            <div class="empty-subtext">لم يتابع هذا المستخدم أحد بعد</div>
+                            <div class="empty-text">حدث خطأ في تحميل المتابعين</div>
                         </div>
                     `;
-                    
-                    document.getElementById('followersCount').textContent = '0';
-                    return;
-                }
-                
-                const followerIds = Object.keys(followers);
-                document.getElementById('followersCount').textContent = followerIds.length;
-                loadUsersList(followerIds, followersList, 'followers', 'متابعون');
+                    resolve();
+                });
             });
         }
         
-        // Load Following List مع Progress
+        // ===== Load Following List =====
         function loadFollowingList(userId) {
-            const followingList = document.getElementById('followingList');
-            followingList.innerHTML = '<div class="empty-state"><div class="empty-icon">👣</div><div class="empty-text">جاري التحميل...</div></div>';
-            
-            db.ref('following/' + userId).once('value', (snapshot) => {
-                const following = snapshot.val();
+            return new Promise((resolve) => {
+                const followingList = document.getElementById('followingList');
+                followingList.innerHTML = '<div class="empty-state"><div class="empty-icon">👣</div><div class="empty-text">جاري التحميل...</div></div>';
                 
-                if (!following) {
+                db.ref('following/' + userId).once('value', (snapshot) => {
+                    const following = snapshot.val();
+                    
+                    if (!following) {
+                        followingList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">👣</div>
+                                <div class="empty-text">لا يتابع أحد</div>
+                                <div class="empty-subtext">لم يبدأ هذا المستخدم بمتابعة أحد بعد</div>
+                            </div>
+                        `;
+                        resolve();
+                        return;
+                    }
+                    
+                    const followingIds = Object.keys(following);
+                    loadUsersList(followingIds, followingList, 'following');
+                    resolve();
+                    
+                }).catch(() => {
                     followingList.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-icon">👣</div>
-                            <div class="empty-text">لا يتابع أحد</div>
-                            <div class="empty-subtext">لم يبدأ هذا المستخدم بمتابعة أحد بعد</div>
+                            <div class="empty-text">حدث خطأ في تحميل قائمة المتابعة</div>
                         </div>
                     `;
-                    
-                    document.getElementById('followingCount').textContent = '0';
-                    return;
-                }
-                
-                const followingIds = Object.keys(following);
-                document.getElementById('followingCount').textContent = followingIds.length;
-                loadUsersList(followingIds, followingList, 'following', 'المتابعة');
+                    resolve();
+                });
             });
         }
         
-        // Load Users List مع Progress
-        function loadUsersList(userIds, container, type, title) {
+        // ===== Load Users List =====
+        function loadUsersList(userIds, container, type) {
             container.innerHTML = '<div class="follow-grid"></div>';
             const grid = container.querySelector('.follow-grid');
             
@@ -2067,7 +2762,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
-                        <div class="empty-text">لا يوجد ${title}</div>
+                        <div class="empty-text">لا يوجد ${type === 'followers' ? 'متابعين' : 'متابعة'}</div>
                     </div>
                 `;
                 return;
@@ -2087,7 +2782,7 @@
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
-                            <div class="empty-text">لا يوجد ${title}</div>
+                            <div class="empty-text">لا يوجد ${type === 'followers' ? 'متابعين' : 'متابعة'}</div>
                         </div>
                     `;
                     return;
@@ -2142,10 +2837,17 @@
                     
                     grid.appendChild(userCard);
                 });
+            }).catch(() => {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">${type === 'followers' ? '👥' : '👣'}</div>
+                        <div class="empty-text">حدث خطأ في تحميل القائمة</div>
+                    </div>
+                `;
             });
         }
         
-        // Toggle Follow for user in list مع Progress
+        // ===== Toggle Follow for user in list =====
         function toggleFollowListUser(targetUserId, button) {
             event.stopPropagation();
             
@@ -2165,62 +2867,67 @@
             button.classList.add('loading');
             button.innerHTML = '<span class="spinner"></span>';
             
-            if (button.textContent === 'متابعة') {
-                const followData = {
-                    timestamp: Date.now(),
-                    userId: currentUserId
-                };
+            followRef.once('value', (snapshot) => {
+                const currentlyFollowing = snapshot.exists();
                 
-                followRef.set(followData).then(() => {
-                    followingRef.set({
-                        timestamp: Date.now(),
-                        userId: targetUserId
+                if (currentlyFollowing) {
+                    // إلغاء المتابعة
+                    Promise.all([
+                        followRef.remove(),
+                        followingRef.remove()
+                    ]).then(() => {
+                        updateFollowCountsList(targetUserId, -1);
+                        button.classList.remove('loading');
+                        button.textContent = 'متابعة';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline');
+                    }).catch(() => {
+                        button.classList.remove('loading');
+                        button.textContent = 'متابعة';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline');
                     });
+                } else {
+                    // متابعة جديدة
+                    const followData = {
+                        timestamp: Date.now(),
+                        userId: currentUserId
+                    };
                     
-                    updateFollowCounts(targetUserId, 1);
-                    
-                    button.classList.remove('loading');
-                    button.textContent = '✓ متابع';
-                    button.classList.remove('btn-outline');
-                    button.classList.add('btn-success');
-                });
-            } else {
-                followRef.remove().then(() => {
-                    followingRef.remove();
-                    
-                    updateFollowCounts(targetUserId, -1);
-                    
-                    button.classList.remove('loading');
-                    button.textContent = 'متابعة';
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-outline');
-                });
-            }
+                    Promise.all([
+                        followRef.set(followData),
+                        followingRef.set({
+                            timestamp: Date.now(),
+                            userId: targetUserId
+                        })
+                    ]).then(() => {
+                        updateFollowCountsList(targetUserId, 1);
+                        button.classList.remove('loading');
+                        button.textContent = '✓ متابع';
+                        button.classList.remove('btn-outline');
+                        button.classList.add('btn-success');
+                    }).catch(() => {
+                        button.classList.remove('loading');
+                        button.textContent = 'متابعة';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline');
+                    });
+                }
+            });
         }
         
-        function updateFollowCounts(targetUserId, change) {
+        // ===== Update Follow Counts for List =====
+        function updateFollowCountsList(targetUserId, change) {
             db.ref('users/' + targetUserId + '/followersCount').transaction((current) => {
-                return (current || 0) + change;
+                return Math.max(0, (current || 0) + change);
             });
             
             db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                return (current || 0) + change;
+                return Math.max(0, (current || 0) + change);
             });
-            
-            if (targetUserId === profileUserId) {
-                db.ref('users/' + targetUserId + '/followersCount').once('value', (snap) => {
-                    document.getElementById('followersCount').textContent = snap.val() || 0;
-                });
-            }
-            
-            if (currentUserId === profileUserId) {
-                db.ref('users/' + currentUserId + '/followingCount').once('value', (snap) => {
-                    document.getElementById('followingCount').textContent = snap.val() || 0;
-                });
-            }
         }
         
-        // View User Profile مع Progress
+        // ===== View User Profile =====
         function viewUserProfile(userId) {
             profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
             
@@ -2229,7 +2936,100 @@
             }, 500);
         }
         
-        // Setup Bio Editor
+        // ===== Load User Products =====
+        function loadUserProducts(userId) {
+            return new Promise((resolve) => {
+                const productsContainer = document.getElementById('userProducts');
+                productsContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-text">جاري تحميل الإعلانات...</div></div>';
+                
+                db.ref('products').orderByChild('uid').equalTo(userId).once('value', (snapshot) => {
+                    const products = snapshot.val();
+                    
+                    if (!products) {
+                        productsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">🛒</div>
+                                <div class="empty-text">لا توجد إعلانات</div>
+                                <div class="empty-subtext">لم ينشر هذا المستخدم أي إعلانات بعد</div>
+                            </div>
+                        `;
+                        resolve();
+                        return;
+                    }
+                    
+                    const productArray = Object.entries(products).reverse();
+                    
+                    if (productArray.length === 0) {
+                        productsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">🛒</div>
+                                <div class="empty-text">لا توجد إعلانات</div>
+                            </div>
+                        `;
+                        resolve();
+                        return;
+                    }
+                    
+                    productsContainer.innerHTML = '<div class="products-grid"></div>';
+                    const grid = productsContainer.querySelector('.products-grid');
+                    
+                    productArray.forEach(([productId, product]) => {
+                        const firstLetter = (product.name || 'إعلان').charAt(0).toUpperCase();
+                        const price = product.price ? formatPrice(product.price) : 'غير محدد';
+                        const date = product.createdAt ? formatTimeAgo(product.createdAt) : 'غير معروف';
+                        
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card';
+                        productCard.onclick = () => viewProduct(productId);
+                        
+                        // إضافة حالة المنتج
+                        let statusBadge = '';
+                        if (product.status === 'sold') {
+                            statusBadge = '<span style="position:absolute;top:10px;right:10px;background:#ef4444;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">مباع</span>';
+                        } else if (product.status === 'reserved') {
+                            statusBadge = '<span style="position:absolute;top:10px;right:10px;background:#f59e0b;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">محجوز</span>';
+                        }
+                        
+                        productCard.innerHTML = `
+                            ${statusBadge}
+                            <div class="product-image">${firstLetter}</div>
+                            <div class="product-name">${product.name || 'إعلان بدون عنوان'}</div>
+                            <div class="product-price">${price} د.ع</div>
+                            <div class="product-meta">
+                                <span>${date}</span>
+                                <span>${product.category || 'غير محدد'}</span>
+                            </div>
+                        `;
+                        
+                        grid.appendChild(productCard);
+                    });
+                    
+                    resolve();
+                    
+                }).catch(error => {
+                    console.error('Error loading user products:', error);
+                    productsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🛒</div>
+                            <div class="empty-text">حدث خطأ في تحميل الإعلانات</div>
+                        </div>
+                    `;
+                    resolve();
+                });
+            });
+        }
+        
+        // ===== View Product =====
+        function viewProduct(productId) {
+            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+            
+            setTimeout(() => {
+                window.open(`index.html#view-${productId}`, '_blank');
+                profileProgress.hideOverlay();
+            }, 500);
+        }
+        
+        // ===== Setup Bio Editor =====
         function setupBioEditor() {
             const bioEditor = document.getElementById('bioEditor');
             const charCount = document.getElementById('charCount');
@@ -2245,16 +3045,16 @@
             });
         }
         
-        // Update Character Count
+        // ===== Update Character Count =====
         function updateCharCount() {
             const bioEditor = document.getElementById('bioEditor');
             const charCount = document.getElementById('charCount');
             const currentLength = bioEditor.value.length;
-            const maxLength = 70;
+            const maxLength = 250;
             
             charCount.textContent = `${currentLength}/${maxLength}`;
             
-            if (currentLength >= maxLength - 10) {
+            if (currentLength >= maxLength - 20) {
                 charCount.className = 'char-count warning';
             } else if (currentLength >= maxLength) {
                 charCount.className = 'char-count error';
@@ -2263,30 +3063,32 @@
             }
         }
         
-        // Show Bio Editor
+        // ===== Show Bio Editor =====
         function showBioEditor() {
             const modal = document.getElementById('bioEditorModal');
             const bioEditor = document.getElementById('bioEditor');
             
             bioEditor.value = currentUserBio;
             updateCharCount();
-            modal.style.display = 'flex';
-            bioEditor.focus();
+            modal.classList.add('active');
+            setTimeout(() => {
+                bioEditor.focus();
+            }, 300);
         }
         
-        // Close Bio Editor
+        // ===== Close Bio Editor =====
         function closeBioEditor() {
             const modal = document.getElementById('bioEditorModal');
-            modal.style.display = 'none';
+            modal.classList.remove('active');
         }
         
-        // Save Bio مع Progress
-        function saveBio() {
+        // ===== Save Bio =====
+        async function saveBio() {
             const bioEditor = document.getElementById('bioEditor');
             const newBio = bioEditor.value.trim();
             
-            if (newBio.length > 70) {
-                profileProgress.showError('الوصف يجب ألا يتجاوز 70 حرفاً');
+            if (newBio.length > 250) {
+                profileProgress.showError('الوصف يجب ألا يتجاوز 250 حرفاً');
                 return;
             }
             
@@ -2296,397 +3098,138 @@
             }
             
             const saveBtn = document.querySelector('.modal-actions .btn-primary');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
             saveBtn.classList.add('loading');
-            
             profileProgress.showOverlay('جاري حفظ الوصف...', 'انتظر قليلاً');
             
-            db.ref('users/' + currentUserId).update({
-                bio: newBio,
-                lastActive: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
+            try {
+                await db.ref('users/' + currentUserId).update({
+                    bio: newBio,
+                    updatedAt: Date.now()
+                });
+                
                 currentUserBio = newBio;
                 document.getElementById('userBio').textContent = newBio || 'لا يوجد وصف شخصي';
+                
                 closeBioEditor();
-                
-                saveBtn.innerHTML = originalText;
-                saveBtn.classList.remove('loading');
-                
                 profileProgress.showSuccess('تم حفظ الوصف بنجاح');
-            }).catch((error) => {
+                
+            } catch (error) {
                 console.error('Error saving bio:', error);
-                
-                saveBtn.innerHTML = originalText;
-                saveBtn.classList.remove('loading');
-                
                 profileProgress.showError('حدث خطأ أثناء حفظ الوصف');
-            });
+            } finally {
+                saveBtn.classList.remove('loading');
+                profileProgress.hideOverlay();
+            }
         }
         
-        // Load User Products مع Progress
-        function loadUserProducts(userId) {
-            const productsContainer = document.getElementById('userProducts');
-            productsContainer.innerHTML = '<div class="products-grid"></div>';
-            const grid = productsContainer.querySelector('.products-grid');
+        // ===== Copy Profile Link =====
+        function copyProfileLink() {
+            const copyBtn = document.getElementById('copyLinkBtn');
+            const originalText = copyBtn.textContent;
             
-            profileProgress.showCircularProgress();
-            
-            db.ref('products').orderByChild('uid').equalTo(userId).once('value', (snapshot) => {
-                const products = snapshot.val();
-                
-                if (!products) {
-                    productsContainer.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🛒</div>
-                            <div class="empty-text">لا توجد إعلانات</div>
-                            <div class="empty-subtext">لم ينشر هذا المستخدم أي إعلانات بعد</div>
-                        </div>
-                    `;
+            navigator.clipboard.writeText(profileLink)
+                .then(() => {
+                    copyBtn.textContent = '✓ تم النسخ';
+                    copyBtn.classList.add('copied');
                     
-                    document.getElementById('productsCount').textContent = '0';
-                    profileProgress.hideCircularProgress();
-                    return;
-                }
-                
-                const productArray = Object.entries(products).reverse();
-                document.getElementById('productsCount').textContent = productArray.length;
-                
-                productArray.forEach(([productId, product]) => {
-                    const firstLetter = (product.name || 'إعلان').charAt(0).toUpperCase();
-                    const price = product.price ? formatPrice(product.price) : 'غير محدد';
-                    const date = product.timestamp ? formatTimeAgo(product.timestamp) : 'غير معروف';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
                     
-                    const productCard = document.createElement('div');
-                    productCard.className = 'product-card';
-                    productCard.onclick = () => viewProduct(productId);
-                    
-                    productCard.innerHTML = `
-                        <div class="product-image">${firstLetter}</div>
-                        <div class="product-name">${product.name || 'إعلان بدون عنوان'}</div>
-                        <div class="product-price">${price} د.ع</div>
-                        <div class="product-meta">
-                            <span>${date}</span>
-                            <span>${product.category || 'غير محدد'}</span>
-                        </div>
-                    `;
-                    
-                    grid.appendChild(productCard);
+                    profileProgress.showSuccess('تم نسخ رابط الملف الشخصي');
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    profileProgress.showError('حدث خطأ في نسخ الرابط');
                 });
-                
-                profileProgress.hideCircularProgress();
-            }).catch(error => {
-                console.error('Error loading user products:', error);
-                productsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🛒</div>
-                        <div class="empty-text">حدث خطأ في تحميل الإعلانات</div>
-                    </div>
-                `;
-                profileProgress.hideCircularProgress();
-                profileProgress.showError('حدث خطأ في تحميل الإعلانات');
-            });
         }
         
-        function viewProduct(productId) {
-            profileProgress.showOverlay('جاري الانتقال...', 'انتقل قليلاً');
+        // ===== Share Profile =====
+        function shareProfile() {
+            const shareData = {
+                title: `ملف ${profileUserData?.fullName || profileUsername} الشخصي`,
+                text: `تفضل بزيارة ملف ${profileUserData?.fullName || profileUsername} الشخصي على a3len`,
+                url: profileLink
+            };
             
-            setTimeout(() => {
-                window.location.href = `index.html#details-${productId}`;
-            }, 500);
-        }
-        
-        // Setup Rating Stars
-        function setupRatingStars() {
-            const stars = document.querySelectorAll('#ratingInput .star');
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    currentUserRating = rating;
-                    
-                    stars.forEach((s, index) => {
-                        if (index < rating) {
-                            s.textContent = '★';
-                            s.classList.add('active');
-                        } else {
-                            s.textContent = '☆';
-                            s.classList.remove('active');
-                        }
+            if (navigator.share) {
+                navigator.share(shareData)
+                    .then(() => {
+                        profileProgress.showSuccess('تمت المشاركة بنجاح');
+                    })
+                    .catch(error => {
+                        console.error('Error sharing:', error);
+                        copyProfileLink();
                     });
-                });
-            });
+            } else {
+                copyProfileLink();
+            }
         }
         
-        // Submit Review مع Progress
-        function submitReview() {
-            if (!currentUserId) {
-                profileProgress.showError('يجب تسجيل الدخول لإضافة تقييم');
+        // ===== Update Location =====
+        function updateLocation() {
+            if (!currentUserId || currentUserId !== profileUserId) {
+                profileProgress.showError('لا يمكنك تحديث موقع مستخدم آخر');
                 return;
             }
             
-            if (currentUserId === profileUserId) {
-                profileProgress.showError('لا يمكنك تقييم نفسك');
-                return;
-            }
+            const location = prompt('أدخل موقعك الحالي (المدينة أو المنطقة):');
             
-            if (currentUserRating === 0) {
-                profileProgress.showError('الرجاء اختيار تقييم من 1 إلى 5 نجوم');
-                return;
-            }
-            
-            const comment = document.getElementById('commentInput').value.trim();
-            const reviewRef = db.ref('reviews/' + profileUserId + '/' + currentUserId);
-            const submitBtn = document.getElementById('submitReviewBtn');
-            
-            submitBtn.classList.add('loading');
-            submitBtn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
-            
-            profileProgress.showOverlay('جاري إرسال التقييم...', 'انتظر قليلاً');
-            
-            reviewRef.once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    submitBtn.classList.remove('loading');
-                    submitBtn.textContent = 'إرسال التقييم';
+            if (location && location.trim()) {
+                profileProgress.showOverlay('جاري تحديث الموقع...', 'انتظر قليلاً');
+                
+                db.ref('users/' + currentUserId).update({
+                    location: location.trim(),
+                    updatedAt: Date.now()
+                })
+                .then(() => {
+                    document.getElementById('userLocation').textContent = location.trim();
+                    profileProgress.showSuccess('تم تحديث الموقع بنجاح');
+                })
+                .catch(error => {
+                    console.error('Error updating location:', error);
+                    profileProgress.showError('حدث خطأ في تحديث الموقع');
+                })
+                .finally(() => {
                     profileProgress.hideOverlay();
-                    profileProgress.showError('لقد قمت بتقييم هذا المستخدم من قبل');
-                    return;
-                }
-                
-                const reviewData = {
-                    rating: currentUserRating,
-                    comment: comment,
-                    reviewerId: currentUserId,
-                    timestamp: Date.now(),
-                    targetId: profileUserId
-                };
-                
-                reviewRef.set(reviewData).then(() => {
-                    updateReviewStats();
-                    
-                    document.getElementById('commentInput').value = '';
-                    currentUserRating = 0;
-                    
-                    const stars = document.querySelectorAll('#ratingInput .star');
-                    stars.forEach(star => {
-                        star.textContent = '☆';
-                        star.classList.remove('active');
-                    });
-                    
-                    submitBtn.classList.remove('loading');
-                    submitBtn.textContent = 'إرسال التقييم';
-                    
-                    profileProgress.showSuccess('تم إرسال تقييمك بنجاح');
+                });
+            }
+        }
+        
+        // ===== Show Tab =====
+        function showTab(tabName) {
+            // إخفاء جميع التبويبات
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // إظهار التبويب المحدد
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            
+            // تحميل المحتوى إذا لزم الأمر
+            switch (tabName) {
+                case 'followers':
+                    loadFollowersList(profileUserId);
+                    break;
+                case 'following':
+                    loadFollowingList(profileUserId);
+                    break;
+                case 'reviews':
                     calculateUserRating(profileUserId);
-                    
-                }).catch((error) => {
-                    console.error('Error submitting review:', error);
-                    submitBtn.classList.remove('loading');
-                    submitBtn.textContent = 'إرسال التقييم';
-                    profileProgress.hideOverlay();
-                    profileProgress.showError('حدث خطأ أثناء إرسال التقييم');
-                });
-            });
-        }
-        
-        function updateReviewStats() {
-            db.ref('users/' + profileUserId + '/totalReviews').transaction((current) => {
-                return (current || 0) + 1;
-            }).then(() => {
-                db.ref('users/' + profileUserId + '/totalReviews').once('value', (snap) => {
-                    document.getElementById('totalReviews').textContent = snap.val() || 0;
-                });
-            });
-        }
-        
-        // Calculate User Rating مع Progress
-        function calculateUserRating(userId) {
-            const clearCircular = profileProgress.showCircularProgress();
-            
-            db.ref('reviews/' + userId).once('value', (snapshot) => {
-                const reviews = snapshot.val();
-                
-                if (!reviews) {
-                    document.getElementById('averageRating').textContent = '0.0';
-                    document.getElementById('ratingStars').innerHTML = '☆☆☆☆☆';
-                    document.getElementById('ratingCount').textContent = 'من 0 تقييم';
-                    document.getElementById('ratingBars').innerHTML = `
-                        <div class="rating-bar">
-                            <span class="bar-label">5 نجوم</span>
-                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
-                            <span>0%</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span class="bar-label">4 نجوم</span>
-                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
-                            <span>0%</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span class="bar-label">3 نجوم</span>
-                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
-                            <span>0%</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span class="bar-label">نجمتان</span>
-                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
-                            <span>0%</span>
-                        </div>
-                        <div class="rating-bar">
-                            <span class="bar-label">نجمة</span>
-                            <div class="bar-container"><div class="bar-fill" style="width: 0%"></div></div>
-                            <span>0%</span>
-                        </div>
-                    `;
-                    
-                    loadUserReviews(userId);
-                    profileProgress.hideCircularProgress();
-                    return;
-                }
-                
-                const reviewArray = Object.values(reviews);
-                const totalReviews = reviewArray.length;
-                
-                let totalRating = 0;
-                const ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
-                
-                reviewArray.forEach(review => {
-                    totalRating += review.rating || 0;
-                    if (review.rating >= 1 && review.rating <= 5) {
-                        ratingDistribution[review.rating]++;
-                    }
-                });
-                
-                const averageRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : '0.0';
-                
-                document.getElementById('averageRating').textContent = averageRating;
-                document.getElementById('ratingCount').textContent = `من ${totalReviews} تقييم`;
-                
-                updateRatingStars(averageRating);
-                updateRatingBars(ratingDistribution, totalReviews);
-                document.getElementById('totalReviews').textContent = totalReviews;
-                
-                loadUserReviews(userId);
-                profileProgress.hideCircularProgress();
-                
-            }).catch(error => {
-                console.error('Error calculating rating:', error);
-                profileProgress.hideCircularProgress();
-                profileProgress.showError('حدث خطأ في تحميل التقييمات');
-            });
-        }
-        
-        function updateRatingStars(rating) {
-            const ratingStars = document.getElementById('ratingStars');
-            const stars = Math.round(parseFloat(rating));
-            
-            let starsHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                if (i <= stars) {
-                    starsHTML += '★';
-                } else {
-                    starsHTML += '☆';
-                }
+                    break;
+                case 'products':
+                    loadUserProducts(profileUserId);
+                    break;
             }
-            ratingStars.innerHTML = starsHTML;
         }
         
-        function updateRatingBars(distribution, totalReviews) {
-            const ratingBars = document.getElementById('ratingBars');
-            let barsHTML = '';
-            
-            for (let i = 5; i >= 1; i--) {
-                const count = distribution[i] || 0;
-                const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
-                
-                barsHTML += `
-                    <div class="rating-bar">
-                        <span class="bar-label">${i} نجوم</span>
-                        <div class="bar-container"><div class="bar-fill" style="width: ${percentage}%"></div></div>
-                        <span>${percentage}%</span>
-                    </div>
-                `;
-            }
-            
-            ratingBars.innerHTML = barsHTML;
-        }
-        
-        // Load User Reviews مع Progress
-        function loadUserReviews(userId) {
-            db.ref('reviews/' + userId).once('value', (snapshot) => {
-                const reviews = snapshot.val();
-                const reviewsList = document.getElementById('reviewsList');
-                
-                if (!reviews) {
-                    reviewsList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">⭐</div>
-                            <div class="empty-text">لا توجد تقييمات</div>
-                            <div class="empty-subtext">كن أول من يقيم هذا المستخدم</div>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const reviewArray = Object.entries(reviews).map(([reviewId, review]) => ({
-                    id: reviewId,
-                    ...review
-                })).sort((a, b) => b.timestamp - a.timestamp);
-                
-                reviewsList.innerHTML = '';
-                
-                const reviewerPromises = reviewArray.map(review => 
-                    db.ref('users/' + review.reviewerId).once('value').then(snap => ({
-                        ...review,
-                        reviewerData: snap.val()
-                    }))
-                );
-                
-                Promise.all(reviewerPromises).then(reviewsWithData => {
-                    reviewsWithData.forEach(review => {
-                        const reviewerName = review.reviewerData ? 
-                            (review.reviewerData.fullName || review.reviewerData.username || 'مستخدم مجهول') : 
-                            'مستخدم مجهول';
-                        
-                        const firstLetter = reviewerName.charAt(0).toUpperCase();
-                        const date = formatTimeAgo(review.timestamp);
-                        
-                        let starsHTML = '';
-                        for (let i = 1; i <= 5; i++) {
-                            if (i <= review.rating) {
-                                starsHTML += '★';
-                            } else {
-                                starsHTML += '☆';
-                            }
-                        }
-                        
-                        const reviewCard = document.createElement('div');
-                        reviewCard.className = 'review-card';
-                        reviewCard.innerHTML = `
-                            <div class="review-header">
-                                <div class="reviewer-info">
-                                    <div class="reviewer-avatar">${firstLetter}</div>
-                                    <div>
-                                        <div class="reviewer-name" onclick="viewUserProfile('${review.reviewerId}')">
-                                            ${reviewerName}
-                                        </div>
-                                        <div class="review-date">${date}</div>
-                                    </div>
-                                </div>
-                                <div class="rating-stars" style="direction: ltr; color: #f59e0b; font-size: 18px;">
-                                    ${starsHTML}
-                                </div>
-                            </div>
-                            ${review.comment ? `
-                                <div class="review-comment">${review.comment}</div>
-                            ` : ''}
-                        `;
-                        
-                        reviewsList.appendChild(reviewCard);
-                    });
-                });
-            });
-        }
-        
-        // Helper Functions
+        // ===== Helper Functions =====
         function formatDate(timestamp) {
             if (!timestamp) return 'غير معروف';
             
@@ -2721,64 +3264,6 @@
         function formatPrice(price) {
             if (!price) return '0';
             return parseInt(price).toLocaleString('ar-SA');
-        }
-        
-        function shareProfile() {
-            const profileUrl = window.location.href;
-            const shareText = `تفضل بزيارة الملف الشخصي لـ ${document.getElementById('fullNameText').textContent} على a3len`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'a3len - ملف شخصي',
-                    text: shareText,
-                    url: profileUrl
-                });
-            } else {
-                navigator.clipboard.writeText(profileUrl).then(() => {
-                    profileProgress.showSuccess('تم نسخ رابط الملف الشخصي إلى الحافظة');
-                });
-            }
-        }
-        
-        // Show Tab مع Progress
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
-            
-            // إظهار Progress عند تحميل المحتوى
-            if (tabName === 'followers') {
-                profileProgress.showProgressBar();
-                setTimeout(() => {
-                    loadFollowersList(profileUserId);
-                    profileProgress.hideProgressBar();
-                }, 300);
-            } else if (tabName === 'following') {
-                profileProgress.showProgressBar();
-                setTimeout(() => {
-                    loadFollowingList(profileUserId);
-                    profileProgress.hideProgressBar();
-                }, 300);
-            } else if (tabName === 'reviews') {
-                profileProgress.showProgressBar();
-                setTimeout(() => {
-                    calculateUserRating(profileUserId);
-                    profileProgress.hideProgressBar();
-                }, 300);
-            } else if (tabName === 'products') {
-                profileProgress.showProgressBar();
-                setTimeout(() => {
-                    loadUserProducts(profileUserId);
-                    profileProgress.hideProgressBar();
-                }, 300);
-            }
         }
     </script>
 </body>
