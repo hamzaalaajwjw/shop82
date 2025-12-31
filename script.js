@@ -405,8 +405,3 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 
 
-// لإظهار التقدم الدائري
-document.getElementById('circularProgress').style.display = 'flex';
-
-// لإخفاء التقدم الدائري
-document.getElementById('circularProgress').style.display = 'none';
