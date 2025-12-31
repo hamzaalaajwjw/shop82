@@ -1712,6 +1712,7 @@
         let isFollowing = false;
         let isBlocked = false;
         let currentUserBio = '';
+        let userDataCache = {}; // كاش لتخزين بيانات المستخدمين
         
         // Get user ID or slug from URL
         function getUserFromURL() {
@@ -1752,9 +1753,6 @@
                         } else {
                             loadProfileData(userParam.value);
                         }
-                        
-                        checkFollowStatus();
-                        checkBlockStatus();
                         
                         // إظهار زر التعديل فقط للمستخدم نفسه
                         if (currentUserId === profileUserId) {
@@ -1872,6 +1870,12 @@
                         document.getElementById('editBioBtn').style.display = 'none';
                     }
                     
+                    // التحقق من حالة المتابعة والحظر
+                    if (currentUserId && currentUserId !== profileUserId) {
+                        checkFollowStatus();
+                        checkBlockStatus();
+                    }
+                    
                     // إخفاء Skeleton وإظهار المحتوى الحقيقي
                     setTimeout(() => {
                         document.getElementById('skeletonLoading').style.display = 'none';
@@ -1976,7 +1980,6 @@
         // Update Follow Button
         function updateFollowButton() {
             const followBtn = document.getElementById('followButton');
-            const followText = document.getElementById('followText');
             
             if (isFollowing) {
                 followBtn.classList.add('following');
@@ -2003,7 +2006,19 @@
             }
         }
         
-        // Toggle Follow مع Progress
+        // Check Block Status
+        function checkBlockStatus() {
+            if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
+                return;
+            }
+            
+            db.ref('blocks/' + currentUserId + '/' + profileUserId).once('value', (snapshot) => {
+                isBlocked = snapshot.exists();
+                updateBlockButton();
+            });
+        }
+        
+        // Toggle Follow مع Progress - الإصدار المحسّن
         function toggleFollow() {
             if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
                 profileProgress.showError('لا يمكنك متابعة نفسك');
@@ -2020,38 +2035,40 @@
             followBtn.innerHTML = '<span class="spinner"></span>';
             
             if (isFollowing) {
-                followRef.once('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        followRef.remove().then(() => {
-                            followingRef.remove();
-                            
-                            db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                                return (current || 1) - 1;
-                            });
-                            
-                            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                                return (current || 1) - 1;
-                            });
-                            
-                            isFollowing = false;
-                            updateFollowButton();
-                            
-                            let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
-                            if (currentFollowers > 0) {
-                                document.getElementById('followersCount').textContent = currentFollowers - 1;
-                            }
-                            
-                            followBtn.classList.remove('loading');
-                            
-                            profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
-                            
-                            if (document.getElementById('followersTab').classList.contains('active')) {
-                                loadFollowersList(profileUserId);
-                            }
-                        });
+                // إلغاء المتابعة
+                followRef.remove().then(() => {
+                    followingRef.remove();
+                    
+                    // تحديث العدادات في قاعدة البيانات
+                    updateFollowCounts(profileUserId, currentUserId, -1);
+                    
+                    // تحديث الحالة المحلية
+                    isFollowing = false;
+                    
+                    // تحديث الزر مباشرة
+                    followBtn.classList.remove('loading', 'following');
+                    followBtn.innerHTML = '<span class="btn-icon">+</span><span class="btn-text">متابعة</span>';
+                    
+                    // تحديث العداد في الصفحة
+                    let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                    if (currentFollowers > 0) {
+                        document.getElementById('followersCount').textContent = currentFollowers - 1;
                     }
+                    
+                    // إعادة تحميل قائمة المتابعين إذا كانت الصفحة مفتوحة
+                    if (document.getElementById('followersTab').classList.contains('active')) {
+                        setTimeout(() => loadFollowersList(profileUserId), 300);
+                    }
+                    
+                    profileProgress.showSuccess('تم إلغاء المتابعة بنجاح');
+                    
+                }).catch(error => {
+                    console.error('Error unfollowing:', error);
+                    followBtn.classList.remove('loading');
+                    profileProgress.showError('حدث خطأ أثناء إلغاء المتابعة');
                 });
             } else {
+                // متابعة جديدة
                 const followData = {
                     timestamp: Date.now(),
                     userId: currentUserId
@@ -2063,29 +2080,64 @@
                         userId: profileUserId
                     });
                     
-                    db.ref('users/' + profileUserId + '/followersCount').transaction((current) => {
-                        return (current || 0) + 1;
-                    });
+                    // تحديث العدادات في قاعدة البيانات
+                    updateFollowCounts(profileUserId, currentUserId, 1);
                     
-                    db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                        return (current || 0) + 1;
-                    });
-                    
+                    // تحديث الحالة المحلية
                     isFollowing = true;
-                    updateFollowButton();
                     
+                    // تحديث الزر مباشرة
+                    followBtn.classList.remove('loading');
+                    followBtn.classList.add('following');
+                    followBtn.innerHTML = '<span class="btn-icon">✓</span><span class="btn-text">متابَع</span>';
+                    
+                    // تحديث العداد في الصفحة
                     let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
                     document.getElementById('followersCount').textContent = currentFollowers + 1;
                     
-                    followBtn.classList.remove('loading');
+                    // إعادة تحميل قائمة المتابعين إذا كانت الصفحة مفتوحة
+                    if (document.getElementById('followersTab').classList.contains('active')) {
+                        setTimeout(() => loadFollowersList(profileUserId), 300);
+                    }
                     
                     profileProgress.showSuccess('تمت المتابعة بنجاح');
                     
-                    if (document.getElementById('followersTab').classList.contains('active')) {
-                        loadFollowersList(profileUserId);
-                    }
+                }).catch(error => {
+                    console.error('Error following:', error);
+                    followBtn.classList.remove('loading');
+                    profileProgress.showError('حدث خطأ أثناء المتابعة');
                 });
             }
+        }
+        
+        // دالة محسنة لتحديث العدادات
+        function updateFollowCounts(targetUserId, followerId, change) {
+            // تحديث عدد المتابعين للمستخدم المستهدف
+            db.ref('users/' + targetUserId).once('value', (snap) => {
+                const userData = snap.val() || {};
+                const currentFollowers = userData.followersCount || 0;
+                const newFollowers = Math.max(0, currentFollowers + change);
+                
+                db.ref('users/' + targetUserId).update({
+                    followersCount: newFollowers
+                });
+            });
+            
+            // تحديث عدد المتابعة للمستخدم الحالي
+            db.ref('users/' + followerId).once('value', (snap) => {
+                const userData = snap.val() || {};
+                const currentFollowing = userData.followingCount || 0;
+                const newFollowing = Math.max(0, currentFollowing + change);
+                
+                db.ref('users/' + followerId).update({
+                    followingCount: newFollowing
+                });
+                
+                // إذا كان المستخدم الحالي هو صاحب الصفحة، قم بتحديث العداد
+                if (followerId === profileUserId) {
+                    document.getElementById('followingCount').textContent = newFollowing;
+                }
+            });
         }
         
         // Toggle Block User مع Progress
@@ -2195,7 +2247,7 @@
             });
         }
         
-        // Load Users List مع Progress
+        // Load Users List مع Progress - الإصدار المحسن
         function loadUsersList(userIds, container, type, title) {
             container.innerHTML = '<div class="follow-grid"></div>';
             const grid = container.querySelector('.follow-grid');
@@ -2210,12 +2262,18 @@
                 return;
             }
             
-            const userPromises = userIds.map(userId => 
-                db.ref('users/' + userId).once('value').then(snap => ({
-                    id: userId,
-                    data: snap.val()
-                }))
-            );
+            const userPromises = userIds.map(userId => {
+                // التحقق من الكاش أولاً
+                if (userDataCache[userId]) {
+                    return Promise.resolve({ id: userId, data: userDataCache[userId] });
+                }
+                
+                return db.ref('users/' + userId).once('value').then(snap => {
+                    const data = snap.val();
+                    userDataCache[userId] = data; // تخزين في الكاش
+                    return { id: userId, data: data };
+                });
+            });
             
             Promise.all(userPromises).then(userData => {
                 const validUsers = userData.filter(({data}) => data);
@@ -2243,6 +2301,7 @@
                     
                     let followButtonHTML = '';
                     if (currentUserId && currentUserId !== id) {
+                        // التحقق من حالة المتابعة
                         db.ref('followers/' + id + '/' + currentUserId).once('value', (snap) => {
                             const isFollowingUser = snap.exists();
                             const followBtn = userCard.querySelector('.follow-btn');
@@ -2282,7 +2341,7 @@
             });
         }
         
-        // Toggle Follow for user in list مع Progress
+        // Toggle Follow for user in list مع Progress - الإصدار المحسن
         function toggleFollowListUser(targetUserId, button) {
             event.stopPropagation();
             
@@ -2305,15 +2364,32 @@
             const isCurrentlyFollowing = button.classList.contains('following');
             
             if (isCurrentlyFollowing) {
+                // إلغاء المتابعة
                 followRef.remove().then(() => {
                     followingRef.remove();
                     
-                    updateFollowCounts(targetUserId, -1);
+                    // تحديث العدادات
+                    updateFollowCounts(targetUserId, currentUserId, -1);
                     
+                    // تحديث الزر مباشرة
                     button.classList.remove('loading', 'following');
                     button.innerHTML = '<span class="btn-icon">+</span><span class="btn-text">متابعة</span>';
+                    
+                    // إذا كان المستخدم المستهدف هو صاحب الصفحة، قم بتحديث العداد
+                    if (targetUserId === profileUserId) {
+                        let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                        if (currentFollowers > 0) {
+                            document.getElementById('followersCount').textContent = currentFollowers - 1;
+                        }
+                    }
+                    
+                }).catch(error => {
+                    console.error('Error unfollowing:', error);
+                    button.classList.remove('loading');
+                    profileProgress.showError('حدث خطأ أثناء إلغاء المتابعة');
                 });
             } else {
+                // متابعة جديدة
                 const followData = {
                     timestamp: Date.now(),
                     userId: currentUserId
@@ -2325,33 +2401,24 @@
                         userId: targetUserId
                     });
                     
-                    updateFollowCounts(targetUserId, 1);
+                    // تحديث العدادات
+                    updateFollowCounts(targetUserId, currentUserId, 1);
                     
+                    // تحديث الزر مباشرة
                     button.classList.remove('loading');
                     button.classList.add('following');
                     button.innerHTML = '<span class="btn-icon">✓</span><span class="btn-text">متابَع</span>';
-                });
-            }
-        }
-        
-        function updateFollowCounts(targetUserId, change) {
-            db.ref('users/' + targetUserId + '/followersCount').transaction((current) => {
-                return (current || 0) + change;
-            });
-            
-            db.ref('users/' + currentUserId + '/followingCount').transaction((current) => {
-                return (current || 0) + change;
-            });
-            
-            if (targetUserId === profileUserId) {
-                db.ref('users/' + targetUserId + '/followersCount').once('value', (snap) => {
-                    document.getElementById('followersCount').textContent = snap.val() || 0;
-                });
-            }
-            
-            if (currentUserId === profileUserId) {
-                db.ref('users/' + currentUserId + '/followingCount').once('value', (snap) => {
-                    document.getElementById('followingCount').textContent = snap.val() || 0;
+                    
+                    // إذا كان المستخدم المستهدف هو صاحب الصفحة، قم بتحديث العداد
+                    if (targetUserId === profileUserId) {
+                        let currentFollowers = parseInt(document.getElementById('followersCount').textContent) || 0;
+                        document.getElementById('followersCount').textContent = currentFollowers + 1;
+                    }
+                    
+                }).catch(error => {
+                    console.error('Error following:', error);
+                    button.classList.remove('loading');
+                    profileProgress.showError('حدث خطأ أثناء المتابعة');
                 });
             }
         }
