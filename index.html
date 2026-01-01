@@ -390,6 +390,149 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     cursor: pointer;
 }
 
+/* ===== أنماط البطاقات ===== */
+.card {
+    background: #1f2937;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+    border: 1px solid #374151;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 200px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    border-color: #38bdf8;
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    color: #f3f4f6;
+    font-size: 18px;
+}
+
+.price {
+    display: block;
+    color: #10b981;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.meta span {
+    background: #374151;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.seller {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #374151;
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+.actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.actions button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    flex: 1;
+}
+
+.actions .edit {
+    background: #3b82f6;
+    color: white;
+}
+
+.actions .del {
+    background: #ef4444;
+    color: white;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.search-bar input, .search-bar select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: #1f2937;
+    color: white;
+    min-width: 200px;
+}
+
+.search-bar input:focus, .search-bar select:focus {
+    outline: none;
+    border-color: #38bdf8;
+}
+
+.empty {
+    text-align: center;
+    color: #9ca3af;
+    padding: 40px;
+    font-size: 18px;
+    grid-column: 1 / -1;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px;
+}
+
+.skeleton-card {
+    background: #1f2937;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px;
+    animation: pulse 1.5s infinite;
+}
+
+.skeleton-line {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+    margin: 8px 0;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* تحسينات للهاتف */
 @media (max-width: 768px) {
     .user-name-wrapper {
@@ -417,6 +560,18 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     .product-image {
         width: 80px;
         height: 80px;
+    }
+    
+    .cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-bar {
+        flex-direction: column;
+    }
+    
+    .search-bar input, .search-bar select {
+        width: 100%;
     }
 }
 </style>
@@ -531,6 +686,8 @@ const firebaseConfig = {
 // التحقق من تكرار تهيئة Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); // إذا كانت مهيئة بالفعل
 }
 
 const auth = firebase.auth();
@@ -1157,7 +1314,7 @@ function applyBudget(){
   loadProducts();
 }
 
-// تحميل المنتجات
+// تحميل المنتجات - الإصدار المُصحح
 function loadProducts(){
   const s = document.getElementById("search")?.value.toLowerCase() || '';
   const c = document.getElementById("cat")?.value || '';
@@ -1170,38 +1327,45 @@ function loadProducts(){
   
   progressManager.showTopProgressBar();
   
+  console.log("جاري تحميل المنتجات...");
+  
   db.ref("products").once("value", snap=>{
     const d = snap.val() || {};
     let htmlCards = [];
+
+    console.log("تم تحميل البيانات من Firebase:", Object.keys(d).length, "منتج");
+    
+    // تصحيح: تحقق من البيانات أولاً
+    if (!d || Object.keys(d).length === 0) {
+        if (productsContainer) {
+            productsContainer.innerHTML = "<p class='empty'>لا توجد إعلانات حالياً. كن أول من ينشر إعلان!</p>";
+        }
+        progressManager.hideTopProgressBar();
+        return;
+    }
 
     Object.keys(d).forEach(k=>{
       const p = d[k];
       
       if (!p || !p.name || !p.price) {
+        console.warn("منتج ناقص البيانات:", k, p);
         return;
       }
       
       const price = parseFloat(p.price) || 0;
-      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
-        if(budget && price > budget) return;
-        
+      const productName = p.name.toLowerCase();
+      const productCategory = p.category || '';
+      
+      // تصحيح: تحسين فلترة البحث
+      const matchesSearch = !s || productName.includes(s);
+      const matchesCategory = !c || productCategory === c;
+      const matchesBudget = !budget || price <= budget;
+      
+      if(matchesSearch && matchesCategory && matchesBudget){
         const status = p.status || 'available';
         let statusBadge = '';
         if (status !== 'available') {
           statusBadge = `<div class="product-status status-${status}">${getStatusText(status)}</div>`;
-        }
-        
-        // الحصول على معلومات البائع
-        let sellerInfo = p.seller || 'غير معروف';
-        let isVerified = false;
-        
-        if (p.uid) {
-          db.ref('users/' + p.uid).once('value', (userSnap) => {
-            const userData = userSnap.val();
-            if (userData) {
-              isVerified = userData.isVerified || false;
-            }
-          });
         }
         
         // عرض الصور إذا كانت موجودة
@@ -1221,18 +1385,21 @@ function loadProducts(){
           `<div class="seller">
             👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">
               <span class="user-name-wrapper">
-                ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
-                ${p.seller}
+                ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+                ${escapeHTML(p.seller || 'غير معروف')}
               </span>
             </span> 
-            | ☎ ${p.phone}
+            | ☎ ${p.phone || ''}
             <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
           </div>` :
           `<div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
+            👤 ${escapeHTML(p.seller || 'غير معروف')} | ☎ ${p.phone || ''}
           </div>`;
         
-        htmlCards.push({uid:p.uid,key:k,html:`
+        htmlCards.push({
+            uid: p.uid,
+            key: k,
+            html: `
           <div class="card" onclick="showDetails('${k}')">
             <h3>${escapeHTML(p.name)}</h3>
             <span class="price">${formatPrice(p.price)} د.ع</span>
@@ -1244,16 +1411,18 @@ function loadProducts(){
               <span>توصيل: ${p.delivery || 'لا'}</span>
             </div>
             ${sellerSection}
+            ${(p.uid===userUID || isAdmin)?`
             <div class="actions">
-              ${(p.uid===userUID || isAdmin)?`
               <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
-            </div>
+              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>
+            </div>` : ""}
           </div>
         `});
       }
     });
 
+    console.log("عدد المنتجات المطابقة:", htmlCards.length);
+    
     if(userUID){
       htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
     }
@@ -1263,7 +1432,7 @@ function loadProducts(){
     const start = (currentPage-1)*postsPerPage;
     const pageItems = htmlCards.slice(start, start+postsPerPage);
 
-    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
+    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات مطابقة لبحثك</p>";
     
     if (productsContainer) {
       productsContainer.style.opacity = '0';
@@ -1277,30 +1446,32 @@ function loadProducts(){
   }).catch(error => {
     console.error("Error loading products:", error);
     if (productsContainer) {
-      productsContainer.innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
+      productsContainer.innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات. يرجى تحديث الصفحة</p>";
     }
     progressManager.hideTopProgressBar();
-    progressManager.showError("خطأ في تحميل الإعلانات");
+    progressManager.showError("خطأ في تحميل الإعلانات: " + error.message);
   });
 }
 
 // Render Pagination Buttons
 function renderPagination(total){
   let html = "";
-  for(let i=1;i<=total;i++){
-    html += `
-      <button onclick="goPage(${i})"
-        style="
-          margin:3px;
-          padding:6px 10px;
-          border-radius:5px;
-          border:none;
-          cursor:pointer;
-          background:${i===currentPage?'#38bdf8':'#1f2937'};
-          color:${i===currentPage?'#000':'#fff'};
-        ">
-        ${i}
-      </button>`;
+  if (total > 1) {
+    for(let i=1;i<=total;i++){
+      html += `
+        <button onclick="goPage(${i})"
+          style="
+            margin:3px;
+            padding:6px 10px;
+            border-radius:5px;
+            border:none;
+            cursor:pointer;
+            background:${i===currentPage?'#38bdf8':'#1f2937'};
+            color:${i===currentPage?'#000':'#fff'};
+          ">
+          ${i}
+        </button>`;
+    }
   }
   const pagination = document.getElementById('pagination');
   if (pagination) {
@@ -1311,6 +1482,7 @@ function renderPagination(total){
 function goPage(p){
   currentPage = p;
   loadProducts();
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 // حذف / تعديل / نشر
@@ -1783,7 +1955,7 @@ function showDetails(k){
       ${imagesHTML}
       <p><strong>البائع:</strong> 
         <span class="user-name-wrapper">
-          ${isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
+          ${p.isVerified ? '<span class="verified-badge">✓ موثّق</span>' : ''}
           ${p.seller}
         </span>
       </p>
