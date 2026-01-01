@@ -1,4 +1,4 @@
-// Firebase Config
+// ===== Firebase Configuration =====
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
   authDomain: "a3len-3ad54.firebaseapp.com",
@@ -8,400 +8,903 @@ const firebaseConfig = {
   messagingSenderId: "767338034080",
   appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
 };
-firebase.initializeApp(firebaseConfig);
+
+// ===== Supabase Configuration =====
+const supabaseConfig = {
+  url: 'https://dnclbdvdzvtdjpgxwnrl.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY2xiZHZkenZ0ZGpwZ3h3bnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMjY5OTcsImV4cCI6MjA4MjgwMjk5N30.alGg61mAPLLqLM2LlQRq2K2o_eOOnJwNuaIJiAXB7Wg'
+};
+
+// ===== تهيئة التطبيقات =====
+// Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+// Supabase
+const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
+
+// ===== خدمات Firebase =====
+const auth = firebase.auth();
 const db = firebase.database();
-firebase.auth().signInAnonymously().catch(err=>console.error(err));
+
+// ===== إعداد مصادقة مجهولة =====
+auth.signInAnonymously().catch(err => console.error("Anonymous auth error:", err));
+
+// ===== متغيرات عامة =====
 let userUID = null;
-firebase.auth().onAuthStateChanged(u=>{if(u) userUID = u.uid;});
-
-const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
-let budget = null;
-
-/* ===== Pagination Variables ===== */
-let currentPage = 1;
-const postsPerPage = 6;
-
-// ===== إضافة متغيرات نظام المصادقة =====
 let currentUser = null;
 let userDisplayName = null;
 let userFullName = null;
+let isAdmin = false;
+let budget = null;
+let currentPage = 1;
+const postsPerPage = 6;
+const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
+const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
 
-// Sidebar
-function toggleSidebar(){document.querySelector(".sidebar").classList.toggle("active")}
-function closeSidebar(){document.querySelector(".sidebar").classList.remove("active")}
+// ===== متغيرات نظام الصور =====
+let currentProductImages = []; // الصور الحالية للإعلان (عند التعديل)
+let selectedImages = []; // الصور المحددة حديثاً
+let galleryImages = []; // صور المعرض
+let currentGalleryIndex = 0; // الفهرس الحالي في المعرض
 
-// Home
-function showHome(){
-  closeSidebar();
-  document.getElementById("content").innerHTML = `
-    <div class="search-bar">
-      <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()">
-      <select id="cat" onchange="loadProducts()">
-        <option value="">كل الأقسام</option>
-        ${categories.map(c=>`<option>${c}</option>`).join("")}
-      </select>
-      <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
-    </div>
-    <div class="cards" id="products"></div>
-    <div id="pagination" style="text-align:center;margin:20px"></div>
-  `;
-  loadProducts();
-}
-
-// Budget Dialog
-function showBudgetDialog(){document.getElementById("budgetDialog").classList.add("show")}
-function closeBudget(){document.getElementById("budgetDialog").classList.remove("show")}
-function applyBudget(){
-  const val=parseFloat(document.getElementById("maxBudget").value);
-  budget=!isNaN(val)?val:null;
-  closeBudget();
-  loadProducts();
-}
-
-// Load Products
-function loadProducts(){
-  const s=document.getElementById("search").value.toLowerCase();
-  const c=document.getElementById("cat").value;
-  db.ref("products").once("value",snap=>{
-    const d=snap.val()||{};
-    let htmlCards=[];
-    Object.keys(d).forEach(k=>{
-      const p=d[k];
-      const price=parseFloat(p.price)||0;
-      if((!c||p.category===c)&&p.name.toLowerCase().includes(s)){
-        if(budget&&price>budget) return;
+// ===== متابعة حالة المصادقة =====
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        userUID = user.uid;
         
-        // ===== إضافة زر الملف الشخصي للبائع =====
-        const sellerSection = userDisplayName ? 
-          `<div class="seller">
-            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
-            <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
-          </div>` :
-          `<div class="seller">
-            👤 ${p.seller} | ☎ ${p.phone}
-          </div>`;
-        
-        htmlCards.push({uid:p.uid,key:k,html:`
-          <div class="card" onclick="showDetails('${k}')">
-            <h3>${p.name}</h3>
-            <span class="price">${p.price} د.ع</span>
-            <div class="meta">
-              <span>${p.category}</span>
-              <span>${p.province}</span>
-              <span>توصيل: ${p.delivery}</span>
-            </div>
-            ${sellerSection}
-            <div class="actions">
-              ${p.uid===userUID?`<button class="edit" onclick="editProduct('${k}')">تعديل</button>
-              <button class="del" onclick="deleteProduct('${k}')">حذف</button>`:""}
-            </div>
-          </div>`});
-      }
-    });
-
-    // ترتيب منشورات المستخدم أولاً
-    if(userUID){
-      htmlCards = htmlCards.sort((a,b)=> b.uid===userUID ? 1 : -1);
+        if (user.email) {
+            // مستخدم مسجل
+            db.ref("users/" + user.uid).once("value", snapshot => {
+                const userData = snapshot.val();
+                if (userData) {
+                    userDisplayName = userData.username;
+                    userFullName = userData.fullName || userData.username;
+                    isAdmin = userData.isAdmin === true;
+                    updateAuthUI();
+                    
+                    // تحديث وقت آخر نشاط
+                    db.ref("users/" + user.uid).update({
+                        lastActive: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            });
+        } else {
+            // مستخدم مجهول
+            userDisplayName = "زائر";
+            updateAuthUI();
+        }
+    } else {
+        // لا يوجد مستخدم
+        currentUser = null;
+        userDisplayName = null;
+        userFullName = null;
+        isAdmin = false;
+        userUID = null;
+        updateAuthUI();
     }
+});
 
-    // Pagination
-    const totalPages = Math.ceil(htmlCards.length / postsPerPage);
-    if(currentPage > totalPages) currentPage = 1;
-    const start = (currentPage-1)*postsPerPage;
-    const pageItems = htmlCards.slice(start, start+postsPerPage);
-
-    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
-    document.getElementById("products").innerHTML = finalHTML;
-
-    renderPagination(totalPages);
-  });
+// ===== دوال Sidebar =====
+function toggleSidebar() {
+    document.querySelector(".sidebar").classList.toggle("active");
+    document.querySelector(".overlay")?.classList.toggle("active");
 }
 
-// Render Pagination Buttons
-function renderPagination(total){
-  let html = "";
-  for(let i=1;i<=total;i++){
-    html += `
-      <button onclick="goPage(${i})"
-        style="
-          margin:3px;
-          padding:6px 10px;
-          border-radius:5px;
-          border:none;
-          cursor:pointer;
-          background:${i===currentPage?'#38bdf8':'#1f2937'};
-          color:${i===currentPage?'#000':'#fff'};
-        ">
-        ${i}
-      </button>`;
-  }
-  document.getElementById("pagination").innerHTML = html;
+function closeSidebar() {
+    document.querySelector(".sidebar").classList.remove("active");
+    document.querySelector(".overlay")?.classList.remove("active");
 }
 
-function goPage(p){
-  currentPage = p;
-  loadProducts();
+// ===== الصفحة الرئيسية =====
+function showHome() {
+    closeSidebar();
+    document.getElementById("content").innerHTML = `
+        <div class="search-bar">
+            <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()" maxlength="50">
+            <select id="cat" onchange="loadProducts()">
+                <option value="">كل الأقسام</option>
+                ${categories.map(c => `<option>${c}</option>`).join("")}
+            </select>
+            <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
+        </div>
+        <div class="cards" id="products"></div>
+        <div id="pagination" style="text-align:center;margin:20px"></div>
+    `;
+    loadProducts();
 }
 
-// ===== تحديث دالة deleteProduct لتحديث العداد =====
-function deleteProduct(k){ 
-  if(confirm("حذف الإعلان؟")) {
-    // الحصول على بيانات المنتج أولاً
-    db.ref("products/" + k).once('value', (snapshot) => {
-      const product = snapshot.val();
-      if (product) {
-        // تقليل عداد منتجات المستخدم
+// ===== Budget Dialog =====
+function showBudgetDialog() {
+    document.getElementById("budgetDialog").classList.add("show");
+}
+
+function closeBudget() {
+    document.getElementById("budgetDialog").classList.remove("show");
+}
+
+function applyBudget() {
+    const val = parseFloat(document.getElementById("maxBudget").value);
+    budget = !isNaN(val) ? val : null;
+    closeBudget();
+    loadProducts();
+}
+
+// ===== تحميل المنتجات مع الصور =====
+function loadProducts() {
+    const s = document.getElementById("search")?.value.toLowerCase() || '';
+    const c = document.getElementById("cat")?.value || '';
+    
+    db.ref("products").once("value", snap => {
+        const d = snap.val() || {};
+        let htmlCards = [];
+        
+        Object.keys(d).forEach(k => {
+            const p = d[k];
+            const price = parseFloat(p.price) || 0;
+            
+            if ((!c || p.category === c) && p.name.toLowerCase().includes(s)) {
+                if (budget && price > budget) return;
+                
+                // إعداد عرض الصور
+                let imagesHTML = '';
+                if (p.images && p.images.length > 0) {
+                    imagesHTML = `
+                        <div class="product-images">
+                            ${p.images.slice(0, 3).map((img, index) => `
+                                <img src="${img}" alt="صورة ${index + 1}" class="product-image-thumb" 
+                                     onclick="openImageGallery('${k}', ${index}); event.stopPropagation();">
+                            `).join('')}
+                            ${p.images.length > 3 ? `
+                                <div style="
+                                    width: 70px;
+                                    height: 70px;
+                                    background: rgba(56, 189, 248, 0.1);
+                                    border: 1px solid rgba(56, 189, 248, 0.2);
+                                    border-radius: 8px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: #38bdf8;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    flex-shrink: 0;
+                                " onclick="openImageGallery('${k}', 3); event.stopPropagation();">
+                                    +${p.images.length - 3}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // عرض البائع
+                const sellerSection = userDisplayName ? 
+                    `<div class="seller">
+                        👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">${p.seller}</span> | ☎ ${p.phone}
+                        <br><small style="color:#9ca3af; font-size:11px;">انقر على الاسم لعرض البروفايل</small>
+                    </div>` :
+                    `<div class="seller">
+                        👤 ${p.seller} | ☎ ${p.phone}
+                    </div>`;
+                
+                htmlCards.push({
+                    uid: p.uid,
+                    key: k,
+                    html: `
+                        <div class="card" onclick="showDetails('${k}')">
+                            <h3>${escapeHTML(p.name)}</h3>
+                            <span class="price">${formatPrice(p.price)} د.ع</span>
+                            ${imagesHTML}
+                            <div class="meta">
+                                <span>${p.category || 'غير محدد'}</span>
+                                <span>${p.province || 'غير محدد'}</span>
+                                <span>توصيل: ${p.delivery || 'لا'}</span>
+                            </div>
+                            ${sellerSection}
+                            <div class="actions">
+                                ${(p.uid === userUID || isAdmin) ? `
+                                    <button class="edit" onclick="editProduct('${k}'); event.stopPropagation();">تعديل</button>
+                                    <button class="del" onclick="deleteProduct('${k}'); event.stopPropagation();">حذف</button>
+                                ` : ""}
+                            </div>
+                        </div>
+                    `
+                });
+            }
+        });
+        
+        // ترتيب منشورات المستخدم أولاً
+        if (userUID) {
+            htmlCards = htmlCards.sort((a, b) => b.uid === userUID ? 1 : -1);
+        }
+        
+        // Pagination
+        const totalPages = Math.ceil(htmlCards.length / postsPerPage);
+        if (currentPage > totalPages) currentPage = 1;
+        const start = (currentPage - 1) * postsPerPage;
+        const pageItems = htmlCards.slice(start, start + postsPerPage);
+        
+        let finalHTML = pageItems.map(p => p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
+        document.getElementById("products").innerHTML = finalHTML;
+        
+        renderPagination(totalPages);
+    }).catch(error => {
+        console.error("Error loading products:", error);
+        document.getElementById("products").innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
+    });
+}
+
+// ===== Render Pagination =====
+function renderPagination(total) {
+    let html = "";
+    for (let i = 1; i <= total; i++) {
+        html += `
+            <button onclick="goPage(${i})"
+                style="
+                    margin: 3px;
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    border: none;
+                    cursor: pointer;
+                    background: ${i === currentPage ? '#38bdf8' : '#1f2937'};
+                    color: ${i === currentPage ? '#000' : '#fff'};
+                    font-weight: 600;
+                    transition: all 0.2s;
+                ">
+                ${i}
+            </button>`;
+    }
+    document.getElementById("pagination").innerHTML = html;
+}
+
+function goPage(p) {
+    currentPage = p;
+    loadProducts();
+}
+
+// ===== حذف المنتج والصور =====
+async function deleteProduct(k) {
+    if (!confirm("هل أنت متأكد من حذف الإعلان؟ سيتم حذف الصور أيضاً ولا يمكن التراجع عن هذا الإجراء.")) {
+        return;
+    }
+    
+    try {
+        // الحصول على بيانات المنتج أولاً
+        const snapshot = await db.ref("products/" + k).once('value');
+        const product = snapshot.val();
+        
+        if (!product) {
+            alert("الإعلان غير موجود");
+            return;
+        }
+        
+        if (product.uid !== userUID && !isAdmin) {
+            alert("ليس لديك صلاحية لحذف هذا الإعلان");
+            return;
+        }
+        
+        // حذف الصور من Supabase إذا وجدت
+        if (product.images && product.images.length > 0) {
+            const imageUrls = product.images;
+            const deletePromises = imageUrls.map(async (url) => {
+                try {
+                    // استخراج اسم الملف من الرابط
+                    const fileName = url.split('/').pop();
+                    if (fileName) {
+                        const { error } = await supabase.storage
+                            .from('product-images')
+                            .remove([`${k}/${fileName}`]);
+                        
+                        if (error) {
+                            console.warn("Error deleting image:", error.message);
+                        }
+                    }
+                } catch (error) {
+                    console.warn("Error processing image deletion:", error);
+                }
+            });
+            
+            await Promise.all(deletePromises);
+        }
+        
+        // تحديث عدد منتجات المستخدم
         if (product.uid) {
-          db.ref('users/' + product.uid).once('value', (userSnapshot) => {
+            const userSnapshot = await db.ref('users/' + product.uid).once('value');
             const userData = userSnapshot.val();
             if (userData) {
-              const currentCount = userData.totalProducts || 0;
-              if (currentCount > 0) {
-                db.ref('users/' + product.uid).update({
-                  totalProducts: currentCount - 1
-                });
-              }
+                const currentCount = userData.totalProducts || 0;
+                if (currentCount > 0) {
+                    await db.ref('users/' + product.uid).update({
+                        totalProducts: currentCount - 1
+                    });
+                }
             }
-          });
         }
         
-        // حذف المنتج
-        db.ref("products/"+k).remove().then(() => {
-          loadProducts();
-        });
-      }
-    });
-  } 
-}
-
-function editProduct(k){db.ref("products/"+k).once("value",s=>showPublish(s.val(),k))}
-
-// ===== تعديل دالة showPublish لدعم المصادقة =====
-function showPublish(p=null,k=null){
-  closeSidebar();
-  
-  // استخدام اسم المستخدم إذا كان مسجلاً
-  const sellerName = userDisplayName || (p ? p.seller : "");
-  const sellerField = userDisplayName ? 
-    `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
-     <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
-    `<input id="seller" placeholder="اسم البائع" value="${sellerName}">`;
-  
-  document.getElementById("content").innerHTML=`
-    <div class="form-box">
-      <h2>${p?"تعديل إعلان":"نشر إعلان جديد"}</h2>
-      <input id="name" placeholder="اسم القطعة" value="${p?p.name:""}">
-      <input id="price" type="number" placeholder="السعر" value="${p?p.price:""}">
-      <select id="category">${categories.map(c=>`<option ${p&&p.category===c?"selected":""}>${c}</option>`).join("")}</select>
-      ${sellerField}
-      <input id="phone" placeholder="رقم الهاتف" value="${p?p.phone:""}">
-      <input id="province" placeholder="المحافظة" value="${p?p.province:""}">
-      <select id="delivery">
-        <option ${p&&p.delivery==="نعم"?"selected":""}>نعم</option>
-        <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
-      </select>
-      <button onclick="save('${k||""}')">💾 حفظ</button>
-    </div>`;
-}
-
-// ===== تحديث دالة save لإضافة عداد المنتجات =====
-function save(k){
-  const phone = document.getElementById("phone").value.trim();
-  if(!/^[0][0-9]{10}$/.test(phone)){
-    alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر.");
-    return;
-  }
-
-  // استخدام اسم المستخدم المسجل إذا كان متوفراً
-  const seller = userDisplayName || document.getElementById("seller").value;
-
-  const data = {
-    name: document.getElementById("name").value,
-    price: document.getElementById("price").value,
-    category: document.getElementById("category").value,
-    seller: seller,
-    phone: phone,
-    province: document.getElementById("province").value,
-    delivery: document.getElementById("delivery").value,
-    uid: userUID,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  };
-  
-  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
-  
-  ref.set(data).then(() => {
-    // ===== تحديث عداد منتجات المستخدم (للإعلانات الجديدة فقط) =====
-    if (!k && userUID) {
-      db.ref('users/' + userUID).once('value', (snapshot) => {
-        const userData = snapshot.val();
-        if (userData) {
-          const currentCount = userData.totalProducts || 0;
-          db.ref('users/' + userUID).update({
-            totalProducts: currentCount + 1,
-            lastActive: firebase.database.ServerValue.TIMESTAMP
-          });
-        } else {
-          // إذا لم يكن للمستخدم بيانات، إنشاءها
-          db.ref('users/' + userUID).update({
-            totalProducts: 1,
-            lastActive: firebase.database.ServerValue.TIMESTAMP
-          });
-        }
-      });
+        // حذف المنتج من Firebase
+        await db.ref("products/" + k).remove();
+        
+        alert("تم حذف الإعلان والصور بنجاح");
+        loadProducts();
+        
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("حدث خطأ أثناء حذف الإعلان");
     }
-    showHome();
-  }).catch(error => {
-    console.error("Error saving product:", error);
-    alert("حدث خطأ أثناء حفظ الإعلان");
-  });
 }
 
-// ===== إضافة دالة showDetails لعرض تفاصيل المنتج =====
-function showDetails(k){
-  db.ref("products/"+k).once("value",snap=>{
-    const p = snap.val();
-    if(!p) return;
+// ===== تعديل المنتج =====
+async function editProduct(k) {
+    try {
+        const snapshot = await db.ref("products/" + k).once("value");
+        const product = snapshot.val();
+        
+        if (!product) {
+            alert("الإعلان غير موجود");
+            return;
+        }
+        
+        if (product.uid !== userUID && !isAdmin) {
+            alert("ليس لديك صلاحية لتعديل هذا الإعلان");
+            return;
+        }
+        
+        // جلب الصور الحالية
+        currentProductImages = product.images || [];
+        selectedImages = []; // إعادة تعيين الصور المحددة
+        
+        showPublish(product, k);
+    } catch (error) {
+        console.error("Error loading product for edit:", error);
+        alert("حدث خطأ في تحميل الإعلان للتعديل");
+    }
+}
+
+// ===== عرض نموذج النشر/التعديل =====
+function showPublish(p = null, k = null) {
+    closeSidebar();
     
-    // ===== إضافة زر الملف الشخصي في نافذة التفاصيل =====
-    const sellerWithLink = userDisplayName ? 
-      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
-       <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
-      `<p><strong>البائع:</strong> ${p.seller}</p>`;
+    const sellerName = userDisplayName || (p ? p.seller : "");
+    const sellerField = userDisplayName ? 
+        `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
+         <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
+        `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
     
-    document.getElementById("detailsContent").innerHTML = `
-      <h2>${p.name}</h2>
-      <p><strong>السعر:</strong> ${p.price} د.ع</p>
-      <p><strong>القسم:</strong> ${p.category}</p>
-      ${sellerWithLink}
-      <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
-      <p><strong>المحافظة:</strong> ${p.province}</p>
-      <p><strong>التوصيل:</strong> ${p.delivery}</p>
-      ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
-    `;
-    document.getElementById("detailsDialog").style.display="block";
-  });
+    // جلب المحافظات مع اختيار المحافظة الحالية
+    const provincesOptions = provinces.map(pr => 
+        `<option value="${pr}" ${p && p.province === pr ? "selected" : ""}>${pr}</option>`
+    ).join("");
+    
+    // إنشاء عرض معاينة الصور
+    let imagesPreviewHTML = '';
+    if (p && currentProductImages && currentProductImages.length > 0) {
+        imagesPreviewHTML = currentProductImages.map((img, index) => `
+            <div class="image-preview">
+                <img src="${img}" alt="صورة ${index + 1}">
+                <button class="remove-image" onclick="removeExistingImage(${index})">✕</button>
+            </div>
+        `).join('');
+    }
+    
+    // إضافة الصور المحددة حديثاً
+    imagesPreviewHTML += selectedImages.map((img, index) => `
+        <div class="image-preview">
+            <img src="${img.preview}" alt="صورة ${index + 1}">
+            <button class="remove-image" onclick="removeSelectedImage(${index})">✕</button>
+        </div>
+    `).join('');
+    
+    document.getElementById("content").innerHTML = `
+        <div class="form-box">
+            <h2>${p ? "تعديل إعلان" : "نشر إعلان جديد"}</h2>
+            
+            <input id="name" placeholder="اسم القطعة" value="${p ? escapeHTML(p.name) : ""}" maxlength="50" required>
+            <input id="price" type="number" placeholder="السعر (د.ع)" value="${p ? p.price : ""}" min="0" max="10000000" required>
+            <select id="category" required>
+                ${categories.map(c => `<option value="${c}" ${p && p.category === c ? "selected" : ""}>${c}</option>`).join("")}
+            </select>
+            ${sellerField}
+            <input id="phone" placeholder="رقم الهاتف (يبدأ بـ 0)" value="${p ? p.phone : ""}" pattern="[0][0-9]{10}" required>
+            <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
+            <select id="province" required>
+                <option value="">اختر المحافظة</option>
+                ${provincesOptions}
+            </select>
+            <select id="delivery" required>
+                <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
+                <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
+            </select>
+            
+            <!-- قسم رفع الصور -->
+            <div class="image-upload-section">
+                <div class="image-upload-header">
+                    <h4>📷 صور الإعلان</h4>
+                    <span class="image-count">${currentProductImages.length + selectedImages.length}/2</span>
+                </div>
+                
+                <div class="image-upload-warning">
+                    ⚠️ يمكنك رفع صورتين فقط لكل إعلان
+                    <br><small>الصور: PNG, JPG, GIF - الحد الأقصى: 5MB لكل صورة</small>
+                </div>
+                
+                <div class="image-preview-container" id="imagePreviewContainer">
+                    ${imagesPreviewHTML || '<div style="color:#9ca3af; text-align:center; width:100%; padding:20px;">لم يتم اختيار صور بعد</div>'}
+                </div>
+                
+                ${(currentProductImages.length + selectedImages.length) < 2 ? `
+                <div class="upload-btn-container">
+                    <label class="upload-image-btn">
+                        <i>📷</i>
+                        إضافة صورة
+                        <input type="file" accept="image/*" style="display:none;" 
+                               onchange="handleImageUpload(event)" multiple>
+                    </label>
+                </div>
+                ` : ''}
+            </div>
+            
+            <button onclick="saveProduct('${k || ""}')" id="saveBtn">
+                💾 ${p ? "تحديث" : "نشر"}
+            </button>
+            ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
+        </div>`;
 }
 
-function closeDetails(){
-  document.getElementById("detailsDialog").style.display="none";
+// ===== معالجة رفع الصور =====
+function handleImageUpload(event) {
+    const files = Array.from(event.target.files);
+    const remainingSlots = 2 - (currentProductImages.length + selectedImages.length);
+    
+    if (files.length > remainingSlots) {
+        alert(`يمكنك رفع ${remainingSlots} صورة فقط`);
+        event.target.value = '';
+        return;
+    }
+    
+    files.forEach(file => {
+        // التحقق من حجم الملف (5MB كحد أقصى)
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`الملف ${file.name} كبير جداً (الحد الأقصى: 5MB)`);
+            return;
+        }
+        
+        // التحقق من نوع الملف
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert(`نوع الملف ${file.name} غير مدعوم`);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedImages.push({
+                file: file,
+                preview: e.target.result
+            });
+            
+            // تحديث العرض
+            updateImagePreview();
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    event.target.value = ''; // إعادة تعيين حقل الرفع
 }
 
-// ===== تحديث دالة updateAuthUI لعرض الاسم الكامل =====
+// ===== تحديث معاينة الصور =====
+function updateImagePreview() {
+    const container = document.getElementById('imagePreviewContainer');
+    const imageCount = document.querySelector('.image-count');
+    
+    if (container) {
+        // عرض الصور الحالية أولاً
+        let html = currentProductImages.map((img, index) => `
+            <div class="image-preview">
+                <img src="${img}" alt="صورة ${index + 1}">
+                <button class="remove-image" onclick="removeExistingImage(${index})">✕</button>
+            </div>
+        `).join('');
+        
+        // إضافة الصور المحددة حديثاً
+        html += selectedImages.map((img, index) => `
+            <div class="image-preview">
+                <img src="${img.preview}" alt="صورة ${index + 1}">
+                <button class="remove-image" onclick="removeSelectedImage(${index})">✕</button>
+            </div>
+        `).join('');
+        
+        if (!html) {
+            html = '<div style="color:#9ca3af; text-align:center; width:100%; padding:20px;">لم يتم اختيار صور بعد</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    if (imageCount) {
+        imageCount.textContent = `${currentProductImages.length + selectedImages.length}/2`;
+    }
+    
+    // إخفاء زر الرفع إذا وصل للحد
+    const uploadBtn = document.querySelector('.upload-btn-container');
+    if (uploadBtn) {
+        if (currentProductImages.length + selectedImages.length >= 2) {
+            uploadBtn.style.display = 'none';
+        } else {
+            uploadBtn.style.display = 'block';
+        }
+    }
+}
+
+function removeSelectedImage(index) {
+    selectedImages.splice(index, 1);
+    updateImagePreview();
+}
+
+function removeExistingImage(index) {
+    currentProductImages.splice(index, 1);
+    updateImagePreview();
+}
+
+// ===== حفظ المنتج مع الصور =====
+async function saveProduct(k) {
+    // التحقق من الحقول المطلوبة
+    const name = document.getElementById("name").value.trim();
+    const price = document.getElementById("price").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const province = document.getElementById("province").value;
+    
+    if (!name || !price || !phone || !province) {
+        alert("جميع الحقول مطلوبة");
+        return;
+    }
+    
+    if (name.length < 3 || name.length > 50) {
+        alert("اسم القطعة يجب أن يكون بين 3 و 50 حرف");
+        return;
+    }
+    
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum < 0 || priceNum > 10000000) {
+        alert("السعر يجب أن يكون بين 0 و 10,000,000 دينار");
+        return;
+    }
+    
+    if(!/^[0][0-9]{10}$/.test(phone)){
+        alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر");
+        return;
+    }
+    
+    if (!province) {
+        alert("يرجى اختيار المحافظة");
+        return;
+    }
+
+    const seller = userDisplayName || document.getElementById("seller").value.trim();
+    
+    if (!seller || seller.length < 2) {
+        alert("اسم البائع مطلوب (2 أحرف على الأقل)");
+        return;
+    }
+
+    // التحقق من عدد الصور
+    const totalImages = currentProductImages.length + selectedImages.length;
+    if (totalImages > 2) {
+        alert("يمكنك رفع صورتين فقط لكل إعلان");
+        return;
+    }
+
+    const saveBtn = document.getElementById('saveBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = 'جاري الحفظ...';
+    saveBtn.disabled = true;
+
+    try {
+        // رفع الصور الجديدة إلى Supabase
+        let uploadedImageUrls = [...currentProductImages];
+        
+        if (selectedImages.length > 0) {
+            // إنشاء معرف فريد للإعلان إذا كان جديداً
+            const productId = k || `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            const uploadPromises = selectedImages.map(async (img, index) => {
+                try {
+                    // إنشاء اسم فريد للملف
+                    const fileExt = img.file.name.split('.').pop();
+                    const fileName = `image_${Date.now()}_${index}.${fileExt}`;
+                    const filePath = `${productId}/${fileName}`;
+                    
+                    // رفع الصورة إلى Supabase Storage
+                    const { data, error } = await supabase.storage
+                        .from('product-images')
+                        .upload(filePath, img.file);
+                    
+                    if (error) throw error;
+                    
+                    // الحصول على الرابط العام
+                    const { data: urlData } = supabase.storage
+                        .from('product-images')
+                        .getPublicUrl(filePath);
+                    
+                    return urlData.publicUrl;
+                } catch (error) {
+                    console.error("Error uploading image:", error);
+                    throw error;
+                }
+            });
+            
+            const newUrls = await Promise.all(uploadPromises);
+            uploadedImageUrls = [...uploadedImageUrls, ...newUrls];
+        }
+        
+        // إعداد بيانات الإعلان
+        const data = {
+            name: name,
+            price: priceNum,
+            category: document.getElementById("category").value,
+            seller: seller,
+            phone: phone,
+            province: province,
+            delivery: document.getElementById("delivery").value,
+            uid: userUID,
+            images: uploadedImageUrls,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        if (!k) {
+            data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+        }
+        
+        const ref = k ? db.ref("products/" + k) : db.ref("products").push();
+        
+        // حفظ البيانات في Firebase
+        await ref.set(data);
+        
+        if (!k && userUID) {
+            // تحديث عدد منتجات المستخدم للإعلانات الجديدة فقط
+            const userSnapshot = await db.ref('users/' + userUID).once('value');
+            const userData = userSnapshot.val();
+            if (userData) {
+                const currentCount = userData.totalProducts || 0;
+                await db.ref('users/' + userUID).update({
+                    totalProducts: currentCount + 1,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+            } else {
+                // إذا لم يكن للمستخدم بيانات، إنشاءها
+                await db.ref('users/' + userUID).set({
+                    totalProducts: 1,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        }
+        
+        // إعادة تعيين متغيرات الصور
+        currentProductImages = [];
+        selectedImages = [];
+        
+        alert(k ? "تم تحديث الإعلان بنجاح" : "تم نشر الإعلان بنجاح");
+        showHome();
+        
+    } catch (error) {
+        console.error("Error saving product:", error);
+        alert("حدث خطأ أثناء حفظ الإعلان");
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+// ===== عرض تفاصيل المنتج =====
+async function showDetails(k) {
+    try {
+        const snapshot = await db.ref("products/" + k).once("value");
+        const p = snapshot.val();
+        
+        if (!p) {
+            alert("الإعلان غير موجود أو تم حذفه");
+            return;
+        }
+        
+        // إعداد عرض الصور
+        let imagesHTML = '';
+        if (p.images && p.images.length > 0) {
+            imagesHTML = `
+                <div style="margin: 20px 0;">
+                    <h4 style="color:#38bdf8; margin-bottom:10px;">📷 صور الإعلان</h4>
+                    <div style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;">
+                        ${p.images.map((img, index) => `
+                            <img src="${img}" alt="صورة ${index + 1}" 
+                                 style="width: 120px; height: 120px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid rgba(56, 189, 248, 0.3);"
+                                 onclick="openImageGallery('${k}', ${index});">
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        const sellerWithLink = userDisplayName ? 
+            `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">${p.seller}</span></p>
+             <p><small style="color:#38bdf8;">انقر على اسم البائع لعرض ملفه الشخصي</small></p>` :
+            `<p><strong>البائع:</strong> ${p.seller}</p>`;
+        
+        document.getElementById("detailsContent").innerHTML = `
+            <h2>${escapeHTML(p.name)}</h2>
+            <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
+            <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+            ${imagesHTML}
+            ${sellerWithLink}
+            <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
+            <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+            <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
+            ${p.uid === userUID ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
+        `;
+        document.getElementById("detailsDialog").style.display = "block";
+        
+    } catch (error) {
+        console.error("Error loading details:", error);
+        alert("حدث خطأ في تحميل التفاصيل");
+    }
+}
+
+function closeDetails() {
+    document.getElementById("detailsDialog").style.display = "none";
+}
+
+// ===== دوال معرض الصور =====
+function openImageGallery(productId, startIndex = 0) {
+    db.ref("products/" + productId).once("value", snapshot => {
+        const product = snapshot.val();
+        if (product && product.images) {
+            galleryImages = product.images;
+            currentGalleryIndex = startIndex;
+            
+            const galleryImage = document.getElementById('galleryImage');
+            const galleryModal = document.getElementById('imageGalleryModal');
+            const galleryCounter = document.getElementById('galleryCounter');
+            
+            if (galleryImage && galleryModal && galleryCounter) {
+                galleryImage.src = galleryImages[currentGalleryIndex];
+                galleryCounter.textContent = `${currentGalleryIndex + 1} / ${galleryImages.length}`;
+                galleryModal.classList.add('active');
+            }
+        }
+    });
+}
+
+function closeGallery() {
+    const galleryModal = document.getElementById('imageGalleryModal');
+    if (galleryModal) {
+        galleryModal.classList.remove('active');
+        galleryImages = [];
+        currentGalleryIndex = 0;
+    }
+}
+
+function prevImage() {
+    if (galleryImages.length > 0) {
+        currentGalleryIndex = (currentGalleryIndex - 1 + galleryImages.length) % galleryImages.length;
+        updateGallery();
+    }
+}
+
+function nextImage() {
+    if (galleryImages.length > 0) {
+        currentGalleryIndex = (currentGalleryIndex + 1) % galleryImages.length;
+        updateGallery();
+    }
+}
+
+function updateGallery() {
+    const galleryImage = document.getElementById('galleryImage');
+    const galleryCounter = document.getElementById('galleryCounter');
+    
+    if (galleryImage && galleryCounter) {
+        galleryImage.src = galleryImages[currentGalleryIndex];
+        galleryCounter.textContent = `${currentGalleryIndex + 1} / ${galleryImages.length}`;
+    }
+}
+
+// ===== دوال المصادقة =====
 function updateAuthUI() {
-  const authSection = document.getElementById("authSection");
-  if (!authSection) return;
-  
-  if (currentUser && userDisplayName) {
-    // المستخدم مسجل الدخول
-    const displayName = userFullName || userDisplayName;
-    authSection.innerHTML = `
-      <div class="user-info">
-        <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
-        <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
-        <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
-      </div>
-    `;
-  } else {
-    // المستخدم غير مسجل
-    authSection.innerHTML = `
-      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
-      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
-    `;
-  }
+    const authSection = document.getElementById("authSection");
+    
+    if (!authSection) return;
+    
+    if (currentUser && userDisplayName) {
+        // المستخدم مسجل الدخول
+        const displayName = userFullName || userDisplayName;
+        authSection.innerHTML = `
+            <div class="user-info">
+                <p class="profile-link" onclick="viewMyProfile()">👤 ${displayName}</p>
+                <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+                <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+            </div>
+        `;
+    } else {
+        // المستخدم غير مسجل
+        authSection.innerHTML = `
+            <button class="auth-btn" onclick="showLoginAlert()">🔐 تسجيل دخول</button>
+            <button class="auth-btn" onclick="showRegisterAlert()">📝 إنشاء حساب</button>
+            <div style="color:#9ca3af; font-size:12px; text-align:center; padding:10px;">
+                يمكنك النشر كمستخدم مجهول
+            </div>
+        `;
+    }
+}
+
+function showLoginAlert() {
+    alert("لنشر الإعلانات المميزة وحفظ إعلاناتك، يرجى إنشاء حساب من خلال تطبيقنا على الهاتف");
+}
+
+function showRegisterAlert() {
+    alert("لتسجيل حساب جديد، يرجى تحميل تطبيقنا على الهاتف من المتجر الرسمي");
 }
 
 function logoutUser() {
-  firebase.auth().signOut()
-    .then(() => {
-      currentUser = null;
-      userDisplayName = null;
-      userFullName = null;
-      updateAuthUI();
-      showHome();
-    })
-    .catch((error) => {
-      console.error("Logout error:", error);
-      alert("حدث خطأ أثناء تسجيل الخروج");
-    });
+    if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+        auth.signOut()
+            .then(() => {
+                currentUser = null;
+                userDisplayName = null;
+                userFullName = null;
+                isAdmin = false;
+                updateAuthUI();
+                showHome();
+            })
+            .catch((error) => {
+                console.error("Logout error:", error);
+                alert("حدث خطأ أثناء تسجيل الخروج");
+            });
+    }
 }
 
-// ===== إضافة دوال نظام الملف الشخصي =====
+// ===== دوال نظام الملف الشخصي =====
 function viewProfile(userId, sellerName) {
-  // حفظ اسم البائع للاستخدام لاحقاً
-  if (sellerName) {
-    localStorage.setItem('profileSellerName', sellerName);
-  }
-  
-  // الانتقال لصفحة الملف الشخصي
-  window.location.href = `profile.html?id=${userId}`;
+    if (sellerName) {
+        localStorage.setItem('profileSellerName', sellerName);
+    }
+    window.location.href = `profile.html?id=${userId}`;
 }
 
 function viewMyProfile() {
-  if (currentUser && currentUser.uid) {
-    window.location.href = `profile.html?id=${currentUser.uid}`;
-  } else {
-    alert('يرجى تسجيل الدخول أولاً');
-    window.location.href = 'login.html';
-  }
+    if (currentUser && currentUser.uid) {
+        window.location.href = `profile.html?id=${currentUser.uid}`;
+    } else {
+        alert('يرجى تسجيل الدخول أولاً');
+        showLoginAlert();
+    }
 }
 
-// متابعة حالة المصادقة
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    currentUser = user;
-    userUID = user.uid;
-    
-    // الحصول على بيانات المستخدم من قاعدة البيانات
-    db.ref("users/" + user.uid).once("value", snapshot => {
-      const userData = snapshot.val();
-      if (userData) {
-        userDisplayName = userData.username;
-        userFullName = userData.fullName || userData.username;
-        updateAuthUI();
-        
-        // تحديث وقت آخر نشاط
-        db.ref("users/" + user.uid).update({
-          lastActive: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    });
-  } else {
-    // المستخدم غير مسجل
-    currentUser = null;
-    userDisplayName = null;
-    userFullName = null;
+// ===== دوال مساعدة =====
+function escapeHTML(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatPrice(price) {
+    return parseInt(price).toLocaleString('ar-SA');
+}
+
+// ===== تهيئة التطبيق =====
+document.addEventListener("DOMContentLoaded", function() {
+    showHome();
     updateAuthUI();
-  }
+    
+    // إغلاق المعرض عند الضغط على ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeGallery();
+        }
+    });
+    
+    // إغلاق المعرض عند الضغط خارج الصورة
+    document.getElementById('imageGalleryModal')?.addEventListener('click', function(e) {
+        if (e.target.classList.contains('image-gallery-modal')) {
+            closeGallery();
+        }
+    });
 });
-
-// Init
-document.addEventListener("DOMContentLoaded",function(){
-  showHome();
-  updateAuthUI();
-  
-  // إضافة أنماط إضافية لروابط البائعين
-  const style = document.createElement('style');
-  style.textContent = `
-    .seller-link {
-      color: #38bdf8;
-      cursor: pointer;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    .seller-link:hover {
-      color: #0ea5e9;
-      text-decoration: none;
-    }
-    .profile-link {
-      color: #38bdf8;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .profile-link:hover {
-      color: #0ea5e9;
-    }
-  `;
-  document.head.appendChild(style);
-});
-
-
