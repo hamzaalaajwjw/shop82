@@ -1057,7 +1057,10 @@ async function showPublish(p=null,k=null){
   
   setTimeout(async () => {
     if (!userUID && !currentUser) {
-      const publishAnyway = confirm("يجب تسجيل الدخول لنشر إعلانات. هل تريد المتابعة كمستخدم مجهول؟ (الإعلان سيحذف عند الخروج)");
+      alert("يجب عليك أولاً تسجيل الدخول في الموقع");
+      window.location.href = 'register.html';
+      progressManager.hideTopProgressBar();
+      return;
       if (!publishAnyway) {
         progressManager.hideTopProgressBar();
         showHome();
