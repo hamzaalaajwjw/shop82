@@ -240,6 +240,176 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   cursor: not-allowed !important;
 }
 
+/* ===== أنماط جديدة للصور ===== */
+.image-upload-container {
+  margin: 15px 0;
+}
+
+.image-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #374151;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.preview-image:hover {
+  transform: scale(1.05);
+  border-color: #38bdf8;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: none;
+}
+
+.image-preview-item {
+  position: relative;
+}
+
+.image-preview-item:hover .remove-image-btn {
+  display: block;
+}
+
+.file-input-label {
+  display: inline-block;
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  margin: 5px 0;
+  border: 2px dashed #374151;
+  transition: all 0.3s;
+}
+
+.file-input-label:hover {
+  background: #374151;
+  border-color: #38bdf8;
+}
+
+.file-input-label i {
+  margin-left: 5px;
+  color: #38bdf8;
+}
+
+#images {
+  display: none;
+}
+
+/* ===== أنماط عرض الصور في البطاقة ===== */
+.product-images {
+  margin: 10px 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+
+.images-slider {
+  display: flex;
+  transition: transform 0.3s ease;
+}
+
+.slider-image {
+  min-width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-counter {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.slider-nav {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  transform: translateY(-50%);
+}
+
+.slider-btn {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.slider-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.no-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #1f2937, #374151);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ===== تعديل أنماط البطاقة لدعم الصور ===== */
+.card {
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+  height: 40px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 /* تحسينات للهاتف */
 @media (max-width: 768px) {
     .user-name-wrapper {
@@ -254,6 +424,43 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     .seller-link {
         font-size: 14px;
     }
+    
+    .slider-image {
+        height: 150px;
+    }
+    
+    .preview-image {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .image-preview {
+        justify-content: center;
+    }
+}
+
+/* ===== أنماط جديدة لتحميل الصور ===== */
+.upload-progress {
+  width: 100%;
+  height: 4px;
+  background: #374151;
+  border-radius: 2px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #38bdf8;
+  border-radius: 2px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+.upload-status {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 5px;
 }
 </style>
 </head>
@@ -343,7 +550,16 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+// ===== تهيئة Supabase =====
+const supabaseUrl = 'https://dnclbdvdzvtdjpgxwnrl.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY2xiZHZkenZ0ZGpwZ3h3bnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMjY5OTcsImV4cCI6MjA4MjgwMjk5N30.alGg61mAPLLqLM2LlQRq2K2o_eOOnJwNuaIJiAXB7Wg';
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
 // إعداد Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
@@ -532,32 +748,19 @@ class ProgressManager {
 // تهيئة Progress Manager
 const progressManager = new ProgressManager();
 
+// ===== متغيرات عامة =====
 let userUID = null;
-auth.onAuthStateChanged(u => {
-    if (u) {
-        userUID = u.uid;
-        if (u.email) {
-            db.ref("users/" + u.uid).update({
-                lastActive: firebase.database.ServerValue.TIMESTAMP
-            });
-        }
-    }
-});
-
-// الأقسام والمحافظات
-const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
-const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
-let budget = null;
-
-/* ===== Pagination Variables ===== */
-let currentPage = 1;
-const postsPerPage = 6;
-
-// ===== إضافة متغيرات المصادقة =====
 let currentUser = null;
 let userDisplayName = null;
 let userFullName = null;
 let isAdmin = false;
+let budget = null;
+let currentPage = 1;
+const postsPerPage = 6;
+
+// الأقسام والمحافظات
+const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
+const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
 
 // ===== نظام تحديد وقت النشر =====
 let canPublish = true;
@@ -569,6 +772,10 @@ let sessionTimeout = null;
 let sessionWarning = null;
 const SESSION_DURATION = 60 * 60 * 1000;
 const SESSION_WARNING = 5 * 60 * 1000;
+
+// ===== متغيرات رفع الصور =====
+let selectedImages = [];
+let imagePreviewUrls = [];
 
 // ===== دالة تحذير الأمان =====
 function showSecurityWarning(message) {
@@ -586,8 +793,137 @@ function showSecurityWarning(message) {
     }
 }
 
-// ===== نظام مؤقت النشر المحسّن (مع Firebase) =====
-function checkPublishPermission() {
+// ===== نظام إدارة الصور =====
+class ImageManager {
+    static async uploadProductImages(productId, images) {
+        const imageUrls = [];
+        
+        for (let i = 0; i < images.length; i++) {
+            const file = images[i];
+            const fileName = `product_${productId}_${Date.now()}_${i}.jpg`;
+            const path = `products/${productId}/${fileName}`;
+            
+            // رفع الصورة إلى Supabase
+            const { data, error } = await supabaseClient.storage
+                .from('ads-images')
+                .upload(path, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                });
+            
+            if (error) {
+                console.error('Error uploading image:', error);
+                continue;
+            }
+            
+            // الحصول على رابط الصورة
+            const { data: urlData } = supabaseClient.storage
+                .from('ads-images')
+                .getPublicUrl(path);
+            
+            if (urlData?.publicUrl) {
+                imageUrls.push(urlData.publicUrl);
+            }
+        }
+        
+        return imageUrls;
+    }
+    
+    static async deleteProductImages(productId) {
+        try {
+            // قائمة الملفات في المجلد الخاص بالمنتج
+            const { data: files, error } = await supabaseClient.storage
+                .from('ads-images')
+                .list(`products/${productId}`);
+            
+            if (error) {
+                console.error('Error listing files:', error);
+                return;
+            }
+            
+            // حذف جميع الملفات
+            for (const file of files) {
+                await supabaseClient.storage
+                    .from('ads-images')
+                    .remove([`products/${productId}/${file.name}`]);
+            }
+            
+            console.log('Product images deleted successfully');
+        } catch (error) {
+            console.error('Error deleting images:', error);
+        }
+    }
+    
+    static createImageSlider(images, productId) {
+        if (!images || images.length === 0) {
+            return '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+        }
+        
+        let sliderHTML = `
+            <div class="product-images" id="slider-${productId}">
+                <div class="images-slider">
+        `;
+        
+        images.forEach((img, index) => {
+            sliderHTML += `
+                <img src="${img}" class="slider-image" alt="صورة المنتج ${index + 1}">
+            `;
+        });
+        
+        sliderHTML += `
+                </div>
+                <div class="image-counter">${images.length} / ${images.length}</div>
+        `;
+        
+        if (images.length > 1) {
+            sliderHTML += `
+                <div class="slider-nav">
+                    <button class="slider-btn prev-btn" onclick="ImageManager.prevSlide('${productId}')">❮</button>
+                    <button class="slider-btn next-btn" onclick="ImageManager.nextSlide('${productId}')">❯</button>
+                </div>
+            `;
+        }
+        
+        sliderHTML += '</div>';
+        
+        return sliderHTML;
+    }
+    
+    static nextSlide(productId) {
+        const slider = document.querySelector(`#slider-${productId} .images-slider`);
+        if (!slider) return;
+        
+        const totalSlides = slider.children.length;
+        const currentSlide = Math.abs(parseInt(slider.style.transform?.match(/-?\d+/)?.[0] || 0) / 100);
+        const nextSlide = (currentSlide + 1) % totalSlides;
+        
+        slider.style.transform = `translateX(-${nextSlide * 100}%)`;
+        
+        const counter = document.querySelector(`#slider-${productId} .image-counter`);
+        if (counter) {
+            counter.textContent = `${nextSlide + 1} / ${totalSlides}`;
+        }
+    }
+    
+    static prevSlide(productId) {
+        const slider = document.querySelector(`#slider-${productId} .images-slider`);
+        if (!slider) return;
+        
+        const totalSlides = slider.children.length;
+        const currentSlide = Math.abs(parseInt(slider.style.transform?.match(/-?\d+/)?.[0] || 0) / 100);
+        const prevSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        
+        slider.style.transform = `translateX(-${prevSlide * 100}%)`;
+        
+        const counter = document.querySelector(`#slider-${productId} .image-counter`);
+        if (counter) {
+            counter.textContent = `${prevSlide + 1} / ${totalSlides}`;
+        }
+    }
+}
+
+// ===== نظام مؤقت النشر المحسّن =====
+async function checkPublishPermission() {
     if (!userUID) {
         canPublish = true;
         return true;
@@ -595,38 +931,30 @@ function checkPublishPermission() {
     
     progressManager.showCircularProgress();
     
-    // الحصول على وقت الخادم من Firebase
-    const serverTimeRef = db.ref('.info/serverTimeOffset');
-    
     return new Promise((resolve) => {
-        serverTimeRef.once('value', (snapshot) => {
-            const serverTimeOffset = snapshot.val() || 0;
-            const serverTime = Date.now() + serverTimeOffset;
+        // التحقق من وقت النشر الأخير في قاعدة بيانات Firebase
+        db.ref('users/' + userUID + '/lastPublish').once('value', (userSnap) => {
+            progressManager.hideCircularProgress();
             
-            // التحقق من وقت النشر الأخير في قاعدة بيانات Firebase
-            db.ref('users/' + userUID + '/lastPublish').once('value', (userSnap) => {
-                progressManager.hideCircularProgress();
-                
-                const lastPublish = userSnap.val();
-                if (!lastPublish) {
-                    canPublish = true;
-                    resolve(true);
-                    return;
-                }
-                
-                const timeDiff = serverTime - lastPublish;
-                const oneHour = 60 * 60 * 1000;
-                
-                if (timeDiff < oneHour) {
-                    canPublish = false;
-                    publishTimeLeft = Math.ceil((oneHour - timeDiff) / 1000);
-                    startPublishTimer();
-                    resolve(false);
-                } else {
-                    canPublish = true;
-                    resolve(true);
-                }
-            });
+            const lastPublish = userSnap.val();
+            if (!lastPublish) {
+                canPublish = true;
+                resolve(true);
+                return;
+            }
+            
+            const timeDiff = Date.now() - lastPublish;
+            const oneHour = 60 * 60 * 1000;
+            
+            if (timeDiff < oneHour) {
+                canPublish = false;
+                publishTimeLeft = Math.ceil((oneHour - timeDiff) / 1000);
+                startPublishTimer();
+                resolve(false);
+            } else {
+                canPublish = true;
+                resolve(true);
+            }
         }).catch((error) => {
             console.error("Error checking publish permission:", error);
             progressManager.hideCircularProgress();
@@ -636,7 +964,6 @@ function checkPublishPermission() {
     });
 }
 
-// ===== بدء مؤقت النشر =====
 function startPublishTimer() {
     if (publishTimer) {
         clearInterval(publishTimer);
@@ -649,13 +976,11 @@ function startPublishTimer() {
             publishTimeLeft--;
             updatePublishTimerDisplay();
             
-            // التحقق إذا انتهى الوقت
             if (publishTimeLeft <= 0) {
                 clearInterval(publishTimer);
                 canPublish = true;
                 updatePublishTimerDisplay();
                 
-                // تحديث واجهة النشر إذا كانت مفتوحة
                 if (document.getElementById('publishTimer')) {
                     const timerElement = document.getElementById('publishTimer');
                     timerElement.innerHTML = `
@@ -677,7 +1002,6 @@ function startPublishTimer() {
     }, 1000);
 }
 
-// ===== تحديث عرض المؤقت =====
 function updatePublishTimerDisplay() {
     const minutes = Math.floor(publishTimeLeft / 60);
     const seconds = publishTimeLeft % 60;
@@ -694,99 +1018,103 @@ function updatePublishTimerDisplay() {
     }
 }
 
-// ===== حفظ وقت النشر الأخير في Firebase =====
 function saveLastPublishTime() {
     if (!userUID) return;
     
-    // الحصول على وقت الخادم من Firebase
-    const serverTimeRef = db.ref('.info/serverTimeOffset');
-    
-    serverTimeRef.once('value', (snapshot) => {
-        const serverTimeOffset = snapshot.val() || 0;
-        const serverTime = Date.now() + serverTimeOffset;
-        
-        // حفظ وقت النشر في قاعدة بيانات المستخدم
-        db.ref('users/' + userUID).update({
-            lastPublish: serverTime
-        }).then(() => {
-            console.log("Publish time saved to Firebase");
-        }).catch((error) => {
-            console.error("Error saving publish time:", error);
-        });
+    db.ref('users/' + userUID).update({
+        lastPublish: Date.now()
+    }).then(() => {
+        console.log("Publish time saved to Firebase");
+    }).catch((error) => {
+        console.error("Error saving publish time:", error);
     });
 }
 
-// ===== إدارة الجلسة =====
-function initSessionManagement() {
-    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
-        document.addEventListener(event, resetSessionTimer);
-    });
+// ===== دوال إدارة الصور =====
+function handleImageSelect(event) {
+    const files = Array.from(event.target.files);
     
-    resetSessionTimer();
+    // التحقق من عدد الصور
+    if (files.length > 2) {
+        progressManager.showError("يمكنك رفع صورتين فقط كحد أقصى");
+        return;
+    }
+    
+    // التحقق من نوع الملفات
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+        progressManager.showError("يجب أن تكون الملفات من نوع صورة (JPEG, PNG, WebP)");
+        return;
+    }
+    
+    // تحديث الصور المحددة
+    selectedImages = files.slice(0, 2);
+    
+    // عرض المعاينة
+    displayImagePreview();
 }
 
-function resetSessionTimer() {
-    if (sessionTimeout) clearTimeout(sessionTimeout);
-    if (sessionWarning) clearTimeout(sessionWarning);
+function displayImagePreview() {
+    const previewContainer = document.getElementById('imagePreview');
+    if (!previewContainer) return;
     
-    document.getElementById('sessionTimeout').style.display = 'none';
+    // مسح المعاينة السابقة
+    imagePreviewUrls = [];
+    previewContainer.innerHTML = '';
     
-    sessionWarning = setTimeout(() => {
-        showSessionWarning();
-    }, SESSION_DURATION - SESSION_WARNING);
+    if (selectedImages.length === 0) {
+        previewContainer.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px;">لم يتم اختيار أي صور</div>';
+        return;
+    }
     
-    sessionTimeout = setTimeout(() => {
-        handleSessionTimeout();
-    }, SESSION_DURATION);
-}
-
-function showSessionWarning() {
-    const timeoutDiv = document.getElementById('sessionTimeout');
-    const timerSpan = document.getElementById('timeoutTimer');
-    
-    let secondsLeft = SESSION_WARNING / 1000;
-    timerSpan.textContent = secondsLeft;
-    timeoutDiv.style.display = 'block';
-    
-    const countdown = setInterval(() => {
-        secondsLeft--;
-        timerSpan.textContent = secondsLeft;
+    // إنشاء معاينة للصور المختارة
+    selectedImages.forEach((file, index) => {
+        const reader = new FileReader();
         
-        if (secondsLeft <= 0) {
-            clearInterval(countdown);
-        }
-    }, 1000);
+        reader.onload = function(e) {
+            const url = e.target.result;
+            imagePreviewUrls.push(url);
+            
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            previewItem.innerHTML = `
+                <img src="${url}" class="preview-image" alt="معاينة الصورة ${index + 1}">
+                <button class="remove-image-btn" onclick="removeImage(${index})">×</button>
+            `;
+            
+            previewContainer.appendChild(previewItem);
+        };
+        
+        reader.readAsDataURL(file);
+    });
 }
 
-function extendSession() {
-    resetSessionTimer();
-    showSecurityWarning("تم توسيع وقت الجلسة بنجاح.");
-}
-
-function handleSessionTimeout() {
-    if (currentUser && !currentUser.isAnonymous) {
-        auth.signOut().then(() => {
-            showSecurityWarning("انتهت جلسة العمل. تم تسجيل الخروج لأسباب أمنية.");
-            showHome();
-            updateAuthUI();
-        });
+function removeImage(index) {
+    selectedImages.splice(index, 1);
+    imagePreviewUrls.splice(index, 1);
+    displayImagePreview();
+    
+    // تحديث input file
+    const imageInput = document.getElementById('images');
+    if (imageInput) {
+        // لا يمكن تحديث input مباشرة، لذلك نعيد تعيينه
+        imageInput.value = '';
     }
-    else {
-        window.location.reload();
-    }
 }
 
-// Sidebar
+// ===== دوال إدارة الصفحة =====
 function toggleSidebar(){
   document.querySelector(".sidebar").classList.toggle("active");
   document.querySelector(".overlay").classList.toggle("active");
 }
+
 function closeSidebar(){
   document.querySelector(".sidebar").classList.remove("active");
   document.querySelector(".overlay").classList.remove("active");
 }
 
-// الصفحة الرئيسية
 function showHome(){
   closeSidebar();
   progressManager.showTopProgressBar();
@@ -809,9 +1137,9 @@ function showHome(){
   }, 300);
 }
 
-// Budget Dialog
 function showBudgetDialog(){ document.getElementById("budgetDialog").style.display="block"; }
 function closeBudget(){ document.getElementById("budgetDialog").style.display="none"; }
+
 function applyBudget(){
   const val = parseFloat(document.getElementById("maxBudget").value);
   
@@ -830,7 +1158,7 @@ function applyBudget(){
   loadProducts();
 }
 
-// تحميل المنتجات
+// ===== دالة تحميل المنتجات مع الصور =====
 function loadProducts(){
   const s = document.getElementById("search")?.value.toLowerCase() || '';
   const c = document.getElementById("cat")?.value || '';
@@ -868,6 +1196,7 @@ function loadProducts(){
         let sellerInfo = p.seller || 'غير معروف';
         let isVerified = false;
         
+        // التحقق من توثيق البائع
         if (p.uid) {
           db.ref('users/' + p.uid).once('value', (userSnap) => {
             const userData = userSnap.val();
@@ -876,6 +1205,11 @@ function loadProducts(){
             }
           });
         }
+        
+        // عرض الصور في البطاقة
+        const imagesHTML = p.images && p.images.length > 0 
+            ? ImageManager.createImageSlider(p.images, k)
+            : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
         
         const sellerSection = userDisplayName ? 
           `<div class="seller">
@@ -894,6 +1228,7 @@ function loadProducts(){
         
         htmlCards.push({uid:p.uid,key:k,html:`
           <div class="card" onclick="showDetails('${k}')">
+            ${imagesHTML}
             <h3>${escapeHTML(p.name)}</h3>
             <span class="price">${formatPrice(p.price)} د.ع</span>
             ${statusBadge}
@@ -943,7 +1278,6 @@ function loadProducts(){
   });
 }
 
-// Render Pagination Buttons
 function renderPagination(total){
   let html = "";
   for(let i=1;i<=total;i++){
@@ -972,9 +1306,9 @@ function goPage(p){
   loadProducts();
 }
 
-// حذف / تعديل / نشر
+// ===== دالة حذف المنتج مع الصور =====
 function deleteProduct(k){ 
-  if(!confirm("هل أنت متأكد من حذف الإعلان؟ لا يمكن التراجع عن هذا الإجراء.")) {
+  if(!confirm("هل أنت متأكد من حذف الإعلان؟ سيتم حذف جميع الصور أيضاً ولا يمكن التراجع عن هذا الإجراء.")) {
     return;
   }
   
@@ -994,6 +1328,12 @@ function deleteProduct(k){
       return;
     }
     
+    // حذف الصور من Supabase أولاً
+    if (product.images && product.images.length > 0) {
+      ImageManager.deleteProductImages(k);
+    }
+    
+    // تحديث عداد منتجات المستخدم
     if (product.uid) {
       db.ref('users/' + product.uid).once('value', (userSnapshot) => {
         const userData = userSnapshot.val();
@@ -1008,8 +1348,9 @@ function deleteProduct(k){
       });
     }
     
+    // حذف المنتج من Firebase
     db.ref("products/"+k).remove().then(() => {
-      progressManager.showSuccess("تم حذف الإعلان بنجاح");
+      progressManager.showSuccess("تم حذف الإعلان والصور بنجاح");
       loadProducts();
       
       if (userUID) {
@@ -1049,7 +1390,7 @@ function editProduct(k){
   });
 }
 
-// ===== تعديل دالة showPublish لدعم نظام المؤقت =====
+// ===== دالة عرض النشر مع نظام الصور =====
 async function showPublish(p=null,k=null){
   closeSidebar();
   
@@ -1061,76 +1402,93 @@ async function showPublish(p=null,k=null){
       window.location.href = 'register.html';
       progressManager.hideTopProgressBar();
       return;
-      if (!publishAnyway) {
-        progressManager.hideTopProgressBar();
-        showHome();
-        return;
-      }
     }
     
     // التحقق من صلاحية النشر (للنشر الجديد فقط)
-// التحقق من صلاحية النشر (للنشر الجديد فقط)
-let canPublishNow = true;
-if (!k) {
-  canPublishNow = await checkPublishPermission();
-}
-
-const sellerName = userDisplayName || (p ? p.seller : "");
-const sellerField = userDisplayName ? 
-  `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
-   <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
-  `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
-
-document.getElementById("content").innerHTML = `
-  <div class="form-box">
-    <h2>${p ? "تعديل إعلان" : "نشر إعلان جديد"}</h2>
-    
-    ${!p && !canPublishNow ? `<div id="publishTimer"></div>` : ''}
-    
-    ${p ? '' : '<small style="color:#9ca3af; margin-bottom:15px; display:block;">يمكنك نشر إعلان واحد كل ساعة</small>'}
-    
-    <input id="name" placeholder="اسم القطعة" value="${p ? escapeHTML(p.name) : ""}" maxlength="50" required>
-    <input id="price" type="number" placeholder="السعر" value="${p ? p.price : ""}" min="0" max="10000000" required>
-    <select id="category">${categories.map(c => `<option ${p && p.category === c ? "selected" : ""}>${c}</option>`).join("")}</select>
-    ${sellerField}
-    <input id="phone" placeholder="رقم الهاتف" value="${p ? p.phone : ""}" pattern="[0][0-9]{10}" required>
-    <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
-    <select id="province">
-      <option value="">اختر المحافظة</option>
-      ${provinces.map(pr => `<option ${p && p.province === pr ? "selected" : ""}>${pr}</option>`).join("")}
-    </select>
-    <select id="delivery">
-      <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
-      <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
-    </select>
-    <select id="status" ${isAdmin || (p && p.uid === userUID) ? '' : 'disabled'}>
-      <option value="available" ${p && p.status === "available" ? "selected" : ""}>متاح</option>
-      <option value="sold" ${p && p.status === "sold" ? "selected" : ""}>مباع</option>
-      <option value="reserved" ${p && p.status === "reserved" ? "selected" : ""}>محجوز</option>
-    </select>
-    <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
-    
-    <!-- رفع الصور -->
-    ${!p ? `<input type="file" id="images" accept="image/*" multiple>
-    <small style="color:#888; font-size:12px;">يمكنك رفع صورة أو صورتين فقط</small>` : ''}
-
-    <button onclick="save('${k || ""}')" id="saveBtn" ${!p && !canPublishNow ? 'disabled class="timer-disabled"' : ''}>
-      💾 ${p ? "تحديث" : "نشر"}
-    </button>
-    
-    ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
-  </div>`;
-    
-    // تحديث عرض المؤقت إذا كان غير متاح
-    if (!p && !canPublishNow) {
-      updatePublishTimerDisplay();
+    let canPublishNow = true;
+    if (!k) {
+      canPublishNow = await checkPublishPermission();
     }
     
-    progressManager.hideTopProgressBar();
-  }, 300);
+    const sellerName = userDisplayName || (p ? p.seller : "");
+    const sellerField = userDisplayName ? 
+      `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
+       <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
+      `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
+    
+    // إعادة تعيين الصور المختارة
+    selectedImages = [];
+    imagePreviewUrls = [];
+    
+    document.getElementById("content").innerHTML = `
+      <div class="form-box">
+        <h2>${p ? "تعديل إعلان" : "نشر إعلان جديد"}</h2>
+        
+        ${!p && !canPublishNow ? `<div id="publishTimer"></div>` : ''}
+        
+        ${p ? '' : '<small style="color:#9ca3af; margin-bottom:15px; display:block;">يمكنك نشر إعلان واحد كل ساعة</small>'}
+        
+        <input id="name" placeholder="اسم القطعة" value="${p ? escapeHTML(p.name) : ""}" maxlength="50" required>
+        <input id="price" type="number" placeholder="السعر" value="${p ? p.price : ""}" min="0" max="10000000" required>
+        <select id="category">${categories.map(c => `<option ${p && p.category === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+        ${sellerField}
+        <input id="phone" placeholder="رقم الهاتف" value="${p ? p.phone : ""}" pattern="[0][0-9]{10}" required>
+        <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
+        <select id="province">
+          <option value="">اختر المحافظة</option>
+          ${provinces.map(pr => `<option ${p && p.province === pr ? "selected" : ""}>${pr}</option>`).join("")}
+        </select>
+        <select id="delivery">
+          <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
+          <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
+        </select>
+        <select id="status" ${isAdmin || (p && p.uid === userUID) ? '' : 'disabled'}>
+          <option value="available" ${p && p.status === "available" ? "selected" : ""}>متاح</option>
+          <option value="sold" ${p && p.status === "sold" ? "selected" : ""}>مباع</option>
+          <option value="reserved" ${p && p.status === "reserved" ? "selected" : ""}>محجوز</option>
+        </select>
+        <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
+        
+        <!-- رفع الصور -->
+        <div class="image-upload-container">
+          <label class="file-input-label">
+            <i class="fas fa-images"></i> اختر صور الإعلان (حد أقصى 2)
+            <input type="file" id="images" accept="image/*" multiple onchange="handleImageSelect(event)">
+          </label>
+          <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
+            يمكنك رفع صورتين كحد أقصى (JPEG, PNG, WebP)
+          </small>
+          <div class="image-preview" id="imagePreview">
+            ${p && p.images && p.images.length > 0 ? 
+              p.images.map((img, idx) => `
+                <div class="image-preview-item">
+                  <img src="${img}" class="preview-image" alt="صورة ${idx + 1}">
+                  <small style="display:block; text-align:center; color:#9ca3af;">الصورة الحالية ${idx + 1}</small>
+                </div>
+              `).join('') : 
+              '<div style="color:#9ca3af; text-align:center; padding:20px;">لم يتم اختيار أي صور</div>'
+            }
+          </div>
+        </div>
+
+        <button onclick="saveProduct('${k || ""}')" id="saveBtn" ${!p && !canPublishNow ? 'disabled class="timer-disabled"' : ''}>
+          💾 ${p ? "تحديث" : "نشر"}
+        </button>
+        
+        ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
+      </div>`;
+      
+      // تحديث عرض المؤقت إذا كان غير متاح
+      if (!p && !canPublishNow) {
+        updatePublishTimerDisplay();
+      }
+      
+      progressManager.hideTopProgressBar();
+    }, 300);
 }
 
-async function save(k){
+// ===== دالة حفظ المنتج مع رفع الصور =====
+async function saveProduct(k){
   // التحقق من المؤقت للنشر الجديد فقط
   if (!k) {
     const canPublishNow = await checkPublishPermission();
@@ -1178,38 +1536,74 @@ async function save(k){
     return;
   }
 
-  const data = {
-    name: name,
-    price: priceNum,
-    category: document.getElementById("category").value,
-    seller: seller,
-    phone: phone,
-    province: province,
-    delivery: document.getElementById("delivery").value,
-    status: document.getElementById("status").value || "available",
-    uid: userUID,
-    lastUpdated: firebase.database.ServerValue.TIMESTAMP
-  };
-  
-  if (!k) {
-    data.createdAt = firebase.database.ServerValue.TIMESTAMP;
-    data.timestamp = firebase.database.ServerValue.TIMESTAMP;
-  }
-  
   const saveBtn = document.getElementById('saveBtn');
   const originalText = saveBtn.innerHTML;
   saveBtn.innerHTML = '<span class="spinner"></span> جاري الحفظ...';
-  saveBtn.classList.add('loading');
+  saveBtn.disabled = true;
   
-  progressManager.showOverlay(k ? "جاري تحديث الإعلان..." : "جاري نشر الإعلان...", "قد يستغرق بضع ثوان");
+  progressManager.showOverlay(k ? "جاري تحديث الإعلان..." : "جاري نشر الإعلان...", "قد يستغرق بضع ثوان خاصة عند رفع الصور");
   
-  const ref = k ? db.ref("products/"+k) : db.ref("products").push();
-  
-  ref.set(data).then(() => {
+  try {
+    let imageUrls = [];
+    
+    // إذا كان تعديلاً، احتفظ بالصور الحالية
+    if (k) {
+      const productRef = db.ref("products/" + k);
+      const snapshot = await productRef.once("value");
+      const existingProduct = snapshot.val();
+      if (existingProduct && existingProduct.images) {
+        imageUrls = existingProduct.images;
+      }
+    }
+    
+    // إذا تم اختيار صور جديدة، رفعها إلى Supabase
+    if (selectedImages.length > 0) {
+      progressManager.updateOverlayText("جاري رفع الصور...", "يرجى الانتظار");
+      
+      if (k) {
+        // حذف الصور القديمة أولاً
+        await ImageManager.deleteProductImages(k);
+      }
+      
+      // رفع الصور الجديدة
+      const uploadedUrls = await ImageManager.uploadProductImages(k || 'temp', selectedImages);
+      imageUrls = uploadedUrls;
+    }
+    
+    // تحضير بيانات المنتج
+    const data = {
+      name: name,
+      price: priceNum,
+      category: document.getElementById("category").value,
+      seller: seller,
+      phone: phone,
+      province: province,
+      delivery: document.getElementById("delivery").value,
+      status: document.getElementById("status").value || "available",
+      uid: userUID,
+      lastUpdated: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // إضافة الصور إذا كانت موجودة
+    if (imageUrls.length > 0) {
+      data.images = imageUrls;
+    }
+    
+    if (!k) {
+      data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+      data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+    }
+    
+    // حفظ المنتج في Firebase
+    const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+    await ref.set(data);
+    
+    // تحديث الوقت والحساب للنشر الجديد فقط
     if (!k && userUID) {
-      // حفظ وقت النشر الأخير في Firebase للنشر الجديد فقط
+      // حفظ وقت النشر الأخير
       saveLastPublishTime();
       
+      // تحديث عداد منتجات المستخدم
       db.ref('users/' + userUID).once('value', (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
@@ -1227,6 +1621,7 @@ async function save(k){
       });
     }
     
+    // تسجيل النشاط
     if (userUID) {
       const activityType = k ? 'product_updated' : 'product_created';
       db.ref("userActivity/" + userUID).push().set({
@@ -1238,23 +1633,25 @@ async function save(k){
     
     progressManager.showSuccess(k ? "تم تحديث الإعلان بنجاح" : "تم نشر الإعلان بنجاح");
     
-    saveBtn.innerHTML = originalText;
-    saveBtn.classList.remove('loading');
+    // إعادة تعيين المتغيرات
+    selectedImages = [];
+    imagePreviewUrls = [];
     
     setTimeout(() => {
       showHome();
     }, 1000);
-  }).catch(error => {
+    
+  } catch (error) {
     console.error("Error saving product:", error);
     progressManager.hideOverlay();
     progressManager.showError("حدث خطأ أثناء حفظ الإعلان");
-    
+  } finally {
     saveBtn.innerHTML = originalText;
-    saveBtn.classList.remove('loading');
-  });
+    saveBtn.disabled = false;
+  }
 }
 
-// Product Details
+// ===== دالة عرض التفاصيل مع الصور =====
 function showDetails(k){
   progressManager.showCircularProgress();
   
@@ -1276,7 +1673,11 @@ function showDetails(k){
         if (userData) {
           isVerified = userData.isVerified || false;
           
-          // تحديث عرض البائع بالمعلومات الجديدة
+          // عرض الصور في التفاصيل
+          const imagesHTML = p.images && p.images.length > 0 
+            ? ImageManager.createImageSlider(p.images, k + '-details')
+            : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+          
           const sellerWithLink = userDisplayName ? 
             `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">
               <span class="user-name-wrapper">
@@ -1292,11 +1693,11 @@ function showDetails(k){
               </span>
             </p>`;
           
-          // تحديث المحتوى
           const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
           
           const detailsContent = `
             <h2>${escapeHTML(p.name)}</h2>
+            ${imagesHTML}
             <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
             <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
             ${statusText}
@@ -1313,11 +1714,16 @@ function showDetails(k){
       });
     }
     
-    // العرض الأولي بدون انتظار الاستعلام
+    // العرض الأولي
+    const imagesHTML = p.images && p.images.length > 0 
+      ? ImageManager.createImageSlider(p.images, k + '-details')
+      : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+    
     const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
     
     const initialContent = `
       <h2>${escapeHTML(p.name)}</h2>
+      ${imagesHTML}
       <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
       <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
       ${statusText}
@@ -1348,7 +1754,7 @@ function closeDetails(){
   document.getElementById("detailsDialog").style.display="none";
 }
 
-// ===== إضافة دوال المصادقة =====
+// ===== دوال المصادقة =====
 function updateAuthUI() {
   const authSection = document.getElementById("authSection");
   
@@ -1428,7 +1834,6 @@ function logoutUser() {
   }
 }
 
-// ===== دوال نظام الملف الشخصي =====
 function viewProfile(userId, sellerName) {
   if (sellerName) {
     localStorage.setItem('profileSellerName', sellerName);
@@ -1525,7 +1930,6 @@ auth.onAuthStateChanged((user) => {
 document.addEventListener("DOMContentLoaded", function() {
   showHome();
   updateAuthUI();
-  initSessionManagement();
   
   // التحقق من صلاحية النشر عند تحميل الصفحة
   setTimeout(() => {
@@ -1546,6 +1950,5 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
