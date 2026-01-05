@@ -793,64 +793,163 @@ function showSecurityWarning(message) {
     }
 }
 
-// ===== نظام إدارة الصور =====
+// ===== نظام إدارة الصور الجديد والمضمون =====
 class ImageManager {
     static async uploadProductImages(productId, images) {
         const imageUrls = [];
         
+        // استخدام معرف المنتج أو timestamp
+        const actualProductId = productId || 'temp_' + Date.now();
+        
         for (let i = 0; i < images.length; i++) {
             const file = images[i];
-            const fileName = `product_${productId}_${Date.now()}_${i}.jpg`;
-            const path = `products/${productId}/${fileName}`;
             
-            // رفع الصورة إلى Supabase
-            const { data, error } = await supabaseClient.storage
-                .from('ads-images')
-                .upload(path, file, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
+            // ضغط الصورة لتجنب المشاكل
+            const compressedFile = await ImageManager.compressImage(file);
             
-            if (error) {
-                console.error('Error uploading image:', error);
-                continue;
-            }
+            // إنشاء اسم ملف بسيط بدون مسارات معقدة
+            const fileName = `product_${actualProductId}_${i}_${Date.now()}.jpg`;
             
-            // الحصول على رابط الصورة
-            const { data: urlData } = supabaseClient.storage
-                .from('ads-images')
-                .getPublicUrl(path);
+            console.log('📤 جاري رفع الصورة:', fileName, 'حجم:', compressedFile.size, 'بايت');
             
-            if (urlData?.publicUrl) {
-                imageUrls.push(urlData.publicUrl);
+            try {
+                // رفع مباشر بدون مجلدات فرعية
+                const { data, error } = await supabaseClient.storage
+                    .from('ads-images')
+                    .upload(fileName, compressedFile, {
+                        cacheControl: '3600',
+                        contentType: 'image/jpeg',
+                        upsert: false
+                    });
+                
+                if (error) {
+                    console.error('❌ خطأ في الرفع:', error.message);
+                    
+                    // محاولة بديلة باسم أبسط
+                    const simpleName = `img_${Date.now()}_${i}.jpg`;
+                    const { data: altData, error: altError } = await supabaseClient.storage
+                        .from('ads-images')
+                        .upload(simpleName, compressedFile);
+                    
+                    if (altError) {
+                        console.error('❌ فشلت المحاولة البديلة:', altError.message);
+                        continue;
+                    }
+                    
+                    const { data: urlData } = supabaseClient.storage
+                        .from('ads-images')
+                        .getPublicUrl(simpleName);
+                    
+                    if (urlData?.publicUrl) {
+                        imageUrls.push(urlData.publicUrl);
+                        console.log('✅ تم الرفع (البديل):', urlData.publicUrl);
+                    }
+                    continue;
+                }
+                
+                // الحصول على رابط الصورة
+                const { data: urlData } = supabaseClient.storage
+                    .from('ads-images')
+                    .getPublicUrl(fileName);
+                
+                if (urlData?.publicUrl) {
+                    imageUrls.push(urlData.publicUrl);
+                    console.log('✅ تم الرفع بنجاح:', urlData.publicUrl);
+                }
+                
+            } catch (err) {
+                console.error('❌ خطأ غير متوقع:', err);
             }
         }
         
         return imageUrls;
     }
     
+    static async compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // تحديد أقصى حجم (800x600)
+                    const maxWidth = 800;
+                    const maxHeight = 600;
+                    
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // حساب الأبعاد الجديدة مع الحفاظ على التناسب
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // رسم الصورة المضغوطة
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // تحويل إلى Blob بجودة 80%
+                    canvas.toBlob((blob) => {
+                        resolve(new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        }));
+                    }, 'image/jpeg', 0.8);
+                };
+            };
+        });
+    }
+    
     static async deleteProductImages(productId) {
         try {
-            // قائمة الملفات في المجلد الخاص بالمنتج
+            // قائمة الملفات التي تبدأ بـ product_${productId}
             const { data: files, error } = await supabaseClient.storage
                 .from('ads-images')
-                .list(`products/${productId}`);
+                .list();
             
             if (error) {
                 console.error('Error listing files:', error);
                 return;
             }
             
-            // حذف جميع الملفات
-            for (const file of files) {
-                await supabaseClient.storage
-                    .from('ads-images')
-                    .remove([`products/${productId}/${file.name}`]);
+            if (files && files.length > 0) {
+                // تصفية الملفات الخاصة بالمنتج
+                const productFiles = files.filter(file => 
+                    file.name.includes(`product_${productId}_`) || 
+                    file.name.includes(`img_${productId}_`)
+                );
+                
+                if (productFiles.length > 0) {
+                    const filePaths = productFiles.map(file => file.name);
+                    const { error: deleteError } = await supabaseClient.storage
+                        .from('ads-images')
+                        .remove(filePaths);
+                    
+                    if (deleteError) {
+                        console.error('Delete error:', deleteError);
+                    } else {
+                        console.log(`✅ تم حذف ${productFiles.length} صورة للمنتج ${productId}`);
+                    }
+                }
             }
-            
-            console.log('Product images deleted successfully');
         } catch (error) {
-            console.error('Error deleting images:', error);
+            console.error('Error in deleteProductImages:', error);
         }
     }
     
@@ -866,13 +965,14 @@ class ImageManager {
         
         images.forEach((img, index) => {
             sliderHTML += `
-                <img src="${img}" class="slider-image" alt="صورة المنتج ${index + 1}">
+                <img src="${img}" class="slider-image" alt="صورة المنتج ${index + 1}" 
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180/1f2937/9ca3af?text=لا+توجد+صورة'">
             `;
         });
         
         sliderHTML += `
                 </div>
-                <div class="image-counter">${images.length} / ${images.length}</div>
+                <div class="image-counter">1 / ${images.length}</div>
         `;
         
         if (images.length > 1) {
@@ -1099,7 +1199,6 @@ function removeImage(index) {
     // تحديث input file
     const imageInput = document.getElementById('images');
     if (imageInput) {
-        // لا يمكن تحديث input مباشرة، لذلك نعيد تعيينه
         imageInput.value = '';
     }
 }
@@ -1560,14 +1659,11 @@ async function saveProduct(k){
     if (selectedImages.length > 0) {
       progressManager.updateOverlayText("جاري رفع الصور...", "يرجى الانتظار");
       
-      if (k) {
-        // حذف الصور القديمة أولاً
-        await ImageManager.deleteProductImages(k);
-      }
-      
       // رفع الصور الجديدة
-      const uploadedUrls = await ImageManager.uploadProductImages(k || 'temp', selectedImages);
-      imageUrls = uploadedUrls;
+      const uploadedUrls = await ImageManager.uploadProductImages(k || Date.now().toString(), selectedImages);
+      if (uploadedUrls.length > 0) {
+        imageUrls = uploadedUrls;
+      }
     }
     
     // تحضير بيانات المنتج
@@ -1948,6 +2044,24 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
     }
   });
+  
+  // اختبار الاتصال مع Supabase
+  setTimeout(async () => {
+    console.log('🔍 اختبار اتصال Supabase...');
+    try {
+      const { data, error } = await supabaseClient.storage
+        .from('ads-images')
+        .list();
+      
+      if (error) {
+        console.error('❌ خطأ في اتصال Supabase:', error.message);
+      } else {
+        console.log('✅ اتصال Supabase نشط، عدد الملفات:', data?.length || 0);
+      }
+    } catch (err) {
+      console.error('❌ خطأ في اختبار الاتصال:', err);
+    }
+  }, 2000);
 });
 </script>
 </body>
