@@ -40,13 +40,12 @@ const provinces = ["بغداد","البصرة","الموصل","أربيل","ده
 
 // ===== نظام إدارة الصور =====
 class ImageManager {
-    static async uploadProductImages(productId, images) {
+    static async uploadProductImages(images) {
         const imageUrls = [];
         
         for (let i = 0; i < images.length; i++) {
             const file = images[i];
-            const fileName = `product_${productId}_${Date.now()}_${i}.jpg`;
-            const path = `products/${productId}/${fileName}`;
+            const fileName = `product_${Date.now()}_${i}.jpg`;
             
             // رفع الصورة إلى Supabase
             const { data, error } = await supabaseClient.storage
@@ -74,37 +73,22 @@ class ImageManager {
         return imageUrls;
     }
     
-    static async deleteProductImages(productId) {
-        try {
-            // قائمة الملفات في المجلد الخاص بالمنتج
-            const { data: files, error } = await supabaseClient.storage
-                .from('ads-images')
-                .list(`products/${productId}`);
-            
-            if (error) {
-                console.error('Error listing files:', error);
-                return;
-            }
-            
-            // حذف جميع الملفات
-            if (files && files.length > 0) {
-                const filePaths = files.map(file => `products/${productId}/${file.name}`);
-                await supabaseClient.storage
-                    .from('ads-images')
-                    .remove(filePaths);
-            }
-            
-            console.log('Product images deleted successfully');
-        } catch (error) {
-            console.error('Error deleting images:', error);
-        }
-    }
-    
     static createImageSlider(images, productId) {
         if (!images || images.length === 0) {
             return '<div class="no-image">🚫 لا توجد صور متاحة</div>';
         }
         
+        // بالنسبة لصورة واحدة فقط، نعرضها مباشرة بدون سلايدر
+        if (images.length === 1) {
+            return `
+                <div class="product-images">
+                    <img src="${images[0]}" class="slider-image" alt="صورة المنتج" 
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180/1f2937/9ca3af?text=لا+توجد+صورة';">
+                </div>
+            `;
+        }
+        
+        // للصور المتعددة (في حال كانت موجودة من بيانات قديمة)
         let sliderHTML = `
             <div class="product-images" id="slider-${productId}">
                 <div class="images-slider">
@@ -181,9 +165,10 @@ class ImageManager {
 function handleImageSelect(event) {
     const files = Array.from(event.target.files);
     
-    // التحقق من عدد الصور
+    // التحقق من عدد الصور - تعديل إلى صورة واحدة فقط
     if (files.length > 1) {
         alert("يمكنك رفع صورة واحدة فقط كحد أقصى");
+        event.target.value = ''; // مسح الإدخال
         return;
     }
     
@@ -193,10 +178,11 @@ function handleImageSelect(event) {
     
     if (invalidFiles.length > 0) {
         alert("يجب أن تكون الملفات من نوع صورة (JPEG, PNG, WebP)");
+        event.target.value = '';
         return;
     }
     
-    // تحديث الصور المحددة
+    // تحديث الصور المحددة - صورة واحدة فقط
     selectedImages = files.slice(0, 1);
     
     // عرض المعاينة
@@ -216,7 +202,7 @@ function displayImagePreview() {
         return;
     }
     
-    // إنشاء معاينة للصور المختارة
+    // إنشاء معاينة للصورة المختارة
     selectedImages.forEach((file, index) => {
         const reader = new FileReader();
         
@@ -227,7 +213,7 @@ function displayImagePreview() {
             const previewItem = document.createElement('div');
             previewItem.className = 'image-preview-item';
             previewItem.innerHTML = `
-                <img src="${url}" class="preview-image" alt="معاينة الصورة ${index + 1}">
+                <img src="${url}" class="preview-image" alt="معاينة الصورة">
                 <button class="remove-image-btn" onclick="removeImage(${index})">×</button>
             `;
             
@@ -377,9 +363,9 @@ function goPage(p){
   loadProducts();
 }
 
-// ===== دالة حذف المنتج مع الصور =====
+// ===== دالة حذف المنتج =====
 async function deleteProduct(k){ 
-  if(!confirm("هل أنت متأكد من حذف الإعلان؟ سيتم حذف جميع الصور أيضاً.")) {
+  if(!confirm("هل أنت متأكد من حذف الإعلان؟")) {
     return;
   }
   
@@ -399,11 +385,6 @@ async function deleteProduct(k){
   }
   
   try {
-    // حذف الصور من Supabase
-    if (product.images && product.images.length > 0) {
-      await ImageManager.deleteProductImages(k);
-    }
-    
     // تقليل عداد منتجات المستخدم
     if (product.uid) {
       const userSnapshot = await db.ref('users/' + product.uid).once('value');
@@ -421,7 +402,7 @@ async function deleteProduct(k){
     // حذف المنتج من Firebase
     await db.ref("products/"+k).remove();
     
-    alert("تم حذف الإعلان والصور بنجاح");
+    alert("تم حذف الإعلان بنجاح");
     loadProducts();
     
   } catch (error) {
@@ -438,12 +419,6 @@ function editProduct(k){
       // التحقق من الصلاحية
       if (product.uid !== userUID && !isAdmin) {
         alert("ليس لديك صلاحية لتعديل هذا الإعلان");
-        return;
-      }
-      // حد التعديل 3 مرات
-      const edits = product.editCount || 0;
-      if(edits >= 3){
-        alert("لا يمكن تعديل الإعلان أكثر من 3 مرات");
         return;
       }
       showPublish(product, k);
@@ -483,21 +458,21 @@ function showPublish(p=null,k=null){
         <option ${p&&p.delivery==="لا"?"selected":""}>لا</option>
       </select>
       
-      <!-- رفع الصور -->
+      <!-- رفع الصور - صورة واحدة فقط -->
       <div class="image-upload-container">
         <label class="file-input-label">
-          <i class="fas fa-images"></i> اختر صور الإعلان (حد أقصى 1)
-          <input type="file" id="images" accept="image/*" multiple onchange="handleImageSelect(event)">
+          <i class="fas fa-images"></i> اختر صورة الإعلان (صورة واحدة فقط)
+          <input type="file" id="images" accept="image/*" onchange="handleImageSelect(event)">
         </label>
         <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
-          يمكنك رفع صورة واحدة كحد أقصى (JPEG, PNG, WebP)
+          يمكنك رفع صورة واحدة فقط (JPEG, PNG, WebP)
         </small>
         <div class="image-preview" id="imagePreview">
           ${p && p.images && p.images.length > 0 ? 
-            p.images.map((img, idx) => `
+            p.images.slice(0, 1).map((img, idx) => `
               <div class="image-preview-item">
-                <img src="${img}" class="preview-image" alt="صورة ${idx + 1}">
-                <small style="display:block; text-align:center; color:#9ca3af;">الصورة الحالية ${idx + 1}</small>
+                <img src="${img}" class="preview-image" alt="صورة الإعلان">
+                <small style="display:block; text-align:center; color:#9ca3af;">الصورة الحالية</small>
               </div>
             `).join('') : 
             '<div style="color:#9ca3af; text-align:center; padding:20px;">لم يتم اختيار أي صور</div>'
@@ -543,29 +518,23 @@ async function saveProduct(k){
   try {
     let imageUrls = [];
     
-    // إذا كان تعديلاً، احتفظ بالصور الحالية
+    // إذا كان تعديلاً، احتفظ بالصورة الحالية (الأولى فقط)
     if (k) {
       const productRef = db.ref("products/" + k);
       const snapshot = await productRef.once("value");
       const existingProduct = snapshot.val();
       if (existingProduct && existingProduct.images) {
-        imageUrls = existingProduct.images;
+        imageUrls = [existingProduct.images[0]]; // أخذ الصورة الأولى فقط
       }
     }
     
-    // إذا تم اختيار صور جديدة، رفعها إلى Supabase
+    // إذا تم اختيار صور جديدة، رفعها إلى Supabase (صورة واحدة فقط)
     if (selectedImages.length > 0) {
-      if (k) {
-        // حذف الصور القديمة أولاً
-        await ImageManager.deleteProductImages(k);
-      }
-      
       // رفع الصور الجديدة
-      imageUrls = await ImageManager.uploadProductImages(k || 'temp', selectedImages);
+      imageUrls = await ImageManager.uploadProductImages(selectedImages.slice(0, 1));
     }
     
     // تحضير بيانات المنتج
-    const editCount = k ? ((existingProduct.editCount||0)+1) : 0;
     const data = {
       name: name,
       price: parseFloat(price),
@@ -575,13 +544,12 @@ async function saveProduct(k){
       province: province,
       delivery: document.getElementById("delivery").value,
       uid: userUID,
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-      editCount: editCount
+      timestamp: firebase.database.ServerValue.TIMESTAMP
     };
     
-    // إضافة الصور إذا كانت موجودة
+    // إضافة الصور إذا كانت موجودة (صورة واحدة فقط)
     if (imageUrls.length > 0) {
-      data.images = imageUrls;
+      data.images = imageUrls.slice(0, 1); // تأكيد أننا نأخذ صورة واحدة فقط
     }
     
     const ref = k ? db.ref("products/"+k) : db.ref("products").push();
@@ -886,8 +854,8 @@ document.addEventListener("DOMContentLoaded",function(){
       flex-wrap: wrap;
     }
     .preview-image {
-      width: 120px;
-      height: 120px;
+      width: 180px;
+      height: 180px;
       border-radius: 8px;
       object-fit: cover;
       border: 2px solid #374151;
