@@ -426,6 +426,25 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   cursor: not-allowed !important;
 }
 
+/* ===== نظام مؤقت النشر ===== */
+.publish-timer {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+  direction: ltr;
+}
+
+.publish-timer.active {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
 /* تحسينات للهاتف */
 @media (max-width: 768px) {
     .user-name-wrapper {
@@ -547,7 +566,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 } else {
-    firebase.app(); // استخدام التطبيق الحالي إذا كان موجوداً
+    firebase.app();
 }
 
 const auth = firebase.auth();
@@ -690,9 +709,117 @@ const postsPerPage = 6;
 const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
 const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
 
+// ===== نظام تحديد وقت النشر =====
+let canPublish = true;
+let publishTimer = null;
+let publishTimeLeft = 0;
+
 // ===== متغيرات رفع الصور =====
 let selectedImages = [];
 let imagePreviewUrls = [];
+
+// ===== نظام مؤقت النشر =====
+async function checkPublishPermission() {
+    if (!userUID) {
+        canPublish = true;
+        return true;
+    }
+    
+    return new Promise((resolve) => {
+        // التحقق من وقت النشر الأخير في قاعدة بيانات Firebase
+        db.ref('users/' + userUID + '/lastPublish').once('value', (userSnap) => {
+            const lastPublish = userSnap.val();
+            if (!lastPublish) {
+                canPublish = true;
+                resolve(true);
+                return;
+            }
+            
+            const timeDiff = Date.now() - lastPublish;
+            const oneHour = 60 * 60 * 1000;
+            
+            if (timeDiff < oneHour) {
+                canPublish = false;
+                publishTimeLeft = Math.ceil((oneHour - timeDiff) / 1000);
+                startPublishTimer();
+                resolve(false);
+            } else {
+                canPublish = true;
+                resolve(true);
+            }
+        }).catch((error) => {
+            console.error("Error checking publish permission:", error);
+            canPublish = true;
+            resolve(true);
+        });
+    });
+}
+
+function startPublishTimer() {
+    if (publishTimer) {
+        clearInterval(publishTimer);
+    }
+    
+    updatePublishTimerDisplay();
+    
+    publishTimer = setInterval(() => {
+        if (publishTimeLeft > 0) {
+            publishTimeLeft--;
+            updatePublishTimerDisplay();
+            
+            if (publishTimeLeft <= 0) {
+                clearInterval(publishTimer);
+                canPublish = true;
+                updatePublishTimerDisplay();
+                
+                if (document.getElementById('publishTimer')) {
+                    const timerElement = document.getElementById('publishTimer');
+                    timerElement.innerHTML = `
+                        <div class="publish-timer active">
+                            ✓ يمكنك الآن نشر إعلان جديد
+                            <br><small style="color:#9ca3af;">انقر على زر النشر لإضافة إعلان</small>
+                        </div>
+                    `;
+                    
+                    const saveBtn = document.getElementById('saveBtn');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('timer-disabled');
+                        saveBtn.innerHTML = '💾 نشر';
+                    }
+                }
+            }
+        }
+    }, 1000);
+}
+
+function updatePublishTimerDisplay() {
+    const minutes = Math.floor(publishTimeLeft / 60);
+    const seconds = publishTimeLeft % 60;
+    
+    const timerElement = document.getElementById('publishTimer');
+    if (timerElement) {
+        timerElement.innerHTML = `
+            <div class="publish-timer">
+                ⏰ يجب الانتظار ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} 
+                قبل نشر إعلان جديد
+                <br><small style="color:#9ca3af;">لضمان جودة الإعلانات وتجنب التكرار</small>
+            </div>
+        `;
+    }
+}
+
+function saveLastPublishTime() {
+    if (!userUID) return;
+    
+    db.ref('users/' + userUID).update({
+        lastPublish: Date.now()
+    }).then(() => {
+        console.log("Publish time saved to Firebase");
+    }).catch((error) => {
+        console.error("Error saving publish time:", error);
+    });
+}
 
 // ===== نظام إدارة الصور =====
 class ImageManager {
@@ -1111,12 +1238,18 @@ function editProduct(k){
 }
 
 // ===== دالة عرض النشر =====
-function showPublish(p=null,k=null){
+async function showPublish(p=null,k=null){
   closeSidebar();
   
   progressManager.showTopProgressBar();
   
-  setTimeout(() => {
+  setTimeout(async () => {
+    // التحقق من صلاحية النشر (للنشر الجديد فقط)
+    let canPublishNow = true;
+    if (!k) {
+      canPublishNow = await checkPublishPermission();
+    }
+    
     const sellerName = userDisplayName || (p ? p.seller : "");
     const sellerField = userDisplayName ? 
       `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
@@ -1134,6 +1267,10 @@ function showPublish(p=null,k=null){
       <div class="form-box">
         <h2>${p ? "تعديل إعلان" : "نشر إعلان جديد"}</h2>
         
+        ${!p && !canPublishNow ? `<div id="publishTimer"></div>` : ''}
+        
+        ${p ? '' : '<small style="color:#9ca3af; margin-bottom:15px; display:block;">يمكنك نشر إعلان واحد كل ساعة</small>'}
+        
         <input id="name" placeholder="اسم القطعة" value="${p ? escapeHTML(p.name) : ""}" maxlength="50" required>
         <input id="price" type="number" placeholder="السعر" value="${p ? p.price : ""}" min="0" max="10000000" required>
         <select id="category">${categories.map(c => `<option ${p && p.category === c ? "selected" : ""}>${c}</option>`).join("")}</select>
@@ -1148,6 +1285,14 @@ function showPublish(p=null,k=null){
           <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
           <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
         </select>
+        
+        <!-- إضافة خاصية الحالة (متاح/مباع/محجوز) -->
+        <select id="status" ${isAdmin || (p && p.uid === userUID) ? '' : 'disabled'}>
+          <option value="available" ${p && p.status === "available" ? "selected" : ""}>متاح</option>
+          <option value="sold" ${p && p.status === "sold" ? "selected" : ""}>مباع</option>
+          <option value="reserved" ${p && p.status === "reserved" ? "selected" : ""}>محجوز</option>
+        </select>
+        <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
         
         <!-- رفع الصور - صورة واحدة فقط -->
         <div class="image-upload-container">
@@ -1171,12 +1316,17 @@ function showPublish(p=null,k=null){
           </div>
         </div>
 
-        <button onclick="saveProduct('${k || ""}')" id="saveBtn">
+        <button onclick="saveProduct('${k || ""}')" id="saveBtn" ${!p && !canPublishNow ? 'disabled class="timer-disabled"' : ''}>
           💾 ${p ? "تحديث" : "نشر"}
         </button>
         
         ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
       </div>`;
+      
+      // تحديث عرض المؤقت إذا كان غير متاح
+      if (!p && !canPublishNow) {
+        updatePublishTimerDisplay();
+      }
       
       progressManager.hideTopProgressBar();
   }, 300);
@@ -1184,6 +1334,15 @@ function showPublish(p=null,k=null){
 
 // ===== دالة حفظ المنتج =====
 async function saveProduct(k){
+  // التحقق من المؤقت للنشر الجديد فقط
+  if (!k) {
+    const canPublishNow = await checkPublishPermission();
+    if (!canPublishNow) {
+      alert("يجب الانتظار قبل نشر إعلان جديد");
+      return;
+    }
+  }
+  
   const name = document.getElementById("name")?.value.trim();
   const price = document.getElementById("price")?.value.trim();
   const phone = document.getElementById("phone")?.value.trim();
@@ -1262,6 +1421,7 @@ async function saveProduct(k){
       phone: phone,
       province: province,
       delivery: document.getElementById("delivery").value,
+      status: document.getElementById("status").value || "available",
       uid: userUID,
       lastUpdated: firebase.database.ServerValue.TIMESTAMP
     };
@@ -1280,8 +1440,12 @@ async function saveProduct(k){
     const ref = k ? db.ref("products/"+k) : db.ref("products").push();
     await ref.set(data);
     
-    // تحديث عداد منتجات المستخدم للنشر الجديد فقط
+    // تحديث الوقت والحساب للنشر الجديد فقط
     if (!k && userUID) {
+      // حفظ وقت النشر الأخير
+      saveLastPublishTime();
+      
+      // تحديث عداد منتجات المستخدم
       db.ref('users/' + userUID).once('value', (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
@@ -1342,6 +1506,8 @@ function showDetails(k){
       </span></p>` :
       `<p><strong>البائع:</strong> ${p.seller}</p>`;
     
+    const statusText = p.status ? `<p><strong>الحالة:</strong> <span class="status-${p.status}">${getStatusText(p.status)}</span></p>` : '';
+    
     const detailsContent = document.getElementById("detailsContent");
     if (detailsContent) {
       detailsContent.innerHTML = `
@@ -1349,6 +1515,7 @@ function showDetails(k){
         ${imagesHTML}
         <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
         <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+        ${statusText}
         ${sellerWithLink}
         <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
         <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
