@@ -34,6 +34,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 400px;
+            border: 1px solid #2d3748;
         }
         
         .logo {
@@ -50,6 +51,17 @@
         .logo p {
             color: #9ca3af;
             font-size: 14px;
+        }
+        
+        .security-notice {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            text-align: center;
         }
         
         .form-group {
@@ -78,6 +90,7 @@
         .form-group input:focus {
             outline: none;
             border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
         }
         
         .show-password {
@@ -89,29 +102,52 @@
             color: #9ca3af;
             cursor: pointer;
             font-size: 18px;
+            z-index: 1;
         }
         
         .login-btn {
             width: 100%;
             padding: 14px;
-            background: #38bdf8;
-            color: #000;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
             border: none;
             border-radius: 6px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
             margin-top: 10px;
         }
         
         .login-btn:hover {
-            background: #0ea5e9;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
         
         .login-btn:disabled {
             background: #4b5563;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .login-btn.loading {
+            color: transparent;
+        }
+        
+        .login-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
         
         .links {
@@ -142,6 +178,7 @@
             font-size: 14px;
             text-align: center;
             display: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         .success-message {
@@ -153,17 +190,7 @@
             font-size: 14px;
             text-align: center;
             display: none;
-        }
-        
-        .security-info {
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 12px;
-            text-align: center;
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.3);
         }
         
         .attempts-warning {
@@ -211,6 +238,56 @@
             width: auto;
         }
         
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .progress-overlay-content {
+            text-align: center;
+            max-width: 300px;
+            padding: 30px;
+            background: #1c1f27;
+            border-radius: 12px;
+            border: 1px solid #374151;
+        }
+        
+        .progress-overlay-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        .progress-overlay-text {
+            color: #e5e7eb;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .progress-overlay-subtext {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        
         @media (max-width: 480px) {
             .login-container {
                 padding: 20px;
@@ -225,14 +302,22 @@
     </style>
 </head>
 <body>
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-overlay-content">
+            <div class="progress-overlay-spinner"></div>
+            <div class="progress-overlay-text" id="progressText">جاري تسجيل الدخول...</div>
+            <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+        </div>
+    </div>
+
     <div class="login-container">
         <div class="logo">
             <h1>a3len</h1>
             <p>سوق بيع وشراء قطع البيسي</p>
         </div>
         
-        <div class="security-info">
-            🔐 نوصي باستخدام كلمة سر قوية ولا تشارك بيانات الدخول مع أحد
+        <div class="security-notice">
+            🔐 جميع محاولات الدخول مسجلة ومحمية
         </div>
         
         <div id="errorMessage" class="error-message"></div>
@@ -271,14 +356,7 @@
         </div>
     </div>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-    
     <script>
-        // إعداد Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
             authDomain: "a3len-3ad54.firebasestorage.app",
@@ -288,115 +366,97 @@
             messagingSenderId: "767338034080",
             appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         
         const auth = firebase.auth();
         const db = firebase.database();
-        const analytics = firebase.analytics();
         
-        // متغيرات التحكم في المحاولات
-        let loginAttempts = 0;
-        const maxAttempts = 5;
-        let lockUntil = 0;
-        let failedLogins = {};
-        
-        // تحميل محاولات الدخول الفاشلة من localStorage
-        function loadFailedLogins() {
-            const stored = localStorage.getItem('failedLogins');
-            if (stored) {
-                failedLogins = JSON.parse(stored);
-                // تنظيف المحاولات القديمة (أقدم من 24 ساعة)
+        class LoginSecurity {
+            static maxAttempts = 5;
+            static lockDuration = 30 * 60 * 1000;
+            static attempts = new Map();
+            
+            static canLogin(username) {
+                const userAttempts = this.attempts.get(username) || { count: 0, lockUntil: 0 };
                 const now = Date.now();
-                for (const key in failedLogins) {
-                    if (now - failedLogins[key].timestamp > 24 * 60 * 60 * 1000) {
-                        delete failedLogins[key];
+                
+                if (now < userAttempts.lockUntil) {
+                    const remaining = Math.ceil((userAttempts.lockUntil - now) / 60000);
+                    this.showLockWarning(remaining);
+                    return false;
+                }
+                
+                if (userAttempts.count >= this.maxAttempts) {
+                    userAttempts.lockUntil = now + this.lockDuration;
+                    this.attempts.set(username, userAttempts);
+                    this.showLockWarning(30);
+                    return false;
+                }
+                
+                this.showAttemptsWarning(this.maxAttempts - userAttempts.count);
+                return true;
+            }
+            
+            static recordAttempt(username, success) {
+                let userAttempts = this.attempts.get(username) || { count: 0, lockUntil: 0 };
+                
+                if (success) {
+                    userAttempts.count = 0;
+                    userAttempts.lockUntil = 0;
+                } else {
+                    userAttempts.count++;
+                    if (userAttempts.count >= this.maxAttempts) {
+                        userAttempts.lockUntil = Date.now() + this.lockDuration;
+                    }
+                }
+                
+                this.attempts.set(username, userAttempts);
+                localStorage.setItem('loginAttempts', JSON.stringify(Array.from(this.attempts.entries())));
+            }
+            
+            static showAttemptsWarning(remaining) {
+                const warningDiv = document.getElementById('attemptsWarning');
+                if (remaining <= 3) {
+                    warningDiv.textContent = `⚠️ لديك ${this.maxAttempts - remaining} محاولات فاشلة. ${remaining} محاولات متبقية.`;
+                    warningDiv.style.display = 'block';
+                } else {
+                    warningDiv.style.display = 'none';
+                }
+            }
+            
+            static showLockWarning(minutes) {
+                const warningDiv = document.getElementById('attemptsWarning');
+                warningDiv.textContent = `🔒 الحساب مقفل مؤقتاً. يرجى المحاولة بعد ${minutes} دقيقة.`;
+                warningDiv.style.display = 'block';
+            }
+            
+            static loadAttempts() {
+                const stored = localStorage.getItem('loginAttempts');
+                if (stored) {
+                    try {
+                        const entries = JSON.parse(stored);
+                        this.attempts = new Map(entries);
+                        
+                        const now = Date.now();
+                        for (const [username, attempts] of this.attempts) {
+                            if (attempts.lockUntil && now > attempts.lockUntil) {
+                                attempts.count = 0;
+                                attempts.lockUntil = 0;
+                                this.attempts.set(username, attempts);
+                            }
+                        }
+                    } catch (e) {
+                        this.attempts = new Map();
                     }
                 }
             }
         }
         
-        // حفظ محاولات الدخول الفاشلة
-        function saveFailedLogins() {
-            localStorage.setItem('failedLogins', JSON.stringify(failedLogins));
-        }
+        LoginSecurity.loadAttempts();
         
-        // التحقق من حالة القفل
-        function checkLoginLock() {
-            const now = Date.now();
-            const username = document.getElementById('username').value.trim();
-            
-            if (failedLogins[username]) {
-                const attempts = failedLogins[username].attempts;
-                const lastAttempt = failedLogins[username].timestamp;
-                const lockTime = failedLogins[username].lockUntil || 0;
-                
-                if (now < lockTime) {
-                    // الحساب مقفل
-                    const remainingMinutes = Math.ceil((lockTime - now) / (60 * 1000));
-                    showLockWarning(remainingMinutes);
-                    document.getElementById('loginBtn').disabled = true;
-                    return true;
-                } else if (attempts >= maxAttempts) {
-                    // إعادة تعيين بعد انتهاء القفل
-                    delete failedLogins[username];
-                    saveFailedLogins();
-                } else {
-                    showAttemptsWarning(attempts);
-                }
-            }
-            return false;
-        }
-        
-        // عرض تحذير المحاولات
-        function showAttemptsWarning(attempts) {
-            const warningDiv = document.getElementById('attemptsWarning');
-            const remaining = maxAttempts - attempts;
-            warningDiv.textContent = `⚠️ لديك ${attempts} محاولات فاشلة. ${remaining} محاولات متبقية قبل القفل المؤقت.`;
-            warningDiv.style.display = 'block';
-        }
-        
-        // عرض تحذير القفل
-        function showLockWarning(minutes) {
-            const warningDiv = document.getElementById('attemptsWarning');
-            warningDiv.textContent = `🔒 الحساب مقفل مؤقتاً. يرجى المحاولة بعد ${minutes} دقيقة.`;
-            warningDiv.style.display = 'block';
-            warningDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-            warningDiv.style.color = '#ef4444';
-            warningDiv.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-        }
-        
-        // تسجيل محاولة فاشلة
-        function recordFailedLogin(username) {
-            if (!failedLogins[username]) {
-                failedLogins[username] = {
-                    attempts: 0,
-                    timestamp: Date.now()
-                };
-            }
-            
-            failedLogins[username].attempts++;
-            failedLogins[username].timestamp = Date.now();
-            
-            // إذا تجاوزت المحاولات الحد الأقصى، قفل الحساب
-            if (failedLogins[username].attempts >= maxAttempts) {
-                failedLogins[username].lockUntil = Date.now() + (30 * 60 * 1000); // قفل لمدة 30 دقيقة
-                showLockWarning(30);
-            }
-            
-            saveFailedLogins();
-            showAttemptsWarning(failedLogins[username].attempts);
-        }
-        
-        // مسح محاولات الدخول الفاشلة عند النجاح
-        function clearFailedLogins(username) {
-            if (failedLogins[username]) {
-                delete failedLogins[username];
-                saveFailedLogins();
-                document.getElementById('attemptsWarning').style.display = 'none';
-            }
-        }
-        
-        // إظهار/إخفاء كلمة السر
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -404,15 +464,17 @@
             this.textContent = type === 'password' ? '👁️' : '🙈';
         });
         
-        // نسيان كلمة السر
         function showForgotPassword() {
             const username = document.getElementById('username').value.trim();
-            let email = '';
             
-            if (username.includes('@')) {
-                email = username;
-            } else {
-                // البحث عن البريد الإلكتروني عبر اسم المستخدم
+            if (!username) {
+                alert('أدخل اسم المستخدم أو البريد الإلكتروني أولاً');
+                return false;
+            }
+            
+            let email = username;
+            
+            if (!username.includes('@')) {
                 db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
                     if (snapshot.exists()) {
                         const users = snapshot.val();
@@ -420,55 +482,34 @@
                             email = users[uid].email;
                             break;
                         }
+                        sendResetEmail(email);
+                    } else {
+                        alert('اسم المستخدم غير موجود');
                     }
                 });
+            } else {
+                sendResetEmail(email);
             }
             
-            if (email) {
-                auth.sendPasswordResetEmail(email)
-                    .then(() => {
-                        alert(`تم إرسال رابط إعادة تعيين كلمة السر إلى ${email}`);
-                    })
-                    .catch((error) => {
-                        console.error('Reset password error:', error);
-                        alert('حدث خطأ في إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني.');
-                    });
-            } else {
-                alert('أدخل اسم المستخدم أو البريد الإلكتروني أولاً');
-            }
             return false;
         }
         
-        // التحقق من صحة النموذج
-        function validateForm() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                return false;
-            }
-            
-            return true;
+        function sendResetEmail(email) {
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    alert(`تم إرسال رابط إعادة تعيين كلمة السر إلى ${email}`);
+                })
+                .catch((error) => {
+                    console.error('Reset password error:', error);
+                    alert('حدث خطأ في إرسال رابط إعادة التعيين');
+                });
         }
         
-        // منع إرسال النموذج
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // التحقق من القفل أولاً
-            if (checkLoginLock()) {
-                return;
-            }
-            
             loginUser();
         });
         
-        // استمع لتغيير اسم المستخدم للتحقق من القفل
-        document.getElementById('username').addEventListener('input', function() {
-            checkLoginLock();
-        });
-        
-        // تسجيل الدخول
         function loginUser() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
@@ -477,43 +518,36 @@
             const successDiv = document.getElementById('successMessage');
             const loginBtn = document.getElementById('loginBtn');
             
-            // إخفاء الرسائل السابقة
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             
-            // التحقق من البيانات
             if (!username || !password) {
                 errorDiv.textContent = 'جميع الحقول مطلوبة';
                 errorDiv.style.display = 'block';
                 return;
             }
             
-            // تعطيل زر الدخول أثناء المعالجة
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = 'جاري تسجيل الدخول...';
+            if (!LoginSecurity.canLogin(username)) {
+                return;
+            }
             
-            // تحديد ما إذا كان الإدخال بريداً إلكترونياً أو اسم مستخدم
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+            document.getElementById('progressOverlay').classList.add('active');
+            
             let userEmail = null;
             
             if (username.includes('@')) {
-                // إذا كان بريداً إلكترونياً
                 userEmail = username;
-                loginWithEmail(userEmail, password, username);
+                attemptLogin(userEmail, password, username);
             } else {
-                // إذا كان اسم مستخدم، البحث عن البريد الإلكتروني
                 db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
                     if (!snapshot.exists()) {
-                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
-                        errorDiv.style.display = 'block';
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = 'تسجيل الدخول';
-                        recordFailedLogin(username);
+                        handleLoginError('اسم المستخدم أو كلمة السر غير صحيحة', username);
                         return;
                     }
                     
-                    // الحصول على بيانات المستخدم
                     const users = snapshot.val();
-                    
                     for (const uid in users) {
                         if (users[uid].username === username) {
                             userEmail = users[uid].email;
@@ -522,164 +556,107 @@
                     }
                     
                     if (!userEmail) {
-                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
-                        errorDiv.style.display = 'block';
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = 'تسجيل الدخول';
-                        recordFailedLogin(username);
+                        handleLoginError('اسم المستخدم أو كلمة السر غير صحيحة', username);
                         return;
                     }
                     
-                    loginWithEmail(userEmail, password, username);
+                    attemptLogin(userEmail, password, username);
                 });
             }
         }
         
-        // تسجيل الدخول باستخدام البريد الإلكتروني
-        function loginWithEmail(email, password, username) {
-            const errorDiv = document.getElementById('errorMessage');
-            const successDiv = document.getElementById('successMessage');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            // تسجيل التحليلات
-            analytics.logEvent('login', {
-                method: 'email'
-            });
-            
-            // تسجيل الدخول
+        function attemptLogin(email, password, username) {
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     
-                    // مسح المحاولات الفاشلة
-                    clearFailedLogins(username);
+                    LoginSecurity.recordAttempt(username, true);
                     
-                    // تسجيل وقت الدخول
+                    document.getElementById('progressText').textContent = 'جاري تحديث معلومات الجلسة...';
+                    
                     db.ref("users/" + user.uid).update({
                         lastLogin: firebase.database.ServerValue.TIMESTAMP,
                         lastActive: firebase.database.ServerValue.TIMESTAMP,
-                        loginCount: firebase.database.ServerValue.increment(1)
+                        loginCount: firebase.database.ServerValue.increment(1),
+                        failedLoginAttempts: 0
                     });
                     
-                    // تسجيل نشاط الدخول
                     db.ref("userActivity/" + user.uid).push().set({
                         type: 'login',
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        ip: 'unknown', // يمكن إضافته لاحقاً
-                        device: navigator.userAgent
+                        device: navigator.userAgent,
+                        ip: 'unknown'
                     });
                     
-                    successDiv.textContent = '✅ تم تسجيل الدخول بنجاح!';
-                    successDiv.style.display = 'block';
+                    document.getElementById('progressText').textContent = 'تم تسجيل الدخول بنجاح!';
                     
-                    // حفظ تذكرني
                     if (document.getElementById('rememberMe').checked) {
                         localStorage.setItem('rememberedUser', username);
                     } else {
                         localStorage.removeItem('rememberedUser');
                     }
                     
-                    // الانتقال للصفحة الرئيسية بعد ثانية
                     setTimeout(() => {
                         window.location.href = 'index.html';
-                    }, 1000);
+                    }, 1500);
                 })
                 .catch((error) => {
-                    console.error('Login error:', error);
-                    
-                    // تسجيل المحاولة الفاشلة
-                    recordFailedLogin(username);
-                    
-                    let errorMessage = 'حدث خطأ أثناء التسجيل';
-                    if (error.code === 'auth/wrong-password') {
-                        errorMessage = 'كلمة السر غير صحيحة';
-                    } else if (error.code === 'auth/user-not-found') {
-                        errorMessage = 'المستخدم غير موجود';
-                    } else if (error.code === 'auth/user-disabled') {
-                        errorMessage = 'الحساب معطل';
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = 'البريد الإلكتروني غير صالح';
-                    } else if (error.code === 'auth/too-many-requests') {
-                        errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
-                    } else if (error.code === 'auth/network-request-failed') {
-                        errorMessage = 'خطأ في الاتصال بالشبكة';
-                    }
-                    
-                    errorDiv.textContent = errorMessage;
-                    errorDiv.style.display = 'block';
-                    
-                    // إعادة تمكين زر الدخول
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'تسجيل الدخول';
+                    handleLoginError(getErrorMessage(error), username);
                 });
         }
         
-        // تحميل المستخدم المتذكر
-        function loadRememberedUser() {
+        function handleLoginError(message, username) {
+            document.getElementById('progressOverlay').classList.remove('active');
+            
+            LoginSecurity.recordAttempt(username, false);
+            
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('loading');
+            
+            document.getElementById('username').focus();
+        }
+        
+        function getErrorMessage(error) {
+            switch(error.code) {
+                case 'auth/wrong-password':
+                    return 'كلمة السر غير صحيحة';
+                case 'auth/user-not-found':
+                    return 'المستخدم غير موجود';
+                case 'auth/user-disabled':
+                    return 'الحساب معطل';
+                case 'auth/invalid-email':
+                    return 'البريد الإلكتروني غير صالح';
+                case 'auth/too-many-requests':
+                    return 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
+                case 'auth/network-request-failed':
+                    return 'خطأ في الاتصال بالشبكة';
+                default:
+                    return 'حدث خطأ أثناء التسجيل';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
             const rememberedUser = localStorage.getItem('rememberedUser');
             if (rememberedUser) {
                 document.getElementById('username').value = rememberedUser;
                 document.getElementById('rememberMe').checked = true;
             }
-        }
-        
-        // تحميل محاولات الدخول الفاشلة عند التحميل
-        document.addEventListener('DOMContentLoaded', function() {
-            loadFailedLogins();
-            loadRememberedUser();
             
-            // إضافة حماية ضد هجمات البرمجيات النصية
             document.addEventListener('keydown', function(e) {
-                // منع فحص الكود
-                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
                     e.preventDefault();
-                    return false;
-                }
-                if (e.ctrlKey && e.key === 'U') {
-                    e.preventDefault();
-                    return false;
                 }
             });
             
-            // حماية ضد النقر الأيمن
             document.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
-                return false;
-            });
-            
-            // حماية ضد السحب والإفلات
-            document.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // حماية ضد النسخ
-            document.addEventListener('copy', function(e) {
-                if (e.target.id === 'password') {
-                    e.preventDefault();
-                    return false;
-                }
             });
         });
-        
-        // كشف الأجهزة المتعددة (ميزة متقدمة)
-        function detectSuspiciousActivity(user) {
-            const currentDevice = navigator.userAgent;
-            const lastDevice = localStorage.getItem(`lastDevice_${user.uid}`);
-            
-            if (lastDevice && lastDevice !== currentDevice) {
-                // إرسال تنبيه أو تسجيل النشاط المشبوه
-                db.ref("securityAlerts/" + user.uid).push().set({
-                    type: 'new_device_login',
-                    timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    previousDevice: lastDevice,
-                    currentDevice: currentDevice,
-                    ip: 'unknown'
-                });
-            }
-            
-            localStorage.setItem(`lastDevice_${user.uid}`, currentDevice);
-        }
     </script>
 </body>
 </html>
