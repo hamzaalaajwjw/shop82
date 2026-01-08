@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب | a3len</title>
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('font.ttf') format('truetype');
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'CustomFont', sans-serif;
+            background: linear-gradient(135deg, #0f1115 0%, #1a1d27 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .register-container {
+            background: #1c1f27;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid #2d3748;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .register-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .logo h1 {
+            color: #38bdf8;
+            font-size: 32px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .logo p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d1d5db;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            background: #111318;
+            color: #e5e7eb;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+        
+        .form-group input.valid {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        .form-group input.invalid {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .validation-icon {
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            font-size: 18px;
+            display: none;
+        }
+        
+        .valid-icon {
+            color: #10b981;
+        }
+        
+        .invalid-icon {
+            color: #ef4444;
+        }
+        
+        .password-strength {
+            height: 6px;
+            background: #374151;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+            border-radius: 3px;
+        }
+        
+        .strength-weak { background: #ef4444; }
+        .strength-medium { background: #f59e0b; }
+        .strength-strong { background: #10b981; }
+        
+        .strength-label {
+            position: absolute;
+            top: -20px;
+            right: 0;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .register-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(56, 189, 248, 0.3);
+        }
+        
+        .register-btn:active {
+            transform: translateY(0);
+        }
+        
+        .register-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .register-btn.loading {
+            color: transparent;
+        }
+        
+        .register-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #374151;
+        }
+        
+        .links a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .links a:hover {
+            background: rgba(56, 189, 248, 0.1);
+            text-decoration: none;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .password-requirements {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        
+        .requirement.met {
+            color: #10b981;
+        }
+        
+        .requirement.unmet {
+            color: #9ca3af;
+        }
+        
+        .requirement-icon {
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-radius: 8px;
+            border: 1px solid #374151;
+        }
+        
+        .terms-checkbox input {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            accent-color: #38bdf8;
+        }
+        
+        .terms-checkbox label {
+            font-size: 13px;
+            color: #9ca3af;
+            line-height: 1.5;
+            flex: 1;
+        }
+        
+        .terms-checkbox a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+        
+        .profile-link-preview {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .profile-link-preview code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #38bdf8;
+            word-break: break-all;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .info-box {
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .info-box ul {
+            padding-right: 20px;
+            margin: 8px 0;
+        }
+        
+        .info-box li {
+            margin: 4px 0;
+        }
+        
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 20px;
+            }
+            
+            .logo h1 {
+                font-size: 28px;
+            }
+            
+            .form-group input {
+                padding: 12px;
+            }
+            
+            .register-btn {
+                padding: 14px;
+            }
+        }
+        
+        /* Progress Overlay */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .progress-overlay.active {
+            opacity: 1;
+            display: flex;
+        }
+        
+        .progress-overlay-content {
+            text-align: center;
+            max-width: 300px;
+            padding: 30px;
+            background: #1c1f27;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .progress-overlay-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        .progress-overlay-text {
+            color: #e5e7eb;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .progress-overlay-subtext {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Overlay -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-overlay-content">
+            <div class="progress-overlay-spinner"></div>
+            <div class="progress-overlay-text" id="progressText">جاري إنشاء الحساب...</div>
+            <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+        </div>
+    </div>
+
+    <div class="register-container">
+        <div class="logo">
+            <h1>a3len</h1>
+            <p>سوق بيع وشراء قطع البيسي</p>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <form id="registerForm">
+            <!-- معلومات الملف الشخصي -->
+            <div class="info-box">
+                <strong>معلومات الملف الشخصي:</strong>
+                <ul>
+                    <li>الاسم الكامل سيظهر في ملفك الشخصي</li>
+                    <li>اسم المستخدم سيستخدم في رابط ملفك الشخصي</li>
+                    <li>يمكنك تعديل هذه المعلومات لاحقاً</li>
+                </ul>
+            </div>
+            
+            <div class="form-group">
+                <label for="fullName">الاسم الكامل (سيظهر في البروفايل)</label>
+                <input type="text" id="fullName" placeholder="مثال: محمد أحمد" autocomplete="name" maxlength="50">
+                <div class="password-requirements">سيظهر هذا الاسم في صفحتك الشخصية وعند نشر الإعلانات</div>
+                <span id="fullNameValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="fullNameInvalidIcon" class="validation-icon invalid-icon">✗</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">اسم المستخدم (بالإنجليزية فقط)</label>
+                <input type="text" id="username" required autocomplete="username" maxlength="20">
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqLength">
+                        <span class="requirement-icon">○</span>
+                        <span>3-20 حرف (أحرف إنجليزية، أرقام، _ فقط)</span>
+                    </div>
+                    <div class="requirement unmet" id="reqStartLetter">
+                        <span class="requirement-icon">○</span>
+                        <span>يجب أن يبدأ بحرف</span>
+                    </div>
+                    <div class="requirement unmet" id="reqAvailable">
+                        <span class="requirement-icon">○</span>
+                        <span>اسم المستخدم متاح</span>
+                    </div>
+                </div>
+                <div id="profileLinkPreview" class="profile-link-preview" style="display: none;">
+                    <small style="color:#38bdf8;">رابط ملفك الشخصي:</small>
+                    <code id="profileLinkCode">https://a3len.store/profile/username</code>
+                </div>
+                <span id="usernameValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="usernameInvalidIcon" class="validation-icon invalid-icon">✗</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">البريد الإلكتروني</label>
+                <input type="email" id="email" required autocomplete="email" maxlength="100">
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqEmailFormat">
+                        <span class="requirement-icon">○</span>
+                        <span>بريد إلكتروني صالح</span>
+                    </div>
+                </div>
+                <span id="emailValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="emailInvalidIcon" class="validation-icon invalid-icon">✗</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">كلمة السر</label>
+                <input type="password" id="password" required autocomplete="new-password" maxlength="50">
+                <div class="password-strength">
+                    <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                    <div class="strength-label" id="strengthLabel">قوة كلمة السر</div>
+                </div>
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="reqMinLength">
+                        <span class="requirement-icon">○</span>
+                        <span>6 أحرف على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqUpperCase">
+                        <span class="requirement-icon">○</span>
+                        <span>حرف كبير واحد على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqLowerCase">
+                        <span class="requirement-icon">○</span>
+                        <span>حرف صغير واحد على الأقل</span>
+                    </div>
+                    <div class="requirement unmet" id="reqNumber">
+                        <span class="requirement-icon">○</span>
+                        <span>رقم واحد على الأقل</span>
+                    </div>
+                </div>
+                <span id="passwordValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="passwordInvalidIcon" class="validation-icon invalid-icon">✗</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">تأكيد كلمة السر</label>
+                <input type="password" id="confirmPassword" required autocomplete="new-password" maxlength="50">
+                <div class="password-requirements" id="confirmMessage"></div>
+                <span id="confirmValidIcon" class="validation-icon valid-icon">✓</span>
+                <span id="confirmInvalidIcon" class="validation-icon invalid-icon">✗</span>
+            </div>
+            
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    أوافق على <a href="#" onclick="showTerms()">شروط الاستخدام</a> و <a href="#" onclick="showPrivacy()">سياسة الخصوصية</a>
+                    وأقر بأن جميع المعلومات التي قدمتها صحيحة. أحتفظ بحق الإدارة في تعليق حسابي في حال مخالفة الشروط.
+                </label>
+            </div>
+            
+            <button type="submit" class="register-btn" id="registerBtn" disabled>إنشاء حساب</button>
+        </form>
+        
+        <div class="links">
+            <a href="login.html">لديك حساب بالفعل؟ تسجيل الدخول</a>
+            <a href="index.html">← العودة للصفحة الرئيسية</a>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <script>
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+            authDomain: "a3len-3ad54.firebasestorage.app",
+            databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+            projectId: "a3len-3ad54",
+            storageBucket: "a3len-3ad54.firebasestorage.app",
+            messagingSenderId: "767338034080",
+            appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+        };
+        
+        // التحقق من عدم تكرار التهيئة
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const analytics = firebase.analytics();
+        
+        // Progress Manager
+        class ProgressManager {
+            constructor() {
+                this.progressOverlay = document.getElementById('progressOverlay');
+                this.progressText = document.getElementById('progressText');
+                this.progressSubtext = document.getElementById('progressSubtext');
+            }
+            
+            showProgress(text = 'جاري المعالجة...', subtext = 'يرجى الانتظار') {
+                this.progressText.textContent = text;
+                this.progressSubtext.textContent = subtext;
+                this.progressOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            hideProgress() {
+                this.progressOverlay.classList.remove('active');
+                setTimeout(() => {
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+            
+            showSuccess(message = 'تم بنجاح!') {
+                this.progressText.textContent = message;
+                this.progressSubtext.textContent = '';
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 1500);
+            }
+            
+            showError(message = 'حدث خطأ!') {
+                this.progressText.textContent = message;
+                this.progressSubtext.textContent = 'الرجاء المحاولة مرة أخرى';
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 2000);
+            }
+        }
+        
+        const progressManager = new ProgressManager();
+        
+        // ===== دوال مساعدة =====
+        function createProfileLink(username) {
+            return `https://a3len.store/profile/${username}`;
+        }
+        
+        function showProfileLinkPreview(username) {
+            if (username && username.length >= 3) {
+                const profileLink = createProfileLink(username);
+                const previewDiv = document.getElementById('profileLinkPreview');
+                const codeElement = document.getElementById('profileLinkCode');
+                
+                codeElement.textContent = profileLink;
+                previewDiv.style.display = 'block';
+            } else {
+                document.getElementById('profileLinkPreview').style.display = 'none';
+            }
+        }
+        
+        function showTerms() {
+            alert(`شروط الاستخدام:
+            
+1. الالتزام بالقوانين المحلية والدولية.
+2. عدم نشر محتوى مسيء أو غير قانوني.
+3. المسؤولية الكاملة عن المحتوى المنشور.
+4. احترام خصوصية الآخرين.
+5. يحق للإدارة حذف أي محتوى مخالف.
+6. يجب أن تكون المعلومات المقدمة صحيحة وكاملة.
+            
+باستخدام المنصة، فإنك توافق على هذه الشروط.`);
+            return false;
+        }
+        
+        function showPrivacy() {
+            alert(`سياسة الخصوصية:
+            
+1. نحن نحترم خصوصيتك ونحمي بياناتك الشخصية.
+2. نستخدم البيانات فقط لتقديم الخدمة وتحسينها.
+3. لا نشارك بياناتك مع أطراف ثالثة دون موافقتك.
+4. يمكنك طلب حذف حسابك وبياناتك في أي وقت.
+5. نستخدم تقنيات حماية متقدمة لحماية بياناتك.
+6. نحتفظ بالحق في تحديث هذه السياسة حسب الحاجة.
+            
+للمزيد من التفاصيل، راجع سياسة الخصوصية الكاملة.`);
+            return false;
+        }
+        
+        // ===== متغيرات التحكم =====
+        let isFormValid = false;
+        let usernameCheckTimeout = null;
+        let lastUsernameCheck = '';
+        
+        // ===== دوال التحقق =====
+        function validateFullName() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const isValid = fullName.length >= 2 && fullName.length <= 50;
+            updateValidationUI('fullName', isValid);
+            checkFormValidity();
+            return isValid;
+        }
+        
+        function validateUsername() {
+            const username = document.getElementById('username').value.trim();
+            
+            // إلغاء الوقت السابق
+            if (usernameCheckTimeout) {
+                clearTimeout(usernameCheckTimeout);
+            }
+            
+            // التحقق من الطول
+            const reqLength = document.getElementById('reqLength');
+            const isLengthValid = username.length >= 3 && username.length <= 20;
+            updateRequirement(reqLength, isLengthValid);
+            
+            // التحقق من الأحرف المسموحة وعدم وجود مسافات
+            const reqStartLetter = document.getElementById('reqStartLetter');
+            const reqAvailable = document.getElementById('reqAvailable');
+            
+            const isValidFormat = /^[a-zA-Z][a-zA-Z0-9_]*$/.test(username);
+            const hasNoSpaces = !/\s/.test(username);
+            const isFormatValid = isValidFormat && hasNoSpaces;
+            
+            updateRequirement(reqStartLetter, /^[a-zA-Z]/.test(username));
+            
+            // إعادة تعيين حالة التوفر
+            reqAvailable.innerHTML = '<span class="requirement-icon">○</span><span>اسم المستخدم متاح</span>';
+            reqAvailable.classList.remove('met', 'unmet');
+            
+            const isValidBasic = isLengthValid && isFormatValid;
+            updateValidationUI('username', isValidBasic);
+            
+            // التحقق من توفر اسم المستخدم عبر username_checks (متاح للجميع)
+            if (isValidBasic && username.length >= 3 && username !== lastUsernameCheck) {
+                usernameCheckTimeout = setTimeout(() => {
+                    checkUsernameAvailability(username);
+                }, 500);
+            }
+            
+            // عرض رابط الملف الشخصي
+            showProfileLinkPreview(username);
+            
+            checkFormValidity();
+            return isValidBasic;
+        }
+        
+        function checkUsernameAvailability(username) {
+            if (username === lastUsernameCheck) return;
+            lastUsernameCheck = username;
+            
+            const reqAvailable = document.getElementById('reqAvailable');
+            reqAvailable.innerHTML = '<span class="requirement-icon">⟳</span><span>جاري التحقق...</span>';
+            
+            // استخدام username_checks للتحقق (قراءة متاحة للجميع حسب قاعدة الأمان)
+            db.ref("username_checks/" + username).once("value", snapshot => {
+                const exists = snapshot.val();
+                
+                if (exists === true) {
+                    reqAvailable.innerHTML = '<span class="requirement-icon">✗</span><span style="color:#ef4444">اسم المستخدم موجود مسبقاً</span>';
+                    reqAvailable.classList.add('unmet');
+                    reqAvailable.classList.remove('met');
+                } else {
+                    reqAvailable.innerHTML = '<span class="requirement-icon">✓</span><span style="color:#10b981">اسم المستخدم متاح</span>';
+                    reqAvailable.classList.add('met');
+                    reqAvailable.classList.remove('unmet');
+                }
+                checkFormValidity();
+            }).catch(error => {
+                console.error("Error checking username:", error);
+                reqAvailable.innerHTML = '<span class="requirement-icon">!</span><span style="color:#f59e0b">تعذر التحقق</span>';
+                reqAvailable.classList.add('unmet');
+                reqAvailable.classList.remove('met');
+                checkFormValidity();
+            });
+        }
+        
+        function validateEmail() {
+            const email = document.getElementById('email').value.trim();
+            
+            // التحقق من صيغة البريد فقط (بدون التحقق من التوفر)
+            const reqEmailFormat = document.getElementById('reqEmailFormat');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isFormatValid = emailRegex.test(email);
+            updateRequirement(reqEmailFormat, isFormatValid);
+            
+            const isValidBasic = isFormatValid;
+            updateValidationUI('email', isValidBasic);
+            
+            checkFormValidity();
+            return isValidBasic;
+        }
+        
+        // التحقق من توفر البريد الإلكتروني عند التسجيل فقط
+        function checkEmailAvailability(email) {
+            return new Promise((resolve, reject) => {
+                // استخدام email_checks للتحقق (قراءة متاحة للجميع حسب قاعدة الأمان)
+                db.ref("email_checks/" + encodeEmail(email)).once("value", snapshot => {
+                    const exists = snapshot.val();
+                    resolve(exists === true);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        }
+        
+        // تشفير البريد الإلكتروني لاستخدامه كمفتاح
+        function encodeEmail(email) {
+            return btoa(email.toLowerCase().trim());
+        }
+        
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            
+            // متطلبات كلمة السر
+            const requirements = {
+                minLength: password.length >= 6,
+                hasUpperCase: /[A-Z]/.test(password),
+                hasLowerCase: /[a-z]/.test(password),
+                hasNumber: /[0-9]/.test(password)
+            };
+            
+            // تحديث واجهة المتطلبات
+            updateRequirement(document.getElementById('reqMinLength'), requirements.minLength);
+            updateRequirement(document.getElementById('reqUpperCase'), requirements.hasUpperCase);
+            updateRequirement(document.getElementById('reqLowerCase'), requirements.hasLowerCase);
+            updateRequirement(document.getElementById('reqNumber'), requirements.hasNumber);
+            
+            // حساب قوة كلمة السر
+            let strength = 0;
+            let strengthText = '';
+            let strengthClass = '';
+            
+            if (requirements.minLength) strength++;
+            if (requirements.hasUpperCase) strength++;
+            if (requirements.hasLowerCase) strength++;
+            if (requirements.hasNumber) strength++;
+            
+            // تحديث شريط القوة
+            const strengthFill = document.getElementById('passwordStrengthFill');
+            const strengthLabel = document.getElementById('strengthLabel');
+            const percent = (strength / 4) * 100;
+            strengthFill.style.width = percent + '%';
+            
+            if (strength <= 1) {
+                strengthText = 'ضعيفة';
+                strengthClass = 'strength-weak';
+            } else if (strength === 2) {
+                strengthText = 'متوسطة';
+                strengthClass = 'strength-medium';
+            } else if (strength === 3) {
+                strengthText = 'جيدة';
+                strengthClass = 'strength-medium';
+            } else {
+                strengthText = 'قوية';
+                strengthClass = 'strength-strong';
+            }
+            
+            strengthFill.className = 'password-strength-fill ' + strengthClass;
+            strengthLabel.textContent = `قوة كلمة السر: ${strengthText}`;
+            
+            const isValid = requirements.minLength && requirements.hasUpperCase && 
+                          requirements.hasLowerCase && requirements.hasNumber;
+            updateValidationUI('password', isValid);
+            checkFormValidity();
+            validateConfirmPassword();
+            return isValid;
+        }
+        
+        function validateConfirmPassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirmMessage = document.getElementById('confirmMessage');
+            
+            let isValid = false;
+            let message = '';
+            let messageColor = '';
+            
+            if (confirmPassword.length === 0) {
+                message = 'أدخل تأكيد كلمة السر';
+                messageColor = '#9ca3af';
+            } else if (password !== confirmPassword) {
+                message = 'كلمتا السر غير متطابقتين';
+                messageColor = '#ef4444';
+            } else {
+                message = 'كلمتا السر متطابقتان ✓';
+                messageColor = '#10b981';
+                isValid = true;
+            }
+            
+            confirmMessage.innerHTML = `<span style="color:${messageColor}">${message}</span>`;
+            updateValidationUI('confirm', isValid);
+            checkFormValidity();
+            return isValid;
+        }
+        
+        function updateRequirement(element, isMet) {
+            if (!element) return;
+            
+            if (isMet) {
+                element.classList.add('met');
+                element.classList.remove('unmet');
+                const icon = element.querySelector('.requirement-icon');
+                if (icon) icon.textContent = '✓';
+            } else {
+                element.classList.add('unmet');
+                element.classList.remove('met');
+                const icon = element.querySelector('.requirement-icon');
+                if (icon) icon.textContent = '○';
+            }
+        }
+        
+        function updateValidationUI(fieldId, isValid) {
+            const input = document.getElementById(fieldId);
+            const validIcon = document.getElementById(fieldId + 'ValidIcon');
+            const invalidIcon = document.getElementById(fieldId + 'InvalidIcon');
+            
+            if (!input) return;
+            
+            if (isValid) {
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+                if (validIcon) validIcon.style.display = 'block';
+                if (invalidIcon) invalidIcon.style.display = 'none';
+            } else if (input.value.length > 0) {
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+                if (validIcon) validIcon.style.display = 'none';
+                if (invalidIcon) invalidIcon.style.display = 'block';
+            } else {
+                input.classList.remove('valid', 'invalid');
+                if (validIcon) validIcon.style.display = 'none';
+                if (invalidIcon) invalidIcon.style.display = 'none';
+            }
+        }
+        
+        function checkFormValidity() {
+            const termsChecked = document.getElementById('terms').checked;
+            
+            // الحصول على قيم الحقول
+            const fullName = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // التحقق من جميع الحقول الأساسية
+            const fullNameValid = fullName.length >= 2;
+            
+            // التحقق من اسم المستخدم
+            const usernameLengthValid = username.length >= 3 && username.length <= 20;
+            const usernameFormatValid = /^[a-zA-Z][a-zA-Z0-9_]*$/.test(username) && !/\s/.test(username);
+            const usernameAvailable = document.getElementById('reqAvailable').classList.contains('met');
+            const usernameValid = usernameLengthValid && usernameFormatValid && usernameAvailable;
+            
+            // التحقق من البريد الإلكتروني (الصيغة فقط)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const emailFormatValid = emailRegex.test(email);
+            const emailValid = emailFormatValid; // التحقق من التوفر يكون عند التسجيل فقط
+            
+            // التحقق من كلمة السر
+            const passwordMinLength = password.length >= 6;
+            const passwordHasUpperCase = /[A-Z]/.test(password);
+            const passwordHasLowerCase = /[a-z]/.test(password);
+            const passwordHasNumber = /[0-9]/.test(password);
+            const passwordValid = passwordMinLength && passwordHasUpperCase && 
+                                 passwordHasLowerCase && passwordHasNumber;
+            
+            // التحقق من تأكيد كلمة السر
+            const confirmValid = password === confirmPassword && confirmPassword.length > 0;
+            
+            // التحقق النهائي
+            isFormValid = fullNameValid && usernameValid && emailValid && 
+                         passwordValid && confirmValid && termsChecked;
+            
+            document.getElementById('registerBtn').disabled = !isFormValid;
+            
+            // تحديث واجهات التحقق النهائية
+            updateValidationUI('fullName', fullNameValid);
+            updateValidationUI('username', usernameValid);
+            updateValidationUI('email', emailValid);
+            updateValidationUI('password', passwordValid);
+            updateValidationUI('confirm', confirmValid);
+            
+            return isFormValid;
+        }
+        
+        // ===== إضافة مستمعات الأحداث =====
+        document.getElementById('fullName').addEventListener('input', validateFullName);
+        document.getElementById('username').addEventListener('input', function() {
+            lastUsernameCheck = '';
+            validateUsername();
+        });
+        document.getElementById('email').addEventListener('input', validateEmail);
+        document.getElementById('password').addEventListener('input', validatePassword);
+        document.getElementById('confirmPassword').addEventListener('input', validateConfirmPassword);
+        document.getElementById('terms').addEventListener('change', checkFormValidity);
+        
+        // ===== منع إرسال النموذج =====
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            registerUser();
+        });
+        
+        // ===== تسجيل المستخدم =====
+        async function registerUser() {
+            if (!isFormValid) {
+                alert('يرجى ملء جميع الحقول بشكل صحيح');
+                return;
+            }
+            
+            const fullName = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const registerBtn = document.getElementById('registerBtn');
+            
+            // إخفاء الرسائل السابقة
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // تعطيل زر التسجيل وإظهار حالة التحميل
+            registerBtn.disabled = true;
+            registerBtn.classList.add('loading');
+            
+            // التحقق النهائي قبل التسجيل
+            progressManager.showProgress('جاري التحقق من المعلومات...', 'انتظر قليلاً');
+            
+            try {
+                // التحقق من اسم المستخدم عبر username_checks
+                const usernameSnapshot = await db.ref("username_checks/" + username).once("value");
+                if (usernameSnapshot.val() === true) {
+                    progressManager.hideProgress();
+                    errorDiv.textContent = 'اسم المستخدم موجود مسبقاً، يرجى اختيار اسم آخر';
+                    errorDiv.style.display = 'block';
+                    registerBtn.disabled = false;
+                    registerBtn.classList.remove('loading');
+                    return;
+                }
+                
+                // التحقق من البريد الإلكتروني عبر email_checks (فقط عند التسجيل)
+                const encodedEmail = encodeEmail(email);
+                const emailSnapshot = await db.ref("email_checks/" + encodedEmail).once("value");
+                if (emailSnapshot.val() === true) {
+                    progressManager.hideProgress();
+                    errorDiv.textContent = 'البريد الإلكتروني مستخدم مسبقاً، يرجى استخدام بريد آخر';
+                    errorDiv.style.display = 'block';
+                    registerBtn.disabled = false;
+                    registerBtn.classList.remove('loading');
+                    return;
+                }
+                
+                // تحديث حالة التقدم
+                progressManager.showProgress('جاري إنشاء الحساب...', 'قد يستغرق بضع ثوان');
+                
+                // إنشاء المستخدم في Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // تسجيل التحليلات
+                analytics.logEvent('sign_up', {
+                    method: 'email'
+                });
+                
+                // إنشاء رابط الملف الشخصي
+                const profileLink = createProfileLink(username);
+                const joinDate = new Date();
+                
+                // حفظ بيانات المستخدم الكاملة للبروفايل
+                const userData = {
+                    fullName: fullName,
+                    username: username,
+                    email: email,
+                    profileLink: profileLink,
+                    followersCount: 0,
+                    followingCount: 0,
+                    totalProducts: 0,
+                    totalReviews: 0,
+                    rating: 0,
+                    averageRating: 0,
+                    joinDate: joinDate.toLocaleDateString('ar-SA'),
+                    joinTimestamp: firebase.database.ServerValue.TIMESTAMP,
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP,
+                    accountStatus: 'active',
+                    emailVerified: false,
+                    profileComplete: true,
+                    bio: '',
+                    phone: '',
+                    location: '',
+                    socialLinks: {},
+                    preferences: {
+                        notifications: true,
+                        emailUpdates: true,
+                        privacy: 'public'
+                    },
+                    stats: {
+                        totalViews: 0,
+                        profileViews: 0,
+                        productsSold: 0
+                    },
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                // حفظ بيانات المستخدم
+                await db.ref("users/" + user.uid).set(userData);
+                
+                // تحديث فهارس التحقق (username_checks و email_checks)
+                await Promise.all([
+                    db.ref("username_checks/" + username).set(true),
+                    db.ref("email_checks/" + encodedEmail).set(true)
+                ]);
+                
+                // إنشاء مجلدات فرعية للمتابعة والتقييمات
+                await db.ref("userStats/" + user.uid).set({
+                    followers: 0,
+                    following: 0,
+                    products: 0,
+                    rating: 0,
+                    reviews: 0
+                });
+                
+                // إنشاء سجل للنشاط
+                await db.ref("userActivity/" + user.uid).push().set({
+                    type: 'account_created',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    details: 'تم إنشاء الحساب بنجاح',
+                    profileLink: profileLink,
+                    ip: 'unknown',
+                    device: navigator.userAgent
+                });
+                
+                // إرسال بريد التحقق
+                await user.sendEmailVerification();
+                
+                progressManager.showSuccess('تم إنشاء الحساب بنجاح!');
+                
+                // تسجيل نجاح التسجيل
+                await db.ref("users/" + user.uid).update({
+                    emailVerificationSent: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // عرض رسالة النجاح
+                successDiv.innerHTML = `
+                    ✅ <strong>تم إنشاء الحساب بنجاح!</strong><br>
+                    <small style="color:#9ca3af;">
+                        تم إرسال رابط التحقق إلى بريدك الإلكتروني.<br>
+                        رابط ملفك الشخصي: <code style="background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px;">${profileLink}</code>
+                    </small>
+                `;
+                successDiv.style.display = 'block';
+                
+                // إعادة تعيين زر التسجيل
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+                
+                // تسجيل الدخول تلقائياً
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                progressManager.hideProgress();
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+                
+                let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'البريد الإلكتروني مستخدم مسبقاً في نظام المصادقة';
+                    document.getElementById('email').classList.add('invalid');
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'البريد الإلكتروني غير صالح';
+                    document.getElementById('email').classList.add('invalid');
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'كلمة السر ضعيفة جداً';
+                    document.getElementById('password').classList.add('invalid');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMessage = 'عملية التسجيل غير مسموحة حالياً';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = 'خطأ في الاتصال بالشبكة، يرجى التحقق من اتصالك بالإنترنت';
+                }
+                
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // ===== تهيئة الصفحة =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // تعيين الحدود القصوى للحقول
+            document.getElementById('fullName').maxLength = 50;
+            document.getElementById('username').maxLength = 20;
+            document.getElementById('email').maxLength = 100;
+            document.getElementById('password').maxLength = 50;
+            document.getElementById('confirmPassword').maxLength = 50;
+            
+            // تهيئة شريط قوة كلمة السر
+            const strengthFill = document.getElementById('passwordStrengthFill');
+            strengthFill.style.width = '0%';
+            strengthFill.className = 'password-strength-fill';
+            
+            // التحقق الأولي
+            checkFormValidity();
+            
+            // حماية ضد فحص الكود
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                // منع فحص الكود
+                if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+                    e.preventDefault();
+                }
+                // منع حفظ الصفحة
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                }
+            });
+            
+            // منع النسخ في حقول كلمة السر
+            const passwordFields = ['password', 'confirmPassword'];
+            passwordFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('copy', function(e) {
+                        e.preventDefault();
+                    });
+                    field.addEventListener('cut', function(e) {
+                        e.preventDefault();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
