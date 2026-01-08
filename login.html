@@ -222,9 +222,77 @@
                 align-items: flex-start;
             }
         }
+        
+        /* Progress Overlay */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .progress-overlay.active {
+            opacity: 1;
+            display: flex;
+        }
+        
+        .progress-overlay-content {
+            text-align: center;
+            max-width: 300px;
+            padding: 30px;
+            background: #1c1f27;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .progress-overlay-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        .progress-overlay-text {
+            color: #e5e7eb;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .progress-overlay-subtext {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Progress Overlay -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-overlay-content">
+            <div class="progress-overlay-spinner"></div>
+            <div class="progress-overlay-text" id="progressText">جاري تسجيل الدخول...</div>
+            <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+        </div>
+    </div>
+
     <div class="login-container">
         <div class="logo">
             <h1>a3len</h1>
@@ -241,8 +309,8 @@
         
         <form id="loginForm">
             <div class="form-group">
-                <label for="username">اسم المستخدم أو البريد الإلكتروني</label>
-                <input type="text" id="username" required autocomplete="username">
+                <label for="email">البريد الإلكتروني</label>
+                <input type="email" id="email" required autocomplete="email">
             </div>
             
             <div class="form-group">
@@ -288,16 +356,60 @@
             messagingSenderId: "767338034080",
             appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        // التحقق من عدم تكرار التهيئة
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         
         const auth = firebase.auth();
         const db = firebase.database();
         const analytics = firebase.analytics();
         
+        // Progress Manager
+        class ProgressManager {
+            constructor() {
+                this.progressOverlay = document.getElementById('progressOverlay');
+                this.progressText = document.getElementById('progressText');
+                this.progressSubtext = document.getElementById('progressSubtext');
+            }
+            
+            showProgress(text = 'جاري تسجيل الدخول...', subtext = 'يرجى الانتظار') {
+                this.progressText.textContent = text;
+                this.progressSubtext.textContent = subtext;
+                this.progressOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            hideProgress() {
+                this.progressOverlay.classList.remove('active');
+                setTimeout(() => {
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+            
+            showSuccess(message = 'تم تسجيل الدخول بنجاح!') {
+                this.progressText.textContent = message;
+                this.progressSubtext.textContent = '';
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 1500);
+            }
+            
+            showError(message = 'حدث خطأ!') {
+                this.progressText.textContent = message;
+                this.progressSubtext.textContent = 'الرجاء المحاولة مرة أخرى';
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 2000);
+            }
+        }
+        
+        const progressManager = new ProgressManager();
+        
         // متغيرات التحكم في المحاولات
         let loginAttempts = 0;
         const maxAttempts = 5;
-        let lockUntil = 0;
         let failedLogins = {};
         
         // تحميل محاولات الدخول الفاشلة من localStorage
@@ -321,28 +433,25 @@
         }
         
         // التحقق من حالة القفل
-        function checkLoginLock() {
-            const now = Date.now();
-            const username = document.getElementById('username').value.trim();
+        function checkLoginLock(email) {
+            if (!failedLogins[email]) return false;
             
-            if (failedLogins[username]) {
-                const attempts = failedLogins[username].attempts;
-                const lastAttempt = failedLogins[username].timestamp;
-                const lockTime = failedLogins[username].lockUntil || 0;
-                
-                if (now < lockTime) {
-                    // الحساب مقفل
-                    const remainingMinutes = Math.ceil((lockTime - now) / (60 * 1000));
-                    showLockWarning(remainingMinutes);
-                    document.getElementById('loginBtn').disabled = true;
-                    return true;
-                } else if (attempts >= maxAttempts) {
-                    // إعادة تعيين بعد انتهاء القفل
-                    delete failedLogins[username];
-                    saveFailedLogins();
-                } else {
-                    showAttemptsWarning(attempts);
-                }
+            const attempts = failedLogins[email].attempts;
+            const lockTime = failedLogins[email].lockUntil || 0;
+            const now = Date.now();
+            
+            if (now < lockTime) {
+                // الحساب مقفل
+                const remainingMinutes = Math.ceil((lockTime - now) / (60 * 1000));
+                showLockWarning(remainingMinutes);
+                document.getElementById('loginBtn').disabled = true;
+                return true;
+            } else if (attempts >= maxAttempts) {
+                // إعادة تعيين بعد انتهاء القفل
+                delete failedLogins[email];
+                saveFailedLogins();
+            } else {
+                showAttemptsWarning(attempts);
             }
             return false;
         }
@@ -366,31 +475,31 @@
         }
         
         // تسجيل محاولة فاشلة
-        function recordFailedLogin(username) {
-            if (!failedLogins[username]) {
-                failedLogins[username] = {
+        function recordFailedLogin(email) {
+            if (!failedLogins[email]) {
+                failedLogins[email] = {
                     attempts: 0,
                     timestamp: Date.now()
                 };
             }
             
-            failedLogins[username].attempts++;
-            failedLogins[username].timestamp = Date.now();
+            failedLogins[email].attempts++;
+            failedLogins[email].timestamp = Date.now();
             
             // إذا تجاوزت المحاولات الحد الأقصى، قفل الحساب
-            if (failedLogins[username].attempts >= maxAttempts) {
-                failedLogins[username].lockUntil = Date.now() + (30 * 60 * 1000); // قفل لمدة 30 دقيقة
+            if (failedLogins[email].attempts >= maxAttempts) {
+                failedLogins[email].lockUntil = Date.now() + (30 * 60 * 1000); // قفل لمدة 30 دقيقة
                 showLockWarning(30);
             }
             
             saveFailedLogins();
-            showAttemptsWarning(failedLogins[username].attempts);
+            showAttemptsWarning(failedLogins[email].attempts);
         }
         
         // مسح محاولات الدخول الفاشلة عند النجاح
-        function clearFailedLogins(username) {
-            if (failedLogins[username]) {
-                delete failedLogins[username];
+        function clearFailedLogins(email) {
+            if (failedLogins[email]) {
+                delete failedLogins[email];
                 saveFailedLogins();
                 document.getElementById('attemptsWarning').style.display = 'none';
             }
@@ -406,71 +515,59 @@
         
         // نسيان كلمة السر
         function showForgotPassword() {
-            const username = document.getElementById('username').value.trim();
-            let email = '';
+            const email = document.getElementById('email').value.trim();
             
-            if (username.includes('@')) {
-                email = username;
-            } else {
-                // البحث عن البريد الإلكتروني عبر اسم المستخدم
-                db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
-                    if (snapshot.exists()) {
-                        const users = snapshot.val();
-                        for (const uid in users) {
-                            email = users[uid].email;
-                            break;
-                        }
-                    }
-                });
-            }
-            
-            if (email) {
-                auth.sendPasswordResetEmail(email)
-                    .then(() => {
-                        alert(`تم إرسال رابط إعادة تعيين كلمة السر إلى ${email}`);
-                    })
-                    .catch((error) => {
-                        console.error('Reset password error:', error);
-                        alert('حدث خطأ في إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني.');
-                    });
-            } else {
-                alert('أدخل اسم المستخدم أو البريد الإلكتروني أولاً');
-            }
-            return false;
-        }
-        
-        // التحقق من صحة النموذج
-        function validateForm() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
+            if (!email) {
+                alert('أدخل البريد الإلكتروني أولاً');
                 return false;
             }
             
-            return true;
+            if (!email.includes('@')) {
+                alert('يرجى إدخال بريد إلكتروني صحيح');
+                return false;
+            }
+            
+            progressManager.showProgress('جاري إرسال رابط إعادة التعيين...');
+            
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    progressManager.hideProgress();
+                    alert(`تم إرسال رابط إعادة تعيين كلمة السر إلى ${email}`);
+                })
+                .catch((error) => {
+                    console.error('Reset password error:', error);
+                    progressManager.hideProgress();
+                    
+                    let errorMessage = 'حدث خطأ في إرسال رابط إعادة التعيين';
+                    if (error.code === 'auth/user-not-found') {
+                        errorMessage = 'البريد الإلكتروني غير مسجل';
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                    }
+                    
+                    alert(errorMessage);
+                });
+            
+            return false;
         }
         
         // منع إرسال النموذج
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // التحقق من القفل أولاً
-            if (checkLoginLock()) {
-                return;
-            }
-            
             loginUser();
         });
         
-        // استمع لتغيير اسم المستخدم للتحقق من القفل
-        document.getElementById('username').addEventListener('input', function() {
-            checkLoginLock();
+        // استمع لتغيير البريد للتحقق من القفل
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value.trim();
+            if (email) {
+                checkLoginLock(email);
+            }
         });
         
         // تسجيل الدخول
         function loginUser() {
-            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             const errorDiv = document.getElementById('errorMessage');
@@ -480,104 +577,69 @@
             // إخفاء الرسائل السابقة
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
+            document.getElementById('attemptsWarning').style.display = 'none';
             
             // التحقق من البيانات
-            if (!username || !password) {
+            if (!email || !password) {
                 errorDiv.textContent = 'جميع الحقول مطلوبة';
                 errorDiv.style.display = 'block';
                 return;
             }
             
-            // تعطيل زر الدخول أثناء المعالجة
+            if (!email.includes('@')) {
+                errorDiv.textContent = 'يرجى إدخال بريد إلكتروني صحيح';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // التحقق من القفل
+            if (checkLoginLock(email)) {
+                return;
+            }
+            
+            // تعطيل زر الدخول وإظهار التحميل
             loginBtn.disabled = true;
             loginBtn.innerHTML = 'جاري تسجيل الدخول...';
-            
-            // تحديد ما إذا كان الإدخال بريداً إلكترونياً أو اسم مستخدم
-            let userEmail = null;
-            
-            if (username.includes('@')) {
-                // إذا كان بريداً إلكترونياً
-                userEmail = username;
-                loginWithEmail(userEmail, password, username);
-            } else {
-                // إذا كان اسم مستخدم، البحث عن البريد الإلكتروني
-                db.ref("users").orderByChild("username").equalTo(username).once("value", snapshot => {
-                    if (!snapshot.exists()) {
-                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
-                        errorDiv.style.display = 'block';
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = 'تسجيل الدخول';
-                        recordFailedLogin(username);
-                        return;
-                    }
-                    
-                    // الحصول على بيانات المستخدم
-                    const users = snapshot.val();
-                    
-                    for (const uid in users) {
-                        if (users[uid].username === username) {
-                            userEmail = users[uid].email;
-                            break;
-                        }
-                    }
-                    
-                    if (!userEmail) {
-                        errorDiv.textContent = 'اسم المستخدم أو كلمة السر غير صحيحة';
-                        errorDiv.style.display = 'block';
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = 'تسجيل الدخول';
-                        recordFailedLogin(username);
-                        return;
-                    }
-                    
-                    loginWithEmail(userEmail, password, username);
-                });
-            }
-        }
-        
-        // تسجيل الدخول باستخدام البريد الإلكتروني
-        function loginWithEmail(email, password, username) {
-            const errorDiv = document.getElementById('errorMessage');
-            const successDiv = document.getElementById('successMessage');
-            const loginBtn = document.getElementById('loginBtn');
+            progressManager.showProgress('جاري تسجيل الدخول...', 'انتظر قليلاً');
             
             // تسجيل التحليلات
             analytics.logEvent('login', {
                 method: 'email'
             });
             
-            // تسجيل الدخول
+            // تسجيل الدخول باستخدام Firebase Auth مباشرة
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     
                     // مسح المحاولات الفاشلة
-                    clearFailedLogins(username);
+                    clearFailedLogins(email);
                     
-                    // تسجيل وقت الدخول
-                    db.ref("users/" + user.uid).update({
-                        lastLogin: firebase.database.ServerValue.TIMESTAMP,
-                        lastActive: firebase.database.ServerValue.TIMESTAMP,
-                        loginCount: firebase.database.ServerValue.increment(1)
-                    });
+                    // تحديث وقت الدخول الأخير (إذا سمحت قاعدة الأمان)
+                    try {
+                        db.ref("users/" + user.uid).update({
+                            lastLogin: firebase.database.ServerValue.TIMESTAMP,
+                            lastActive: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    } catch (error) {
+                        console.log("لم يتم تحديث وقت الدخول:", error.message);
+                    }
                     
-                    // تسجيل نشاط الدخول
-                    db.ref("userActivity/" + user.uid).push().set({
-                        type: 'login',
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        ip: 'unknown', // يمكن إضافته لاحقاً
-                        device: navigator.userAgent
-                    });
+                    // حفظ تذكرني
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedEmail', email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
                     
+                    // عرض رسالة النجاح
+                    progressManager.showSuccess('تم تسجيل الدخول بنجاح!');
                     successDiv.textContent = '✅ تم تسجيل الدخول بنجاح!';
                     successDiv.style.display = 'block';
                     
-                    // حفظ تذكرني
-                    if (document.getElementById('rememberMe').checked) {
-                        localStorage.setItem('rememberedUser', username);
-                    } else {
-                        localStorage.removeItem('rememberedUser');
-                    }
+                    // إعادة تعيين زر الدخول
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'تسجيل الدخول';
                     
                     // الانتقال للصفحة الرئيسية بعد ثانية
                     setTimeout(() => {
@@ -588,13 +650,14 @@
                     console.error('Login error:', error);
                     
                     // تسجيل المحاولة الفاشلة
-                    recordFailedLogin(username);
+                    recordFailedLogin(email);
                     
-                    let errorMessage = 'حدث خطأ أثناء التسجيل';
+                    // عرض رسالة الخطأ المناسبة
+                    let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
                     if (error.code === 'auth/wrong-password') {
                         errorMessage = 'كلمة السر غير صحيحة';
                     } else if (error.code === 'auth/user-not-found') {
-                        errorMessage = 'المستخدم غير موجود';
+                        errorMessage = 'البريد الإلكتروني غير مسجل';
                     } else if (error.code === 'auth/user-disabled') {
                         errorMessage = 'الحساب معطل';
                     } else if (error.code === 'auth/invalid-email') {
@@ -602,80 +665,73 @@
                     } else if (error.code === 'auth/too-many-requests') {
                         errorMessage = 'تم إجراء العديد من المحاولات، يرجى الانتظار قليلاً';
                     } else if (error.code === 'auth/network-request-failed') {
-                        errorMessage = 'خطأ في الاتصال بالشبكة';
+                        errorMessage = 'خطأ في الاتصال بالشبكة، تحقق من اتصالك بالإنترنت';
                     }
-                    
-                    errorDiv.textContent = errorMessage;
-                    errorDiv.style.display = 'block';
                     
                     // إعادة تمكين زر الدخول
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'تسجيل الدخول';
+                    progressManager.hideProgress();
+                    
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.style.display = 'block';
                 });
         }
         
         // تحميل المستخدم المتذكر
         function loadRememberedUser() {
-            const rememberedUser = localStorage.getItem('rememberedUser');
-            if (rememberedUser) {
-                document.getElementById('username').value = rememberedUser;
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            if (rememberedEmail) {
+                document.getElementById('email').value = rememberedEmail;
                 document.getElementById('rememberMe').checked = true;
             }
         }
         
-        // تحميل محاولات الدخول الفاشلة عند التحميل
+        // تهيئة الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             loadFailedLogins();
             loadRememberedUser();
             
-            // إضافة حماية ضد هجمات البرمجيات النصية
-            document.addEventListener('keydown', function(e) {
-                // منع فحص الكود
-                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                    e.preventDefault();
-                    return false;
-                }
-                if (e.ctrlKey && e.key === 'U') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // حماية ضد النقر الأيمن
+            // حماية ضد فحص الكود
             document.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
-                return false;
             });
             
-            // حماية ضد السحب والإفلات
-            document.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // حماية ضد النسخ
-            document.addEventListener('copy', function(e) {
-                if (e.target.id === 'password') {
+            document.addEventListener('keydown', function(e) {
+                // منع فحص الكود
+                if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
                     e.preventDefault();
-                    return false;
+                }
+                // منع حفظ الصفحة
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
                 }
             });
+            
+            // منع النسخ في حقل كلمة السر
+            const passwordField = document.getElementById('password');
+            if (passwordField) {
+                passwordField.addEventListener('copy', function(e) {
+                    e.preventDefault();
+                });
+                passwordField.addEventListener('cut', function(e) {
+                    e.preventDefault();
+                });
+            }
+            
+            // التركيز على حقل البريد عند التحميل
+            setTimeout(() => {
+                document.getElementById('email').focus();
+            }, 100);
         });
         
-        // كشف الأجهزة المتعددة (ميزة متقدمة)
+        // اكتشاف الأجهزة المتعددة (ميزة متقدمة)
         function detectSuspiciousActivity(user) {
             const currentDevice = navigator.userAgent;
             const lastDevice = localStorage.getItem(`lastDevice_${user.uid}`);
             
             if (lastDevice && lastDevice !== currentDevice) {
-                // إرسال تنبيه أو تسجيل النشاط المشبوه
-                db.ref("securityAlerts/" + user.uid).push().set({
-                    type: 'new_device_login',
-                    timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    previousDevice: lastDevice,
-                    currentDevice: currentDevice,
-                    ip: 'unknown'
-                });
+                console.log('⚠️ تم تسجيل الدخول من جهاز جديد');
             }
             
             localStorage.setItem(`lastDevice_${user.uid}`, currentDevice);
