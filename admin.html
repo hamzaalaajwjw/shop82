@@ -2010,6 +2010,17 @@
                                         <div class="comparison-value ${product.originalData.category !== product.category ? 'changed' : ''}">${product.category || 'غير محدد'}</div>
                                     </div>
                                 </div>
+                                
+                                <div class="comparison-row">
+                                    <div class="comparison-item">
+                                        <div class="comparison-label">الحالة الأصلية</div>
+                                        <div class="comparison-value">${getStatusText(product.originalData.status2 || 'available')}</div>
+                                    </div>
+                                    <div class="comparison-item">
+                                        <div class="comparison-label">الحالة المعدلة</div>
+                                        <div class="comparison-value ${product.originalData.status2 !== product.status2 ? 'changed' : ''}">${getStatusText(product.status2 || 'available')}</div>
+                                    </div>
+                                </div>
                             </div>
                             
                             ${product.originalData.images && product.originalData.images.length > 0 ? `
@@ -2058,6 +2069,10 @@
                                 <div>
                                     <div style="color: #9ca3af;">المحافظة:</div>
                                     <div style="color: #e5e7eb;">${product.province || 'غير محدد'}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #9ca3af;">الحالة:</div>
+                                    <div style="color: #e5e7eb; font-weight: bold;">${getStatusText(product.status2 || 'available')}</div>
                                 </div>
                             </div>
                         </div>
@@ -2221,13 +2236,18 @@
                         return;
                     }
                     
-                    // حذف البيانات الأصلية المخزنة بعد قبول التعديل
+                    // تحضير التحديثات
                     const updates = {
                         status: PRODUCT_STATUS.APPROVED,
                         approvedAt: firebase.database.ServerValue.TIMESTAMP,
                         approvedBy: currentUser.uid,
                         lastUpdated: firebase.database.ServerValue.TIMESTAMP
                     };
+                    
+                    // إذا كانت هناك حالة جديدة في status2، احفظها
+                    if (product.status2) {
+                        updates.status2 = product.status2;
+                    }
                     
                     // حذف حقل البيانات الأصلية إذا كان موجوداً
                     if (product.originalData) {
@@ -2406,6 +2426,11 @@
                             approvedBy: currentUser.uid,
                             lastUpdated: firebase.database.ServerValue.TIMESTAMP
                         };
+                        
+                        // إذا كانت هناك حالة جديدة في status2، احفظها
+                        if (product.status2) {
+                            updates.status2 = product.status2;
+                        }
                         
                         // حذف البيانات الأصلية
                         if (product.originalData) {
