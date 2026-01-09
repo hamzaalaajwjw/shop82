@@ -560,7 +560,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     </div>
 </div>
 
-<div class="overlay" onclick="closeSidebar()"></div>
+<div class="overlay" onclick="closeSidebar()"></overlay>
 
 <div class="layout">
   <aside class="sidebar">
@@ -1249,26 +1249,46 @@ function loadProducts(){
         let statusClass = '';
         let statusText = '';
         
-        switch(status) {
-          case ApprovalSystem.STATUS.PENDING:
-            statusClass = 'status-pending';
-            statusText = '⏳ بانتظار الموافقة';
-            break;
-          case ApprovalSystem.STATUS.EDITED_PENDING:
-            statusClass = 'status-pending';
-            statusText = '✏️ تعديل بانتظار الموافقة';
-            break;
-          case ApprovalSystem.STATUS.APPROVED:
-            statusClass = 'status-available';
-            statusText = '✅ متاح';
-            break;
-          case ApprovalSystem.STATUS.REJECTED:
-            statusClass = 'status-rejected';
-            statusText = '❌ مرفوض';
-            break;
-          default:
-            statusClass = 'status-available';
-            statusText = '✅ متاح';
+        // عرض حالة المنتج الفعلية (status2) إذا كانت معتمدة
+        if (status === ApprovalSystem.STATUS.APPROVED) {
+          const actualStatus = p.status2 || 'available';
+          
+          switch(actualStatus) {
+            case 'available':
+              statusClass = 'status-available';
+              statusText = '✅ متاح';
+              break;
+            case 'sold':
+              statusClass = 'status-sold';
+              statusText = '✅ مباع';
+              break;
+            case 'reserved':
+              statusClass = 'status-reserved';
+              statusText = '✅ محجوز';
+              break;
+            default:
+              statusClass = 'status-available';
+              statusText = '✅ متاح';
+          }
+        } else {
+          // حالات الموافقة الأخرى
+          switch(status) {
+            case ApprovalSystem.STATUS.PENDING:
+              statusClass = 'status-pending';
+              statusText = '⏳ بانتظار الموافقة';
+              break;
+            case ApprovalSystem.STATUS.EDITED_PENDING:
+              statusClass = 'status-pending';
+              statusText = '✏️ تعديل بانتظار الموافقة';
+              break;
+            case ApprovalSystem.STATUS.REJECTED:
+              statusClass = 'status-rejected';
+              statusText = '❌ مرفوض';
+              break;
+            default:
+              statusClass = 'status-available';
+              statusText = '✅ متاح';
+          }
         }
         
         // شريط الانتظار الأصفر للإعلانات المعلقة
@@ -1550,9 +1570,9 @@ async function showPublish(p=null,k=null){
         
         <!-- إضافة خاصية الحالة (متاح/مباع/محجوز) -->
         <select id="status" ${isAdmin || (p && p.uid === userUid) ? '' : 'disabled'}>
-          <option value="available" ${p && p.status === "available" ? "selected" : ""}>متاح</option>
-          <option value="sold" ${p && p.status === "sold" ? "selected" : ""}>مباع</option>
-          <option value="reserved" ${p && p.status === "reserved" ? "selected" : ""}>محجوز</option>
+          <option value="available" ${(p && (p.status2 === "available" || (!p.status2 && p.status === "approved"))) ? "selected" : ""}>متاح</option>
+          <option value="sold" ${p && p.status2 === "sold" ? "selected" : ""}>مباع</option>
+          <option value="reserved" ${p && p.status2 === "reserved" ? "selected" : ""}>محجوز</option>
         </select>
         <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
         
@@ -1609,6 +1629,7 @@ async function saveProduct(k){
   const price = document.getElementById("price")?.value.trim();
   const phone = document.getElementById("phone")?.value.trim();
   const province = document.getElementById("province")?.value;
+  const status = document.getElementById("status")?.value || "available";
   
   if (!name || !price || !phone || !province) {
     alert("جميع الحقول مطلوبة");
@@ -1693,6 +1714,7 @@ async function saveProduct(k){
       phone: phone,
       province: province,
       delivery: document.getElementById("delivery").value,
+      status2: status,
       uid: userUid,
       lastUpdated: firebase.database.ServerValue.TIMESTAMP
     };
@@ -1720,6 +1742,7 @@ async function saveProduct(k){
           phone: existingProduct.phone,
           province: existingProduct.province,
           delivery: existingProduct.delivery,
+          status2: existingProduct.status2 || "available",
           images: existingProduct.images || []
         };
       } else {
@@ -1834,24 +1857,47 @@ function showDetails(k){
         </span>
       </p>`;
     
-    const status = p.status || ApprovalSystem.STATUS.PENDING;
-    let statusText = '';
+    const approvalStatus = p.status || ApprovalSystem.STATUS.PENDING;
+    let approvalStatusText = '';
     
-    switch(status) {
+    switch(approvalStatus) {
       case ApprovalSystem.STATUS.PENDING:
-        statusText = '⏳ بانتظار الموافقة';
+        approvalStatusText = '⏳ بانتظار الموافقة';
         break;
       case ApprovalSystem.STATUS.EDITED_PENDING:
-        statusText = '✏️ تعديل بانتظار الموافقة';
+        approvalStatusText = '✏️ تعديل بانتظار الموافقة';
         break;
       case ApprovalSystem.STATUS.APPROVED:
-        statusText = '✅ معتمد ومتاح';
+        approvalStatusText = '✅ معتمد';
         break;
       case ApprovalSystem.STATUS.REJECTED:
-        statusText = '❌ مرفوض';
+        approvalStatusText = '❌ مرفوض';
         break;
       default:
-        statusText = '✅ متاح';
+        approvalStatusText = '✅ معتمد';
+    }
+    
+    // عرض الحالة الفعلية للمنتج
+    const actualStatus = p.status2 || 'available';
+    let actualStatusText = '';
+    let actualStatusColor = '#10b981';
+    
+    switch(actualStatus) {
+      case 'available':
+        actualStatusText = 'متاح';
+        actualStatusColor = '#10b981';
+        break;
+      case 'sold':
+        actualStatusText = 'مباع';
+        actualStatusColor = '#38bdf8';
+        break;
+      case 'reserved':
+        actualStatusText = 'محجوز';
+        actualStatusColor = '#f59e0b';
+        break;
+      default:
+        actualStatusText = 'متاح';
+        actualStatusColor = '#10b981';
     }
     
     const detailsContent = document.getElementById("detailsContent");
@@ -1859,7 +1905,8 @@ function showDetails(k){
       detailsContent.innerHTML = `
         <h2>${escapeHTML(p.name)}</h2>
         ${imagesHTML}
-        <p><strong>الحالة:</strong> <span style="font-weight:bold; color:${status === ApprovalSystem.STATUS.PENDING || status === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : status === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${statusText}</span></p>
+        <p><strong>حالة الموافقة:</strong> <span style="font-weight:bold; color:${approvalStatus === ApprovalSystem.STATUS.PENDING || approvalStatus === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : approvalStatus === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${approvalStatusText}</span></p>
+        <p><strong>حالة المنتج:</strong> <span style="font-weight:bold; color:${actualStatusColor}">${actualStatusText}</span></p>
         <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
         <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
         ${sellerWithLink}
