@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>a3len | بيع وشراء قطع البيسي</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+/* ===== Custom Font ===== */
+@font-face {
+  font-family: 'CustomFont';
+  src: url('font.ttf') format('truetype');
+}
+body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
+
+/* ===== شارة التوثيق المحسنة ===== */
+.verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    font-size: 11px;
+    padding: 2px 8px 2px 6px;
+    border-radius: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.verified-badge img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(51%) sepia(98%) saturate(348%) hue-rotate(116deg) brightness(94%) contrast(94%);
+}
+
+.user-name-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ===== Budget Dialog ===== */
+.budget-btn {
+  margin-left: 10px;
+  background:#1f2937;
+  color:#e5e7eb;
+  border:none;
+  padding:5px 10px;
+  cursor:pointer;
+  border-radius:5px;
+}
+.budget-dialog {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#0f1115;
+  color:#e5e7eb;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px #000;
+  z-index:1000;
+  display:none;
+}
+.budget-dialog input {
+  width:100%;
+  padding:5px;
+  margin:10px 0;
+  border-radius:5px;
+  border:1px solid #333;
+  background:#1f1f1f;
+  color:#e5e7eb;
+}
+.budget-dialog button {
+  padding:5px 10px;
+  border:none;
+  border-radius:5px;
+  background:#38bdf8;
+  color:#000;
+  cursor:pointer;
+}
+.budget-dialog .close-btn { background:#ef4444; margin-left:10px; }
+
+/* ===== Product Details Dialog ===== */
+.details-dialog {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#0f1115;
+  color:#e5e7eb;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px #000;
+  z-index:1001;
+  display:none;
+  width: 90%;
+  max-width: 500px;
+}
+.details-dialog h2 { margin-top:0; }
+.details-dialog button { margin-top:10px; padding:5px 10px; border:none; border-radius:5px; background:#38bdf8; color:#000; cursor:pointer; }
+
+/* ===== إضافة نظام المصادقة ===== */
+.auth-section { 
+  margin-top: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+.user-info { 
+  padding: 15px; 
+  background: #1f2937; 
+  border-radius: 6px; 
+  text-align: center; 
+  margin-top: auto; 
+}
+.user-info p { 
+  margin: 0; 
+  color: #38bdf8; 
+  font-weight: bold; 
+  margin-bottom: 5px; 
+}
+.logout-btn { 
+  width: 100%; 
+  padding: 8px; 
+  background: #ef4444; 
+  color: white; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  font-size: 14px; 
+}
+.logout-btn:hover { 
+  background: #dc2626; 
+}
+.auth-btn { 
+  width: 100%; 
+  padding: 10px; 
+  background: #1f2937; 
+  border: none; 
+  color: #e5e7eb; 
+  font-size: 16px; 
+  cursor: pointer; 
+  border-radius: 6px; 
+  text-align: center; 
+}
+.auth-btn:hover { 
+  background: #374151; 
+}
+
+/* ===== إضافة أنماط نظام الملف الشخصي ===== */
+.seller-link {
+  color: #38bdf8;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+.seller-link:hover {
+  color: #0ea5e9;
+  text-decoration: none;
+}
+.profile-link {
+  color: #38bdf8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.profile-link:hover {
+  color: #0ea5e9;
+}
+
+/* ===== إضافة أنماط جديدة للتحسينات ===== */
+.product-status {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.status-pending { 
+  background: rgba(245, 158, 11, 0.2); 
+  color: #f59e0b; 
+  animation: pulse 1.5s infinite;
+}
+.status-available { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.status-sold { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.status-reserved { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.status-rejected { background: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+.admin-badge {
+  background: #8b5cf6;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 5px;
+}
+
+.security-warning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ===== أنماط جديدة للصور ===== */
+.image-upload-container {
+  margin: 15px 0;
+}
+
+.image-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.preview-image {
+  width: 180px;
+  height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #374151;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.preview-image:hover {
+  transform: scale(1.05);
+  border-color: #38bdf8;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: none;
+}
+
+.image-preview-item {
+  position: relative;
+}
+
+.image-preview-item:hover .remove-image-btn {
+  display: block;
+}
+
+.file-input-label {
+  display: inline-block;
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  margin: 5px 0;
+  border: 2px dashed #374151;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.file-input-label:hover {
+  background: #374151;
+  border-color: #38bdf8;
+}
+
+#images {
+  display: none;
+}
+
+/* ===== أنماط عرض الصور في البطاقة ===== */
+.product-images {
+  margin: 10px 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+
+.slider-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.no-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #1f2937, #374151);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ===== Progress Bar System ===== */
+.top-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: transparent;
+  z-index: 9999;
+  display: none;
+}
+
+.progress-bar-line {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+  transition: width 0.3s;
+}
+
+.circular-progress {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  z-index: 9998;
+  display: none;
+}
+
+.progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.95);
+  z-index: 9997;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.progress-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.progress-overlay-content {
+  text-align: center;
+  color: white;
+}
+
+.progress-overlay-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #374151;
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.progress-overlay-text {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.progress-overlay-subtext {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* ===== Skeleton Loading ===== */
+.skeleton-card {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-line {
+  background: #374151;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+/* ===== Publish Timer ===== */
+.publish-timer {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.publish-timer.active {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.timer-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.timer-disabled button {
+  background: #6b7280 !important;
+  cursor: not-allowed !important;
+}
+
+/* ===== نظام مؤقت النشر ===== */
+.publish-timer {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: center;
+  direction: ltr;
+}
+
+.publish-timer.active {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+/* ===== أنماط حالة الانتظار ===== */
+.pending-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 5px;
+  animation: pulse 1.5s infinite;
+}
+
+.waiting-approval {
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px dashed #f59e0b;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px 0;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+.waiting-approval h4 {
+  color: #f59e0b;
+  margin: 0 0 10px 0;
+}
+
+.waiting-approval p {
+  color: #9ca3af;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* تحسينات للهاتف */
+@media (max-width: 768px) {
+    .user-name-wrapper {
+        flex-wrap: wrap;
+    }
+    
+    .verified-badge {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .verified-badge img {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .seller-link {
+        font-size: 14px;
+    }
+    
+    .slider-image {
+        height: 150px;
+    }
+    
+    .preview-image {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .details-dialog {
+        width: 95%;
+        padding: 15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="logo">a3len</div>
+  <div class="tagline">سوق بيع وشراء قطع البيسي</div>
+</header>
+
+<!-- Progress Bar System -->
+<div class="top-progress-bar" id="topProgressBar">
+    <div class="progress-bar-line" id="progressBarLine"></div>
+</div>
+
+<div class="circular-progress" id="circularProgress">
+    <svg viewBox="0 0 36 36">
+        <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+        <circle class="progress-fill" cx="18" cy="18" r="16" 
+                stroke-dasharray="100" stroke-dashoffset="100"></circle>
+    </svg>
+</div>
+
+<div class="progress-overlay" id="progressOverlay">
+    <div class="progress-overlay-content">
+        <div class="progress-overlay-spinner"></div>
+        <div class="progress-overlay-text" id="progressText">جاري التحميل...</div>
+        <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+    </div>
+</div>
+
+<div class="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <button onclick="showHome()">🏠 الرئيسية</button>
+    <button onclick="showPublish()">➕ نشر إعلان</button>
+    
+    <!-- إضافة قسم المصادقة -->
+    <div id="authSection" class="auth-section"></div>
+  </aside>
+
+  <main id="content"></main>
+</div>
+
+<!-- Budget Dialog -->
+<div class="budget-dialog" id="budgetDialog">
+  <h3>اكتب أعلى سعر في ميزانيتك</h3>
+  <input type="number" id="maxBudget" placeholder="مثال: 100000" min="0" max="10000000">
+  <div style="text-align:right">
+    <button onclick="applyBudget()">متابعة</button>
+    <button class="close-btn" onclick="closeBudget()">إلغاء</button>
+  </div>
+</div>
+
+<!-- Product Details Dialog -->
+<div class="details-dialog" id="detailsDialog">
+  <div id="detailsContent"></div>
+  <button onclick="closeDetails()">رجوع للصفحة الرئيسية</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// ===== تهيئة Supabase =====
+const supabaseUrl = 'https://dnclbdvdzvtdjpgxwnrl.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY2xiZHZkenZ0ZGpwZ3h3bnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMjY5OTcsImV4cCI6MjA4MjgwMjk5N30.alGg61mAPLLqLM2LlQRq2K2o_eOOnJwNuaIJiAXB7Wg';
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAl3XunFOwHpGw-4_VYyETMtoLgk4mnRpQ",
+  authDomain: "a3len-3ad54.firebasestorage.app",
+  databaseURL: "https://a3len-3ad54-default-rtdb.firebaseio.com",
+  projectId: "a3len-3ad54",
+  storageBucket: "a3len-3ad54.firebasestorage.app",
+  messagingSenderId: "767338034080",
+  appId: "1:767338034080:web:801d77fb74c0aa56e92ac5"
+};
+
+// التحقق من تكرار تهيئة Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app();
+}
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+// ===== Progress Bar System =====
+class ProgressManager {
+    constructor() {
+        this.topProgressBar = document.getElementById('topProgressBar');
+        this.progressBarLine = document.getElementById('progressBarLine');
+        this.circularProgress = document.getElementById('circularProgress');
+        this.progressOverlay = document.getElementById('progressOverlay');
+        this.progressText = document.getElementById('progressText');
+        this.progressSubtext = document.getElementById('progressSubtext');
+        
+        this.currentProgress = 0;
+        this.progressInterval = null;
+        this.isLoading = false;
+    }
+    
+    // إظهار Progress Bar العلوي
+    showTopProgressBar() {
+        if (!this.topProgressBar) return;
+        this.topProgressBar.style.display = 'block';
+        this.progressBarLine.style.width = '0%';
+        this.progressBarLine.className = 'progress-bar-line';
+        
+        this.currentProgress = 0;
+        clearInterval(this.progressInterval);
+        
+        this.progressInterval = setInterval(() => {
+            if (this.currentProgress < 90) {
+                this.currentProgress += Math.random() * 10;
+                this.updateTopProgress(this.currentProgress);
+            }
+        }, 200);
+    }
+    
+    // تحديث التقدم العلوي
+    updateTopProgress(percent) {
+        if (!this.progressBarLine) return;
+        this.progressBarLine.style.width = `${Math.min(percent, 100)}%`;
+    }
+    
+    // إخفاء Progress Bar العلوي
+    hideTopProgressBar() {
+        if (!this.topProgressBar) return;
+        clearInterval(this.progressInterval);
+        this.updateTopProgress(100);
+        
+        setTimeout(() => {
+            this.topProgressBar.style.display = 'none';
+            this.currentProgress = 0;
+        }, 300);
+    }
+    
+    // إظهار Overlay كامل
+    showOverlay(text = 'جاري التحميل...', subtext = 'يرجى الانتظار') {
+        if (!this.progressOverlay) return;
+        this.isLoading = true;
+        this.progressText.textContent = text;
+        this.progressSubtext.textContent = subtext;
+        this.progressOverlay.classList.add('active');
+        
+        document.body.style.overflow = 'hidden';
+    }
+    
+    // تحديث نص الـ Overlay
+    updateOverlayText(text, subtext = null) {
+        if (!this.progressText) return;
+        this.progressText.textContent = text;
+        if (subtext !== null && this.progressSubtext) {
+            this.progressSubtext.textContent = subtext;
+        }
+    }
+    
+    // إخفاء الـ Overlay
+    hideOverlay() {
+        if (!this.progressOverlay) return;
+        this.isLoading = false;
+        this.progressOverlay.classList.remove('active');
+        
+        setTimeout(() => {
+            document.body.style.overflow = '';
+        }, 300);
+    }
+    
+    // عرض حالة نجاح
+    showSuccess(message = 'تم بنجاح!') {
+        this.updateOverlayText(message, '');
+        
+        setTimeout(() => {
+            this.hideOverlay();
+            this.hideTopProgressBar();
+        }, 1500);
+    }
+    
+    // عرض حالة خطأ
+    showError(message = 'حدث خطأ!') {
+        this.updateOverlayText(message, 'الرجاء المحاولة مرة أخرى');
+        
+        setTimeout(() => {
+            this.hideOverlay();
+            this.hideTopProgressBar();
+        }, 2000);
+    }
+    
+    // إنشاء هيكل Skeleton للبطاقات
+    createSkeletonCards(count = 6) {
+        let skeletonHTML = '';
+        for (let i = 0; i < count; i++) {
+            skeletonHTML += `
+                <div class="skeleton-card">
+                    <div class="skeleton-line" style="height: 20px; width: 70%"></div>
+                    <div class="skeleton-line" style="height: 16px; width: 40%"></div>
+                    <div class="skeleton-line" style="height: 12px; width: 60%"></div>
+                    <div class="skeleton-line" style="height: 12px; width: 50%"></div>
+                    <div class="skeleton-line" style="height: 12px; width: 80%"></div>
+                </div>
+            `;
+        }
+        return skeletonHTML;
+    }
+}
+
+// تهيئة Progress Manager
+const progressManager = new ProgressManager();
+
+// ===== متغيرات عامة =====
+let userUid = null;
+let currentUser = null;
+let userDisplayName = null;
+let userFullName = null;
+let isAdmin = false;
+let budget = null;
+let currentPage = 1;
+const postsPerPage = 6;
+
+// الأقسام والمحافظات
+const categories = ["CPU","GPU","RAM","Motherboard","Storage","Power Supply","Case","Cooler","Accessories"];
+const provinces = ["بغداد","البصرة","الموصل","أربيل","دهوك","السليمانية","نينوى","الأنبار","ذي قار","بابل","كربلاء","واسط","الديوانية","القادسية","صلاح الدين","المثنى","ميسان","النجف","كركوك"];
+
+// ===== نظام تحديد وقت النشر =====
+let canPublish = true;
+let publishTimer = null;
+let publishTimeLeft = 0;
+
+// ===== متغيرات رفع الصور =====
+let selectedImages = [];
+let imagePreviewUrls = [];
+
+// ===== دالة ضغط الصور باستخدام Canvas API =====
+async function compressImage(imageFile) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+            const img = new Image();
+            
+            img.onload = function() {
+                // تحديد الأبعاد القصوى للصورة
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                
+                let width = img.width;
+                let height = img.height;
+                
+                // تقليل الأبعاد إذا كانت الصورة كبيرة جداً
+                if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height = Math.round(height * (MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width = Math.round(width * (MAX_HEIGHT / height));
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                }
+                
+                // تحديد جودة الضغط بناءً على الحجم الأصلي
+                let quality = 0.8; // جودة 80% افتراضياً
+                
+                // إذا كانت الصورة كبيرة جداً (أكبر من 2MB)، نخفض الجودة أكثر
+                if (imageFile.size > 2 * 1024 * 1024) {
+                    quality = 0.6;
+                }
+                
+                // إذا كانت الصورة كبيرة جداً جداً (أكبر من 5MB)، نخفض الجودة أكثر
+                if (imageFile.size > 5 * 1024 * 1024) {
+                    quality = 0.4;
+                }
+                
+                // إنشاء عنصر Canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // تحسين جودة الرسم
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // رسم الصورة على Canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // تحويل Canvas إلى Blob مع ضغط
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        reject(new Error('فشل في ضغط الصورة'));
+                        return;
+                    }
+                    
+                    console.log(`✅ تم ضغط الصورة: ${(imageFile.size / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                    console.log(`📊 نسبة الضغط: ${Math.round((1 - (blob.size / imageFile.size)) * 100)}%`);
+                    
+                    // إنشاء File جديد من Blob المضغوط
+                    const compressedFile = new File([blob], imageFile.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            
+            img.onerror = function() {
+                reject(new Error('فشل في تحميل الصورة'));
+            };
+            
+            img.src = event.target.result;
+        };
+        
+        reader.onerror = function() {
+            reject(new Error('فشل في قراءة الملف'));
+        };
+        
+        reader.readAsDataURL(imageFile);
+    });
+}
+
+// ===== نظام الموافقة على المنشورات =====
+class ApprovalSystem {
+    static STATUS = {
+        PENDING: 'pending',
+        APPROVED: 'approved',
+        REJECTED: 'rejected',
+        EDITED_PENDING: 'edited_pending'
+    };
+    
+    // تسجيل نشاط الموافقة
+    static async logApprovalAction(adminId, productId, action, reason = '') {
+        try {
+            const logRef = db.ref('approval_logs').push();
+            await logRef.set({
+                adminId: adminId,
+                productId: productId,
+                action: action,
+                reason: reason,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            return true;
+        } catch (error) {
+            console.error('Error logging approval action:', error);
+            return false;
+        }
+    }
+    
+    // إرسال إشعار للمستخدم
+    static async sendNotification(userId, title, message) {
+        try {
+            const notificationRef = db.ref('notifications/' + userId).push();
+            await notificationRef.set({
+                title: title,
+                message: message,
+                read: false,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            return true;
+        } catch (error) {
+            console.error('Error sending notification:', error);
+            return false;
+        }
+    }
+}
+
+// ===== نظام إدارة الصور =====
+class ImageManager {
+    static async uploadProductImages(images) {
+        const imageUrls = [];
+        console.log('📤 بدء رفع', images.length, 'صورة');
+        
+        for (let i = 0; i < images.length; i++) {
+            let file = images[i];
+            const originalSize = file.size;
+            
+            // ضغط الصورة قبل الرفع
+            console.log(`🔧 جاري ضغط الصورة ${i + 1}...`);
+            progressManager.updateOverlayText("جاري معالجة الصورة...", "قد يستغرق بضع ثوان");
+            
+            try {
+                // ضغط الصورة إذا كانت أكبر من 500KB
+                if (file.size > 500 * 1024) {
+                    console.log(`📦 حجم الصورة الأصلي: ${(file.size / 1024).toFixed(1)}KB`);
+                    file = await compressImage(file);
+                    console.log(`✅ تم ضغط الصورة بنجاح`);
+                } else {
+                    console.log(`📦 الصورة صغيرة (${(file.size / 1024).toFixed(1)}KB)، لا تحتاج لضغط`);
+                }
+            } catch (compressError) {
+                console.error('⚠️ فشل ضغط الصورة، سيتم رفع الأصل:', compressError.message);
+                // نستمر بالملف الأصلي في حالة الفشل
+            }
+            
+            // اسم ملف بسيط مع الوقت
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 10);
+            const fileExtension = 'jpg'; // دائماً نستخدم jpeg بعد الضغط
+            const fileName = `${timestamp}_${random}.${fileExtension}`;
+            
+            try {
+                progressManager.updateOverlayText("جاري رفع الصورة...", "يرجى الانتظار");
+                
+                // رفع الصورة إلى Supabase
+                const { data, error } = await supabaseClient.storage
+                    .from('ads-images')
+                    .upload(`products/${fileName}`, file);
+                
+                if (error) {
+                    console.error('❌ فشل الرفع:', error.message);
+                    continue;
+                }
+                
+                // جلب الرابط
+                const { data: urlData } = await supabaseClient.storage
+                    .from('ads-images')
+                    .getPublicUrl(`products/${fileName}`);
+                
+                if (urlData?.publicUrl) {
+                    imageUrls.push(urlData.publicUrl);
+                    console.log(`✅ تم الرفع: ${(file.size / 1024).toFixed(1)}KB`);
+                }
+                
+            } catch (err) {
+                console.error('❌ خطأ غير متوقع:', err.message || err);
+            }
+        }
+        
+        console.log('🎯 النتيجة:', imageUrls.length, 'من', images.length, 'صورة مرفوعة');
+        return imageUrls;
+    }
+    
+    // حذف الصورة من Supabase
+    static async deleteImage(imageUrl) {
+        try {
+            // استخراج اسم الملف من الرابط
+            const urlParts = imageUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            
+            if (!fileName) {
+                console.error('❌ لا يمكن استخراج اسم الملف من الرابط:', imageUrl);
+                return false;
+            }
+            
+            const { error } = await supabaseClient.storage
+                .from('ads-images')
+                .remove([`products/${fileName}`]);
+            
+            if (error) {
+                console.error('❌ فشل حذف الصورة:', error.message);
+                return false;
+            }
+            
+            console.log(`✅ تم حذف الصورة: ${fileName}`);
+            return true;
+        } catch (err) {
+            console.error('❌ خطأ غير متوقع في حذف الصورة:', err.message || err);
+            return false;
+        }
+    }
+    
+    static createImageDisplay(images) {
+        if (!images || images.length === 0) {
+            return '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+        }
+        
+        // عرض الصورة الأولى فقط
+        return `
+            <div class="product-images">
+                <img src="${images[0]}" class="slider-image" alt="صورة المنتج" 
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180/1f2937/9ca3af?text=لا+توجد+صورة'">
+            </div>
+        `;
+    }
+}
+
+// ===== دوال إدارة الصور =====
+function handleImageSelect(event) {
+    const files = Array.from(event.target.files);
+    
+    // التحقق من عدد الصور - صورة واحدة فقط
+    if (files.length > 1) {
+        alert("يمكنك رفع صورة واحدة فقط كحد أقصى");
+        event.target.value = '';
+        return;
+    }
+    
+    // التحقق من نوع الملفات
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+        alert("يجب أن تكون الملفات من نوع صورة (JPEG, PNG, WebP)");
+        event.target.value = '';
+        return;
+    }
+    
+    // التحقق من حجم الصورة (الحد الأقصى 15MB)
+    const maxSize = 15 * 1024 * 1024; // 15MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+        alert("حجم الصورة كبير جداً. الحد الأقصى 15MB");
+        event.target.value = '';
+        return;
+    }
+    
+    // تحديث الصور المحددة - صورة واحدة فقط
+    selectedImages = files.slice(0, 1);
+    
+    // عرض المعاينة
+    displayImagePreview();
+}
+
+function displayImagePreview() {
+    const previewContainer = document.getElementById('imagePreview');
+    if (!previewContainer) return;
+    
+    // مسح المعاينة السابقة
+    imagePreviewUrls = [];
+    previewContainer.innerHTML = '';
+    
+    if (selectedImages.length === 0) {
+        previewContainer.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px;">لم يتم اختيار أي صور</div>';
+        return;
+    }
+    
+    // إنشاء معاينة للصورة المختارة
+    selectedImages.forEach((file, index) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const url = e.target.result;
+            imagePreviewUrls.push(url);
+            
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            previewItem.innerHTML = `
+                <img src="${url}" class="preview-image" alt="معاينة الصورة">
+                <div style="text-align:center; margin-top:5px; font-size:11px; color:#9ca3af;">
+                    ${(file.size / 1024).toFixed(1)}KB
+                </div>
+                <button class="remove-image-btn" onclick="removeImage(${index})">×</button>
+            `;
+            
+            previewContainer.appendChild(previewItem);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeImage(index) {
+    selectedImages.splice(index, 1);
+    imagePreviewUrls.splice(index, 1);
+    displayImagePreview();
+    
+    // تحديث input file
+    const imageInput = document.getElementById('images');
+    if (imageInput) {
+        imageInput.value = '';
+    }
+}
+
+// ===== دوال إدارة الصفحة =====
+function toggleSidebar(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
+  if (sidebar && overlay) {
+    sidebar.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
+}
+
+function closeSidebar(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
+  if (sidebar && overlay) {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+  }
+}
+
+function showHome(){
+  closeSidebar();
+  progressManager.showTopProgressBar();
+  
+  setTimeout(() => {
+    const content = document.getElementById("content");
+    if (!content) return;
+    
+    content.innerHTML = `
+      <div class="search-bar">
+        <input id="search" placeholder="🔍 ابحث عن قطعة..." onkeyup="loadProducts()" maxlength="50">
+        <select id="cat" onchange="loadProducts()">
+          <option value="">كل الأقسام</option>
+          ${categories.map(c=>`<option>${c}</option>`).join("")}
+        </select>
+        <button onclick="showBudgetDialog()" class="budget-btn">ميزانيتك 💰</button>
+      </div>
+      <div class="cards" id="products"></div>
+      <div id="pagination" style="text-align:center;margin:20px"></div>
+    `;
+    loadProducts();
+    progressManager.hideTopProgressBar();
+  }, 300);
+}
+
+function showBudgetDialog(){ 
+  const dialog = document.getElementById("budgetDialog");
+  if (dialog) dialog.style.display="block"; 
+}
+
+function closeBudget(){ 
+  const dialog = document.getElementById("budgetDialog");
+  if (dialog) dialog.style.display="none"; 
+}
+
+function applyBudget(){
+  const input = document.getElementById("maxBudget");
+  if (!input) return;
+  
+  const val = parseFloat(input.value);
+  
+  if (isNaN(val) || val < 0) {
+    alert("يرجى إدخال قيمة ميزانية صحيحة");
+    return;
+  }
+  
+  if (val > 10000000) {
+    alert("القيمة المدخلة كبيرة جداً");
+    return;
+  }
+  
+  budget = val;
+  closeBudget();
+  loadProducts();
+}
+
+// ===== دالة تحميل المنتجات =====
+function loadProducts(){
+  const searchInput = document.getElementById("search");
+  const catSelect = document.getElementById("cat");
+  
+  const s = searchInput ? searchInput.value.toLowerCase() : '';
+  const c = catSelect ? catSelect.value : '';
+  
+  // عرض Skeleton Loading
+  const productsContainer = document.getElementById('products');
+  if (productsContainer) {
+    productsContainer.innerHTML = progressManager.createSkeletonCards(6);
+  }
+  
+  progressManager.showTopProgressBar();
+  
+  db.ref("products").once("value", snap=>{
+    const d = snap.val() || {};
+    let htmlCards = [];
+
+    Object.keys(d).forEach(k=>{
+      const p = d[k];
+      
+      if (!p || !p.name || !p.price) {
+        return;
+      }
+      
+      const price = parseFloat(p.price) || 0;
+      
+      // تحديد ما إذا كان يجب عرض الإعلان
+      let showPost = false;
+      
+      // حالة الإعلان
+      const status = p.status || ApprovalSystem.STATUS.PENDING;
+      
+      // إذا كان المستخدم مسجلاً
+      if (userUid) {
+        // إذا كان المسؤول يرى كل شيء
+        if (isAdmin) {
+          showPost = true;
+        }
+        // إذا كان مالك الإعلان يرى إعلاناته بجميع حالاتها
+        else if (p.uid === userUid) {
+          showPost = true;
+        }
+        // إذا كان الإعلان معتمداً، يظهر للجميع
+        else if (status === ApprovalSystem.STATUS.APPROVED) {
+          showPost = true;
+        }
+      }
+      // إذا لم يكن مسجلاً، يرى فقط الإعلانات المعتمدة
+      else if (status === ApprovalSystem.STATUS.APPROVED) {
+        showPost = true;
+      }
+      
+      if (!showPost) return;
+      
+      if((!c || p.category===c) && p.name.toLowerCase().includes(s)){
+        if(budget && price > budget) return;
+        
+        // تحديد لون وشكل الحالة
+        let statusBadge = '';
+        let statusClass = '';
+        let statusText = '';
+        
+        switch(status) {
+          case ApprovalSystem.STATUS.PENDING:
+            statusClass = 'status-pending';
+            statusText = '⏳ بانتظار الموافقة';
+            break;
+          case ApprovalSystem.STATUS.EDITED_PENDING:
+            statusClass = 'status-pending';
+            statusText = '✏️ تعديل بانتظار الموافقة';
+            break;
+          case ApprovalSystem.STATUS.APPROVED:
+            statusClass = 'status-available';
+            statusText = '✅ متاح';
+            break;
+          case ApprovalSystem.STATUS.REJECTED:
+            statusClass = 'status-rejected';
+            statusText = '❌ مرفوض';
+            break;
+          default:
+            statusClass = 'status-available';
+            statusText = '✅ متاح';
+        }
+        
+        // شريط الانتظار الأصفر للإعلانات المعلقة
+        const pendingBar = (status === ApprovalSystem.STATUS.PENDING || status === ApprovalSystem.STATUS.EDITED_PENDING) ? 
+          `<div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-size: 13px; font-weight: bold; animation: pulse 2s infinite;">
+            ⏳ بانتظار موافقة المسؤول
+          </div>` : '';
+        
+        statusBadge = `<div class="product-status ${statusClass}">${statusText}</div>`;
+        
+        // الحصول على معلومات البائع
+        let isVerified = false;
+        
+        // التحقق من توثيق البائع
+        if (p.uid) {
+          db.ref('users/' + p.uid).once('value', (userSnap) => {
+            const userData = userSnap.val();
+            if (userData) {
+              isVerified = userData.isVerified || false;
+            }
+          });
+        }
+        
+        // عرض الصور في البطاقة
+        const imagesHTML = p.images && p.images.length > 0 
+            ? ImageManager.createImageDisplay(p.images)
+            : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+        
+        const sellerSection = userDisplayName ? 
+          `<div class="seller">
+            👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">
+              <span class="user-name-wrapper">
+                ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
+                ${p.seller}
+              </span>
+            </span> 
+            | ☎ ${p.phone}
+          </div>` :
+          `<div class="seller">
+            👤 ${p.seller} | ☎ ${p.phone}
+          </div>`;
+        
+        htmlCards.push({uid:p.uid,key:k,html:`
+          <div class="card" onclick="showDetails('${k}')">
+            ${pendingBar}
+            ${imagesHTML}
+            <h3>${escapeHTML(p.name)}</h3>
+            <span class="price">${formatPrice(p.price)} د.ع</span>
+            ${statusBadge}
+            <div class="meta">
+              <span>${p.category || 'غير محدد'}</span>
+              <span>${p.province || 'غير محدد'}</span>
+              <span>توصيل: ${p.delivery || 'لا'}</span>
+            </div>
+            ${sellerSection}
+            <div class="actions">
+              ${(p.uid === userUid || isAdmin) ? `
+              <button class="edit" onclick="editProduct('${k}');event.stopPropagation();">تعديل</button>
+              <button class="del" onclick="deleteProduct('${k}');event.stopPropagation();">حذف</button>` : ""}
+            </div>
+          </div>
+        `});
+      }
+    });
+
+    if(userUid){
+      htmlCards = htmlCards.sort((a,b)=> b.uid === userUid ? 1 : -1);
+    }
+
+    const totalPages = Math.ceil(htmlCards.length / postsPerPage);
+    if(currentPage > totalPages) currentPage = 1;
+    const start = (currentPage-1)*postsPerPage;
+    const pageItems = htmlCards.slice(start, start+postsPerPage);
+
+    let finalHTML = pageItems.map(p=>p.html).join("") || "<p class='empty'>لا توجد إعلانات</p>";
+    
+    if (productsContainer) {
+      productsContainer.style.opacity = '0';
+      setTimeout(() => {
+        productsContainer.innerHTML = finalHTML;
+        productsContainer.style.opacity = '1';
+        renderPagination(totalPages);
+        progressManager.hideTopProgressBar();
+      }, 300);
+    }
+  }).catch(error => {
+    console.error("Error loading products:", error);
+    if (productsContainer) {
+      productsContainer.innerHTML = "<p class='empty'>حدث خطأ في تحميل الإعلانات</p>";
+    }
+    progressManager.hideTopProgressBar();
+    alert("خطأ في تحميل الإعلانات");
+  });
+}
+
+function renderPagination(total){
+  let html = "";
+  for(let i=1;i<=total;i++){
+    html += `
+      <button onclick="goPage(${i})"
+        style="
+          margin:3px;
+          padding:6px 10px;
+          border-radius:5px;
+          border:none;
+          cursor:pointer;
+          background:${i===currentPage?'#38bdf8':'#1f2937'};
+          color:${i===currentPage?'#000':'#fff'};
+        ">
+        ${i}
+      </button>`;
+  }
+  const pagination = document.getElementById('pagination');
+  if (pagination) {
+    pagination.innerHTML = html;
+  }
+}
+
+function goPage(p){
+  currentPage = p;
+  loadProducts();
+}
+
+// ===== دالة حذف المنتج مع حذف الصورة =====
+async function deleteProduct(k){ 
+  if(!confirm("هل أنت متأكد من حذف الإعلان؟ لا يمكن التراجع عن هذا الإجراء.")) {
+    return;
+  }
+  
+  progressManager.showOverlay("جاري حذف الإعلان...", "قد يستغرق بضع ثوان");
+  
+  db.ref("products/" + k).once('value', async (snapshot) => {
+    const product = snapshot.val();
+    if (!product) {
+      progressManager.hideOverlay();
+      alert("الإعلان غير موجود");
+      return;
+    }
+    
+    if (product.uid !== userUid && !isAdmin) {
+      progressManager.hideOverlay();
+      alert("ليس لديك صلاحية لحذف هذا الإعلان");
+      return;
+    }
+    
+    // حذف الصور من Supabase
+    if (product.images && product.images.length > 0) {
+      for (let imageUrl of product.images) {
+        await ImageManager.deleteImage(imageUrl);
+      }
+    }
+    
+    // تحديث عداد منتجات المستخدم
+    if (product.uid) {
+      db.ref('users/' + product.uid).once('value', (userSnapshot) => {
+        const userData = userSnapshot.val();
+        if (userData) {
+          const currentCount = userData.totalProducts || 0;
+          if (currentCount > 0) {
+            db.ref('users/' + product.uid).update({
+              totalProducts: currentCount - 1
+            });
+          }
+        }
+      });
+    }
+    
+    // حذف المنتج من Firebase
+    db.ref("products/"+k).remove().then(() => {
+      progressManager.showSuccess("تم حذف الإعلان بنجاح");
+      loadProducts();
+    }).catch(error => {
+      console.error("Delete error:", error);
+      progressManager.hideOverlay();
+      alert("حدث خطأ أثناء حذف الإعلان");
+    });
+  });
+}
+
+function editProduct(k){ 
+  progressManager.showTopProgressBar();
+  
+  db.ref("products/"+k).once("value", s => {
+    const product = s.val();
+    if (!product) {
+      progressManager.hideTopProgressBar();
+      alert("الإعلان غير موجود");
+      return;
+    }
+    
+    if (product.uid !== userUid && !isAdmin) {
+      progressManager.hideTopProgressBar();
+      alert("ليس لديك صلاحية لتعديل هذا الإعلان");
+      return;
+    }
+    
+    showPublish(product, k);
+    progressManager.hideTopProgressBar();
+  });
+}
+
+// ===== دالة عرض النشر =====
+async function showPublish(p=null,k=null){
+  closeSidebar();
+  
+  progressManager.showTopProgressBar();
+  
+  setTimeout(async () => {
+    // التحقق من صلاحية النشر (للنشر الجديد فقط)
+    let canPublishNow = true;
+    if (!k) {
+      canPublishNow = await checkPublishPermission();
+    }
+    
+    const sellerName = userDisplayName || (p ? p.seller : "");
+    const sellerField = userDisplayName ? 
+      `<input id="seller" placeholder="اسم البائع" value="${sellerName}" disabled style="background:#374151; color:#9ca3af; cursor:not-allowed;">
+       <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
+      `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
+    
+    // إعادة تعيين الصور المختارة
+    selectedImages = [];
+    imagePreviewUrls = [];
+    
+    const content = document.getElementById("content");
+    if (!content) return;
+    
+    // عرض حالة الإعلان الحالي
+    const currentStatus = p ? (p.status || ApprovalSystem.STATUS.PENDING) : ApprovalSystem.STATUS.PENDING;
+    let statusMessage = '';
+    
+    if (currentStatus === ApprovalSystem.STATUS.PENDING) {
+      statusMessage = `
+        <div class="waiting-approval">
+          <h4>⏳ بانتظار موافقة المسؤول</h4>
+          <p>إعلانك قيد المراجعة وسيظهر للجميع بعد الموافقة عليه</p>
+        </div>
+      `;
+    } else if (currentStatus === ApprovalSystem.STATUS.EDITED_PENDING) {
+      statusMessage = `
+        <div class="waiting-approval">
+          <h4>✏️ تعديل بانتظار الموافقة</h4>
+          <p>تعديلاتك قيد المراجعة وسيتم تحديث الإعلان بعد الموافقة عليها</p>
+        </div>
+      `;
+    } else if (currentStatus === ApprovalSystem.STATUS.REJECTED) {
+      statusMessage = `
+        <div class="security-warning">
+          <h4>❌ الإعلان مرفوض</h4>
+          <p>يرجى تعديل الإعلان وإعادة إرساله للمراجعة</p>
+        </div>
+      `;
+    }
+    
+    content.innerHTML = `
+      <div class="form-box">
+        <h2>${p ? "تعديل إعلان" : "نشر إعلان جديد"}</h2>
+        
+        ${statusMessage}
+        
+        ${!p && !canPublishNow ? `<div id="publishTimer"></div>` : ''}
+        
+        ${p ? '' : '<small style="color:#9ca3af; margin-bottom:15px; display:block;">يمكنك نشر إعلان واحد كل ساعة</small>'}
+        
+        <input id="name" placeholder="اسم القطعة" value="${p ? escapeHTML(p.name) : ""}" maxlength="50" required>
+        <input id="price" type="number" placeholder="السعر" value="${p ? p.price : ""}" min="0" max="10000000" required>
+        <select id="category">${categories.map(c => `<option ${p && p.category === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+        ${sellerField}
+        <input id="phone" placeholder="رقم الهاتف" value="${p ? p.phone : ""}" pattern="[0][0-9]{10}" required>
+        <small style="color:#9ca3af; font-size:12px;">يجب أن يبدأ بـ 0 ويتكون من 11 رقم</small>
+        <select id="province">
+          <option value="">اختر المحافظة</option>
+          ${provinces.map(pr => `<option ${p && p.province === pr ? "selected" : ""}>${pr}</option>`).join("")}
+        </select>
+        <select id="delivery">
+          <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
+          <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
+        </select>
+        
+        <!-- إضافة خاصية الحالة (متاح/مباع/محجوز) -->
+        <select id="status" ${isAdmin || (p && p.uid === userUid) ? '' : 'disabled'}>
+          <option value="available" ${p && p.status === "available" ? "selected" : ""}>متاح</option>
+          <option value="sold" ${p && p.status === "sold" ? "selected" : ""}>مباع</option>
+          <option value="reserved" ${p && p.status === "reserved" ? "selected" : ""}>محجوز</option>
+        </select>
+        <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
+        
+        <!-- رفع الصور - صورة واحدة فقط -->
+        <div class="image-upload-container">
+          <label class="file-input-label">
+            📷 اختر صورة الإعلان (صورة واحدة فقط)
+            <input type="file" id="images" accept="image/*" onchange="handleImageSelect(event)">
+          </label>
+          <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
+            يمكنك رفع صورة واحدة فقط (JPEG, PNG, WebP) - سيتم ضغطها تلقائياً
+          </small>
+          <div class="image-preview" id="imagePreview">
+            ${p && p.images && p.images.length > 0 ? 
+              p.images.slice(0, 1).map((img, idx) => `
+                <div class="image-preview-item">
+                  <img src="${img}" class="preview-image" alt="صورة الإعلان">
+                  <small style="display:block; text-align:center; color:#9ca3af;">الصورة الحالية</small>
+                </div>
+              `).join('') : 
+              '<div style="color:#9ca3af; text-align:center; padding:20px;">لم يتم اختيار أي صور</div>'
+            }
+          </div>
+        </div>
+
+        <button onclick="saveProduct('${k || ""}')" id="saveBtn" ${!p && !canPublishNow ? 'disabled class="timer-disabled"' : ''}>
+          💾 ${p ? "تحديث" : "نشر"}
+        </button>
+        
+        ${p ? `<button onclick="showHome()" style="background:#6b7280; margin-top:10px;">إلغاء</button>` : ''}
+      </div>`;
+      
+      // تحديث عرض المؤقت إذا كان غير متاح
+      if (!p && !canPublishNow) {
+        updatePublishTimerDisplay();
+      }
+      
+      progressManager.hideTopProgressBar();
+  }, 300);
+}
+
+// ===== دالة حفظ المنتج مع نظام الموافقة =====
+async function saveProduct(k){
+  // التحقق من المؤقت للنشر الجديد فقط
+  if (!k) {
+    const canPublishNow = await checkPublishPermission();
+    if (!canPublishNow) {
+      alert("يجب الانتظار قبل نشر إعلان جديد");
+      return;
+    }
+  }
+  
+  const name = document.getElementById("name")?.value.trim();
+  const price = document.getElementById("price")?.value.trim();
+  const phone = document.getElementById("phone")?.value.trim();
+  const province = document.getElementById("province")?.value;
+  
+  if (!name || !price || !phone || !province) {
+    alert("جميع الحقول مطلوبة");
+    return;
+  }
+  
+  if (name.length < 3 || name.length > 50) {
+    alert("اسم القطعة يجب أن يكون بين 3 و 50 حرف");
+    return;
+  }
+  
+  const priceNum = parseFloat(price);
+  if (isNaN(priceNum) || priceNum < 0 || priceNum > 10000000) {
+    alert("السعر يجب أن يكون بين 0 و 10,000,000 دينار");
+    return;
+  }
+  
+  if(!/^[0][0-9]{10}$/.test(phone)){
+    alert("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بصفر");
+    return;
+  }
+  
+  if (!province) {
+    alert("يرجى اختيار المحافظة");
+    return;
+  }
+
+  const seller = userDisplayName || document.getElementById("seller")?.value.trim();
+  
+  if (!seller || seller.length < 2) {
+    alert("اسم البائع مطلوب (2 أحرف على الأقل)");
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = 'جاري الحفظ...';
+  saveBtn.disabled = true;
+  
+  progressManager.showOverlay(k ? "جاري تحديث الإعلان..." : "جاري نشر الإعلان...", "يرجى الانتظار");
+  
+  try {
+    let imageUrls = [];
+    let oldImages = [];
+    
+    // إذا كان تعديلاً، احتفظ بالصورة الحالية
+    if (k) {
+      const productRef = db.ref("products/" + k);
+      const snapshot = await productRef.once("value");
+      const existingProduct = snapshot.val();
+      if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
+        imageUrls = [existingProduct.images[0]];
+        oldImages = [existingProduct.images[0]];
+      }
+    }
+    
+    // إذا تم اختيار صور جديدة، حذف القديمة ورفع الجديدة
+    if (selectedImages.length > 0) {
+      progressManager.updateOverlayText("جاري معالجة الصورة...", "سيتم ضغط الصورة تلقائياً");
+      
+      // حذف الصور القديمة إذا كانت موجودة
+      if (oldImages.length > 0) {
+        for (let oldImage of oldImages) {
+          await ImageManager.deleteImage(oldImage);
+        }
+      }
+      
+      // رفع الصور الجديدة (سيتم ضغطها تلقائياً في uploadProductImages)
+      const uploadedUrls = await ImageManager.uploadProductImages(selectedImages.slice(0, 1));
+      
+      if (uploadedUrls.length > 0) {
+        imageUrls = [uploadedUrls[0]];
+      }
+    }
+    
+    // تحضير بيانات المنتج
+    const data = {
+      name: name,
+      price: priceNum,
+      category: document.getElementById("category").value,
+      seller: seller,
+      phone: phone,
+      province: province,
+      delivery: document.getElementById("delivery").value,
+      uid: userUid,
+      lastUpdated: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // تحديد حالة الإعلان بناءً على ما إذا كان جديداً أو تعديلاً
+    if (!k) {
+      // إعلان جديد: حالة معلقة
+      data.status = ApprovalSystem.STATUS.PENDING;
+      data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+      data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+    } else {
+      // تعديل إعلان موجود
+      const productRef = db.ref("products/" + k);
+      const snapshot = await productRef.once("value");
+      const existingProduct = snapshot.val();
+      
+      // إذا كان الإعلان معتمداً مسبقاً، يصبح التعديل معلقاً
+      if (existingProduct && existingProduct.status === ApprovalSystem.STATUS.APPROVED) {
+        data.status = ApprovalSystem.STATUS.EDITED_PENDING;
+        data.originalData = {
+          name: existingProduct.name,
+          price: existingProduct.price,
+          category: existingProduct.category,
+          seller: existingProduct.seller,
+          phone: existingProduct.phone,
+          province: existingProduct.province,
+          delivery: existingProduct.delivery,
+          images: existingProduct.images || []
+        };
+      } else {
+        // إذا كان معلقاً سابقاً، يبقى معلقاً
+        data.status = existingProduct?.status || ApprovalSystem.STATUS.PENDING;
+      }
+    }
+    
+    // إضافة الصور إذا كانت موجودة
+    if (imageUrls.length > 0) {
+      data.images = imageUrls;
+    }
+    
+    // حفظ المنتج في Firebase
+    const ref = k ? db.ref("products/"+k) : db.ref("products").push();
+    await ref.set(data);
+    
+    // تحديث الوقت والحساب للنشر الجديد فقط
+    if (!k && userUid) {
+      // حفظ وقت النشر الأخير
+      saveLastPublishTime();
+      
+      // تحديث عداد منتجات المستخدم
+      db.ref('users/' + userUid).once('value', (snapshot) => {
+        const userData = snapshot.val();
+        if (userData) {
+          const currentCount = userData.totalProducts || 0;
+          db.ref('users/' + userUid).update({
+            totalProducts: currentCount + 1,
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        } else {
+          db.ref('users/' + userUid).update({
+            totalProducts: 1,
+            lastActive: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      });
+    }
+    
+    // إرسال إشعار للمسؤول
+    if (userUid && isAdmin) {
+      // إذا كان المسؤول هو من ينشر، يعتمد مباشرة
+      db.ref("products/" + ref.key).update({
+        status: ApprovalSystem.STATUS.APPROVED,
+        approvedAt: firebase.database.ServerValue.TIMESTAMP,
+        approvedBy: userUid
+      });
+      
+      progressManager.showSuccess("تم نشر الإعلان بنجاح وتم اعتماده تلقائياً");
+    } else {
+      progressManager.showSuccess(k ? "تم تحديث الإعلان بنجاح وجاري انتظار الموافقة" : "تم نشر الإعلان بنجاح وجاري انتظار الموافقة");
+    }
+    
+    // إعادة تعيين المتغيرات
+    selectedImages = [];
+    imagePreviewUrls = [];
+    
+    setTimeout(() => {
+      showHome();
+    }, 1000);
+    
+  } catch (error) {
+    console.error("Error saving product:", error);
+    progressManager.hideOverlay();
+    alert("حدث خطأ أثناء حفظ الإعلان");
+  } finally {
+    saveBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
+  }
+}
+
+// ===== دالة عرض التفاصيل =====
+function showDetails(k){
+  progressManager.showOverlay("جاري التحميل...", "انتظر قليلاً");
+  
+  db.ref("products/"+k).once("value",snap=>{
+    const p = snap.val();
+    if(!p) {
+      progressManager.hideOverlay();
+      alert("الإعلان غير موجود أو تم حذفه");
+      return;
+    }
+    
+    // التحقق من توثيق البائع
+    let isVerified = false;
+    if (p.uid) {
+      db.ref('users/' + p.uid).once('value', (userSnap) => {
+        const userData = userSnap.val();
+        if (userData) {
+          isVerified = userData.isVerified || false;
+        }
+      });
+    }
+    
+    // عرض الصور في التفاصيل
+    const imagesHTML = p.images && p.images.length > 0 
+      ? ImageManager.createImageDisplay(p.images)
+      : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+    
+    const sellerWithLink = userDisplayName ? 
+      `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">
+        <span class="user-name-wrapper">
+          ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
+          ${p.seller}
+        </span>
+      </span></p>` :
+      `<p><strong>البائع:</strong> 
+        <span class="user-name-wrapper">
+          ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
+          ${p.seller}
+        </span>
+      </p>`;
+    
+    const status = p.status || ApprovalSystem.STATUS.PENDING;
+    let statusText = '';
+    
+    switch(status) {
+      case ApprovalSystem.STATUS.PENDING:
+        statusText = '⏳ بانتظار الموافقة';
+        break;
+      case ApprovalSystem.STATUS.EDITED_PENDING:
+        statusText = '✏️ تعديل بانتظار الموافقة';
+        break;
+      case ApprovalSystem.STATUS.APPROVED:
+        statusText = '✅ معتمد ومتاح';
+        break;
+      case ApprovalSystem.STATUS.REJECTED:
+        statusText = '❌ مرفوض';
+        break;
+      default:
+        statusText = '✅ متاح';
+    }
+    
+    const detailsContent = document.getElementById("detailsContent");
+    if (detailsContent) {
+      detailsContent.innerHTML = `
+        <h2>${escapeHTML(p.name)}</h2>
+        ${imagesHTML}
+        <p><strong>الحالة:</strong> <span style="font-weight:bold; color:${status === ApprovalSystem.STATUS.PENDING || status === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : status === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${statusText}</span></p>
+        <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
+        <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+        ${sellerWithLink}
+        <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
+        <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+        <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
+        ${p.uid === userUid ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
+      `;
+    }
+    
+    const dialog = document.getElementById("detailsDialog");
+    if (dialog) {
+      dialog.style.display="block";
+    }
+    
+    progressManager.hideOverlay();
+  }).catch(error => {
+    console.error("Error loading details:", error);
+    progressManager.hideOverlay();
+    alert("حدث خطأ في تحميل التفاصيل");
+  });
+}
+
+function closeDetails(){
+  const dialog = document.getElementById("detailsDialog");
+  if (dialog) dialog.style.display="none";
+}
+
+// ===== دوال المصادقة =====
+function updateAuthUI() {
+  const authSection = document.getElementById("authSection");
+  
+  if (!authSection) return;
+  
+  if (currentUser && userDisplayName) {
+    db.ref("users/" + currentUser.uid).once("value", snapshot => {
+      const userData = snapshot.val();
+      const displayName = userData ? (userData.fullName || userDisplayName) : userDisplayName;
+      
+      isAdmin = userData && userData.isAdmin === true;
+      const isVerified = userData && userData.isVerified === true;
+      
+      authSection.innerHTML = `
+        <div class="user-info">
+          <p class="profile-link" onclick="viewMyProfile()">
+            <span class="user-name-wrapper">
+              ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"></span>' : ''}
+              ${displayName}
+              ${isAdmin ? '<span class="admin-badge">مدير</span>' : ''}
+            </span>
+          </p>
+          <small style="color:#9ca3af; font-size:12px;">@${userDisplayName}</small>
+          <small style="color:#9ca3af; font-size:11px; display:block; margin:5px 0;">${userData ? userData.totalProducts || 0 : 0} إعلان</small>
+          <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+        </div>
+      `;
+    });
+  } else {
+    authSection.innerHTML = `
+      <button class="auth-btn" onclick="window.location.href='login.html'">🔐 تسجيل دخول</button>
+      <button class="auth-btn" onclick="window.location.href='register.html'">📝 إنشاء حساب</button>
+    `;
+  }
+}
+
+function logoutUser() {
+  if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+    progressManager.showOverlay("جاري تسجيل الخروج...", "انتظر قليلاً");
+    
+    auth.signOut()
+      .then(() => {
+        currentUser = null;
+        userDisplayName = null;
+        userFullName = null;
+        isAdmin = false;
+        userUid = null;
+        updateAuthUI();
+        showHome();
+        progressManager.showSuccess("تم تسجيل الخروج بنجاح");
+      })
+      .catch((error) => {
+        console.error("Logout error:", error);
+        progressManager.hideOverlay();
+        alert("حدث خطأ أثناء تسجيل الخروج");
+      });
+  }
+}
+
+function viewProfile(userId, sellerName) {
+  if (sellerName) {
+    localStorage.setItem('profileSellerName', sellerName);
+  }
+  
+  progressManager.showTopProgressBar();
+  setTimeout(() => {
+    window.location.href = `profile.html?id=${userId}`;
+  }, 300);
+}
+
+function viewMyProfile() {
+  if (currentUser && currentUser.uid) {
+    progressManager.showTopProgressBar();
+    setTimeout(() => {
+      window.location.href = `profile.html?id=${currentUser.uid}`;
+    }, 300);
+  } else {
+    alert("يرجى تسجيل الدخول أولاً");
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1500);
+  }
+}
+
+// ===== دوال نظام مؤقت النشر =====
+async function checkPublishPermission() {
+    if (!userUid) {
+        canPublish = true;
+        return true;
+    }
+    
+    return new Promise((resolve) => {
+        // التحقق من وقت النشر الأخير في قاعدة بيانات Firebase
+        db.ref('users/' + userUid + '/lastPublish').once('value', (userSnap) => {
+            const lastPublish = userSnap.val();
+            if (!lastPublish) {
+                canPublish = true;
+                resolve(true);
+                return;
+            }
+            
+            const timeDiff = Date.now() - lastPublish;
+            const oneHour = 60 * 60 * 1000;
+            
+            if (timeDiff < oneHour) {
+                canPublish = false;
+                publishTimeLeft = Math.ceil((oneHour - timeDiff) / 1000);
+                startPublishTimer();
+                resolve(false);
+            } else {
+                canPublish = true;
+                resolve(true);
+            }
+        }).catch((error) => {
+            console.error("Error checking publish permission:", error);
+            canPublish = true;
+            resolve(true);
+        });
+    });
+}
+
+function startPublishTimer() {
+    if (publishTimer) {
+        clearInterval(publishTimer);
+    }
+    
+    updatePublishTimerDisplay();
+    
+    publishTimer = setInterval(() => {
+        if (publishTimeLeft > 0) {
+            publishTimeLeft--;
+            updatePublishTimerDisplay();
+            
+            if (publishTimeLeft <= 0) {
+                clearInterval(publishTimer);
+                canPublish = true;
+                updatePublishTimerDisplay();
+                
+                if (document.getElementById('publishTimer')) {
+                    const timerElement = document.getElementById('publishTimer');
+                    timerElement.innerHTML = `
+                        <div class="publish-timer active">
+                            ✓ يمكنك الآن نشر إعلان جديد
+                            <br><small style="color:#9ca3af;">انقر على زر النشر لإضافة إعلان</small>
+                        </div>
+                    `;
+                    
+                    const saveBtn = document.getElementById('saveBtn');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('timer-disabled');
+                        saveBtn.innerHTML = '💾 نشر';
+                    }
+                }
+            }
+        }
+    }, 1000);
+}
+
+function updatePublishTimerDisplay() {
+    const minutes = Math.floor(publishTimeLeft / 60);
+    const seconds = publishTimeLeft % 60;
+    
+    const timerElement = document.getElementById('publishTimer');
+    if (timerElement) {
+        timerElement.innerHTML = `
+            <div class="publish-timer">
+                ⏰ يجب الانتظار ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} 
+                قبل نشر إعلان جديد
+                <br><small style="color:#9ca3af;">لضمان جودة الإعلانات وتجنب التكرار</small>
+            </div>
+        `;
+    }
+}
+
+function saveLastPublishTime() {
+    if (!userUid) return;
+    
+    db.ref('users/' + userUid).update({
+        lastPublish: Date.now()
+    }).then(() => {
+        console.log("Publish time saved to Firebase");
+    }).catch((error) => {
+        console.error("Error saving publish time:", error);
+    });
+}
+
+// ===== دوال مساعدة =====
+function escapeHTML(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatPrice(price) {
+  return parseInt(price).toLocaleString('ar-SA');
+}
+
+function getStatusText(status) {
+  const statuses = {
+    'pending': '⏳ بانتظار الموافقة',
+    'edited_pending': '✏️ تعديل بانتظار الموافقة',
+    'approved': '✅ معتمد',
+    'rejected': '❌ مرفوض',
+    'available': '✅ متاح',
+    'sold': '✅ مباع',
+    'reserved': '✅ محجوز'
+  };
+  return statuses[status] || status;
+}
+
+// متابعة حالة المصادقة
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    userUid = user.uid;
+    
+    db.ref("users/" + user.uid).once("value", snapshot => {
+      const userData = snapshot.val();
+      if (userData) {
+        userDisplayName = userData.username;
+        userFullName = userData.fullName;
+        isAdmin = userData.isAdmin === true;
+        updateAuthUI();
+        
+        db.ref("users/" + user.uid).update({
+          lastActive: firebase.database.ServerValue.TIMESTAMP
+        });
+      }
+    });
+  } else {
+    currentUser = null;
+    userDisplayName = null;
+    userFullName = null;
+    isAdmin = false;
+    userUid = null;
+    updateAuthUI();
+  }
+});
+
+// بدء الصفحة الرئيسية
+document.addEventListener("DOMContentLoaded", function() {
+  showHome();
+  updateAuthUI();
+});
+</script>
+</body>
+</html>
