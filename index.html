@@ -47,6 +47,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .post-link-system {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     margin: 15px 0;
     padding: 12px;
@@ -55,31 +56,15 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
-.post-link {
-    flex: 1;
-    padding: 10px 15px;
-    background: rgba(15, 23, 42, 0.8);
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
-    font-family: monospace;
-    font-size: 14px;
-    direction: ltr;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .copy-link-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.1));
     border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     padding: 0;
@@ -98,8 +83,8 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 }
 
 .copy-link-btn img {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     filter: brightness(0) saturate(100%) invert(69%) sepia(95%) saturate(492%) hue-rotate(162deg) brightness(98%) contrast(101%);
 }
 
@@ -1148,16 +1133,11 @@ main {
     }
     
     .post-link-system {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .post-link {
-        font-size: 12px;
+        padding: 10px;
     }
     
     .copy-link-btn {
-        width: 100%;
+        width: 44px;
         height: 44px;
     }
 }
@@ -1528,14 +1508,59 @@ const progressManager = new ProgressManager();
 
 // ===== نظام الروابط المباشرة =====
 class LinkManager {
+    // توليد كود مكون من 6 أحرف/أرقام
+    static generateShortCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+    
     // توليد رابط مباشر للمنشور
-    static generatePostLink(postId) {
+    static generatePostLink(shortCode) {
         // يمكنك تغيير النطاق حسب احتياجك
         const domain = window.location.hostname === 'localhost' 
             ? `${window.location.protocol}//${window.location.host}`
             : 'https://a3len.store';
         
-        return `${domain}/?post=${postId}`;
+        return `${domain}/p/${shortCode}`;
+    }
+    
+    // حفظ أو تحديث كود المنتج
+    static async saveProductCode(productId, shortCode) {
+        try {
+            await db.ref(`product_codes/${productId}`).set({
+                shortCode: shortCode,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            return true;
+        } catch (error) {
+            console.error('Error saving product code:', error);
+            return false;
+        }
+    }
+    
+    // الحصول على كود المنتج أو إنشاء واحد جديد
+    static async getProductCode(productId) {
+        return new Promise((resolve) => {
+            db.ref(`product_codes/${productId}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.shortCode) {
+                    resolve(data.shortCode);
+                } else {
+                    // إنشاء كود جديد وحفظه
+                    const newCode = this.generateShortCode();
+                    this.saveProductCode(productId, newCode);
+                    resolve(newCode);
+                }
+            }).catch(() => {
+                // في حالة الخطأ، نرجع كود افتراضي
+                const newCode = this.generateShortCode();
+                resolve(newCode);
+            });
+        });
     }
     
     // نسخ الرابط إلى الحافظة
@@ -1567,61 +1592,90 @@ class LinkManager {
     }
     
     // عرض نظام الروابط في تفاصيل المنتج
-    static createLinkSection(postId) {
-        const postLink = this.generatePostLink(postId);
-        
+    static createLinkSection(productId) {
         return `
             <div class="post-link-system">
-                <div class="post-link" id="postLink-${postId}">
-                    ${postLink}
-                </div>
-                <button class="copy-link-btn" onclick="LinkManager.copyLink('${postId}')" id="copyBtn-${postId}" title="نسخ رابط الإعلان">
+                <button class="copy-link-btn" onclick="LinkManager.copyProductLink('${productId}')" 
+                        id="copyBtn-${productId}" title="نسخ رابط الإعلان">
                     <img src="img/copy.png" alt="نسخ">
                 </button>
             </div>
         `;
     }
     
-    // نسخ الرابط مع تغيير مظهر الزر
-    static async copyLink(postId) {
-        const link = this.generatePostLink(postId);
-        const copyBtn = document.getElementById(`copyBtn-${postId}`);
-        const originalHTML = copyBtn.innerHTML;
-        
-        const success = await this.copyToClipboard(link);
-        
-        if (success) {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
-            copyBtn.classList.add('copied');
-            copyBtn.title = 'تم النسخ!';
+    // نسخ رابط المنتج
+    static async copyProductLink(productId) {
+        try {
+            // الحصول على كود المنتج
+            const shortCode = await this.getProductCode(productId);
+            const link = this.generatePostLink(shortCode);
+            const copyBtn = document.getElementById(`copyBtn-${productId}`);
+            const originalHTML = copyBtn.innerHTML;
             
-            setTimeout(() => {
-                copyBtn.innerHTML = originalHTML;
-                copyBtn.classList.remove('copied');
-                copyBtn.title = 'نسخ رابط الإعلان';
-            }, 1500);
-        } else {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);">';
-            copyBtn.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.1))';
+            const success = await this.copyToClipboard(link);
             
-            setTimeout(() => {
-                copyBtn.innerHTML = originalHTML;
-                copyBtn.style.background = '';
-            }, 1500);
+            if (success) {
+                copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
+                copyBtn.classList.add('copied');
+                copyBtn.title = 'تم نسخ الرابط!';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('copied');
+                    copyBtn.title = 'نسخ رابط الإعلان';
+                }, 1500);
+            } else {
+                copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);">';
+                copyBtn.title = 'فشل النسخ';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.title = 'نسخ رابط الإعلان';
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Error copying link:', error);
+            alert('حدث خطأ أثناء نسخ الرابط');
         }
     }
     
-    // التحقق من وجود معامل post في الرابط
-    static checkForPostParameter() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const postId = urlParams.get('post');
+    // التحقق من وجود رابط p/ في الرابط
+    static checkForShortLink() {
+        const path = window.location.pathname;
+        const match = path.match(/\/p\/([A-Za-z0-9]{6})/);
         
-        if (postId) {
-            // عرض تفاصيل المنشور مباشرة
-            showDetails(postId);
+        if (match && match[1]) {
+            const shortCode = match[1];
+            this.redirectFromShortCode(shortCode);
             return true;
         }
         return false;
+    }
+    
+    // التحويل من الكود المختصر إلى المنتج
+    static async redirectFromShortCode(shortCode) {
+        progressManager.showOverlay("جاري التحميل...", "الرجاء الانتظار");
+        
+        try {
+            // البحث عن المنتج باستخدام الكود المختصر
+            db.ref('product_codes').orderByChild('shortCode').equalTo(shortCode).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const productId = Object.keys(data)[0];
+                    // عرض تفاصيل المنتج
+                    showDetails(productId);
+                } else {
+                    progressManager.hideOverlay();
+                    alert('الرابط غير صحيح أو منتهي الصلاحية');
+                    showHome();
+                }
+            });
+        } catch (error) {
+            console.error('Error redirecting from short code:', error);
+            progressManager.hideOverlay();
+            alert('حدث خطأ في تحميل الرابط');
+            showHome();
+        }
     }
 }
 
@@ -2199,10 +2253,11 @@ function loadProducts() {
                     ? ImageManager.createImageDisplay(p.images)
                     : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
                 
-                // زر الرابط - صورة فقط
+                // زر نسخ الرابط - صورة فقط في الزاوية
                 const copyButtonHTML = `
-                    <button class="copy-link-btn" onclick="event.stopPropagation(); LinkManager.copyLink('${k}')" 
-                            id="cardCopyBtn-${k}" title="نسخ رابط الإعلان" style="position:absolute; top:15px; left:15px; z-index:2;">
+                    <button class="copy-link-btn" onclick="event.stopPropagation(); LinkManager.copyProductLink('${k}')" 
+                            id="cardCopyBtn-${k}" title="نسخ رابط الإعلان" 
+                            style="position:absolute; top:15px; left:15px; z-index:2; width:40px; height:40px;">
                         <img src="img/copy.png" alt="نسخ">
                     </button>
                 `;
@@ -2344,6 +2399,9 @@ async function deleteProduct(k) {
                 await ImageManager.deleteImage(imageUrl);
             }
         }
+        
+        // حذف كود المنتج
+        db.ref(`product_codes/${k}`).remove();
         
         // تحديث عداد منتجات المستخدم
         if (product.uid) {
@@ -2664,6 +2722,12 @@ async function saveProduct(k) {
         const ref = k ? db.ref("products/" + k) : db.ref("products").push();
         await ref.set(data);
         
+        // إنشاء كود مختصر للمنتج الجديد
+        if (!k) {
+            const productId = ref.key;
+            await LinkManager.saveProductCode(productId, LinkManager.generateShortCode());
+        }
+        
         // تحديث الوقت والحساب للنشر الجديد فقط
         if (!k && userUid) {
             // حفظ وقت النشر الأخير
@@ -2810,7 +2874,7 @@ function showDetails(k) {
                 <h2>${escapeHTML(p.name)}</h2>
                 ${imagesHTML}
                 
-                <!-- نظام الروابط المباشرة -->
+                <!-- نظام الروابط المباشرة - زر نسخ فقط -->
                 ${LinkManager.createLinkSection(k)}
                 
                 <p><strong>حالة الموافقة:</strong> <span style="font-weight:bold; color:${approvalStatus === ApprovalSystem.STATUS.PENDING || approvalStatus === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : approvalStatus === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${approvalStatusText}</span></p>
@@ -3081,10 +3145,10 @@ auth.onAuthStateChanged((user) => {
 
 // بدء الصفحة الرئيسية
 document.addEventListener("DOMContentLoaded", function() {
-    // التحقق من وجود رابط منشور في URL
-    const hasPostParam = LinkManager.checkForPostParameter();
+    // التحقق من وجود رابط p/ في URL
+    const hasShortLink = LinkManager.checkForShortLink();
     
-    if (!hasPostParam) {
+    if (!hasShortLink) {
         showHome();
     }
     
@@ -3101,11 +3165,11 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // معالجة الضغط على زر الرجوع في المتصفح
     window.addEventListener('popstate', function(event) {
-        if (window.location.search.includes('post=')) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const postId = urlParams.get('post');
-            if (postId) {
-                showDetails(postId);
+        const path = window.location.pathname;
+        if (path.includes('/p/')) {
+            const shortCode = path.split('/p/')[1];
+            if (shortCode && shortCode.length === 6) {
+                LinkManager.redirectFromShortCode(shortCode);
             }
         } else {
             showHome();
