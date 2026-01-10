@@ -98,6 +98,44 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     100% { transform: scale(1); }
 }
 
+/* ===== إشعارات النظام ===== */
+.custom-notification {
+    animation: slideInRight 0.3s ease forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.custom-notification.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.custom-notification.error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.custom-notification.info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* ===== تحسينات للعرض المباشر ===== */
+body.direct-view {
+    background: linear-gradient(135deg, #0f1115 0%, #181b24 100%);
+}
+
+body.direct-view .topbar,
+body.direct-view .sidebar {
+    display: none !important;
+}
+
 /* ===== Budget Dialog ===== */
 .budget-btn {
   margin-left: 10px;
@@ -1301,7 +1339,7 @@ img, svg {
     <div class="progress-overlay-content">
         <div class="progress-overlay-spinner"></div>
         <div class="progress-overlay-text" id="progressText">جاري التحميل...</div>
-        <div class="progress-overlay-subtext" id="progressSubtext">يرجى الانتظار</div>
+        <div class="progress-overlay-subtext" id="progressSubtext">يرجاء الانتظار</div>
     </div>
 </div>
 
@@ -1506,7 +1544,7 @@ class ProgressManager {
 // تهيئة Progress Manager
 const progressManager = new ProgressManager();
 
-// ===== نظام الروابط المباشرة =====
+// ===== نظام الروابط المباشرة المحسن =====
 class LinkManager {
     // توليد كود مكون من 6 أحرف/أرقام
     static generateShortCode() {
@@ -1520,12 +1558,9 @@ class LinkManager {
     
     // توليد رابط مباشر للمنشور
     static generatePostLink(shortCode) {
-        // يمكنك تغيير النطاق حسب احتياجك
-        const domain = window.location.hostname === 'localhost' 
-            ? `${window.location.protocol}//${window.location.host}`
-            : 'https://a3len.store';
-        
-        return `${domain}/p/${shortCode}`;
+        // استخدم النطاق الحالي
+        const currentUrl = window.location.origin;
+        return `${currentUrl}/?p=${shortCode}`;
     }
     
     // حفظ أو تحديث كود المنتج
@@ -1544,7 +1579,7 @@ class LinkManager {
     
     // الحصول على كود المنتج أو إنشاء واحد جديد
     static async getProductCode(productId) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             db.ref(`product_codes/${productId}`).once('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.shortCode) {
@@ -1555,10 +1590,8 @@ class LinkManager {
                     this.saveProductCode(productId, newCode);
                     resolve(newCode);
                 }
-            }).catch(() => {
-                // في حالة الخطأ، نرجع كود افتراضي
-                const newCode = this.generateShortCode();
-                resolve(newCode);
+            }).catch((error) => {
+                reject(error);
             });
         });
     }
@@ -1570,82 +1603,83 @@ class LinkManager {
             return true;
         } catch (err) {
             // Fallback للأنظمة القديمة
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                return true;
-            } catch (e) {
-                console.error('Fallback copy failed:', e);
-                document.body.removeChild(textArea);
-                return false;
-            }
+            return new Promise((resolve) => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    const success = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    resolve(success);
+                } catch (e) {
+                    console.error('Fallback copy failed:', e);
+                    document.body.removeChild(textArea);
+                    resolve(false);
+                }
+            });
         }
     }
     
-    // عرض نظام الروابط في تفاصيل المنتج
-    static createLinkSection(productId) {
-        return `
-            <div class="post-link-system">
-                <button class="copy-link-btn" onclick="LinkManager.copyProductLink('${productId}')" 
-                        id="copyBtn-${productId}" title="نسخ رابط الإعلان">
-                    <img src="img/copy.png" alt="نسخ">
-                </button>
-            </div>
-        `;
-    }
-    
     // نسخ رابط المنتج
-    static async copyProductLink(productId) {
+    static async copyProductLink(productId, event = null) {
+        if (event) event.stopPropagation();
+        
         try {
             // الحصول على كود المنتج
             const shortCode = await this.getProductCode(productId);
             const link = this.generatePostLink(shortCode);
-            const copyBtn = document.getElementById(`copyBtn-${productId}`);
-            const originalHTML = copyBtn.innerHTML;
             
+            // تحديد زر النسخ الصحيح
+            let copyBtn;
+            if (event) {
+                copyBtn = event.currentTarget;
+            } else {
+                copyBtn = document.getElementById(`copyBtn-${productId}`) || 
+                         document.getElementById(`cardCopyBtn-${productId}`);
+            }
+            
+            const originalHTML = copyBtn ? copyBtn.innerHTML : null;
             const success = await this.copyToClipboard(link);
             
-            if (success) {
-                copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
-                copyBtn.classList.add('copied');
-                copyBtn.title = 'تم نسخ الرابط!';
-                
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalHTML;
-                    copyBtn.classList.remove('copied');
-                    copyBtn.title = 'نسخ رابط الإعلان';
-                }, 1500);
+            if (copyBtn) {
+                if (success) {
+                    copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
+                    copyBtn.classList.add('copied');
+                    copyBtn.title = 'تم نسخ الرابط!';
+                    
+                    // إظهار إشعار
+                    showNotification('تم نسخ رابط الإعلان بنجاح', 'success');
+                    
+                    setTimeout(() => {
+                        if (originalHTML) copyBtn.innerHTML = originalHTML;
+                        copyBtn.classList.remove('copied');
+                        copyBtn.title = 'نسخ رابط الإعلان';
+                    }, 2000);
+                } else {
+                    showNotification('فشل نسخ الرابط', 'error');
+                }
             } else {
-                copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);">';
-                copyBtn.title = 'فشل النسخ';
-                
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalHTML;
-                    copyBtn.title = 'نسخ رابط الإعلان';
-                }, 1500);
+                // إذا لم يكن هناك زر، عرض الرابط للمستخدم
+                prompt('انسخ الرابط التالي:', link);
             }
         } catch (error) {
             console.error('Error copying link:', error);
-            alert('حدث خطأ أثناء نسخ الرابط');
+            showNotification('حدث خطأ أثناء نسخ الرابط', 'error');
         }
     }
     
     // التحقق من وجود رابط p/ في الرابط
     static checkForShortLink() {
-        const path = window.location.pathname;
-        const match = path.match(/\/p\/([A-Za-z0-9]{6})/);
+        const urlParams = new URLSearchParams(window.location.search);
+        const shortCode = urlParams.get('p');
         
-        if (match && match[1]) {
-            const shortCode = match[1];
+        if (shortCode && shortCode.length === 6) {
             this.redirectFromShortCode(shortCode);
             return true;
         }
@@ -1654,7 +1688,7 @@ class LinkManager {
     
     // التحويل من الكود المختصر إلى المنتج
     static async redirectFromShortCode(shortCode) {
-        progressManager.showOverlay("جاري التحميل...", "الرجاء الانتظار");
+        progressManager.showOverlay("جاري تحميل الإعلان...", "الرجاء الانتظار");
         
         try {
             // البحث عن المنتج باستخدام الكود المختصر
@@ -1662,21 +1696,185 @@ class LinkManager {
                 const data = snapshot.val();
                 if (data) {
                     const productId = Object.keys(data)[0];
-                    // عرض تفاصيل المنتج
-                    showDetails(productId);
+                    // عرض تفاصيل المنتج مباشرة
+                    loadProductDetailsDirectly(productId);
                 } else {
                     progressManager.hideOverlay();
-                    alert('الرابط غير صحيح أو منتهي الصلاحية');
+                    showNotification('الرابط غير صحيح أو منتهي الصلاحية', 'error');
                     showHome();
                 }
+            }).catch((error) => {
+                console.error('Error in redirect:', error);
+                progressManager.hideOverlay();
+                showNotification('حدث خطأ في تحميل الرابط', 'error');
+                showHome();
             });
         } catch (error) {
             console.error('Error redirecting from short code:', error);
             progressManager.hideOverlay();
-            alert('حدث خطأ في تحميل الرابط');
+            showNotification('حدث خطأ في تحميل الرابط', 'error');
             showHome();
         }
     }
+}
+
+// ===== دالة عرض الإشعارات =====
+function showNotification(message, type = 'info') {
+    // إزالة أي إشعارات سابقة
+    const oldNotification = document.querySelector('.custom-notification');
+    if (oldNotification) oldNotification.remove();
+    
+    // إنشاء إشعار جديد
+    const notification = document.createElement('div');
+    notification.className = `custom-notification ${type}`;
+    notification.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'}; 
+                    color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+                    z-index: 10000; display: flex; align-items: center; gap: 10px; min-width: 300px; max-width: 400px;">
+            <span style="font-size: 20px;">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // إزالة الإشعار تلقائياً بعد 3 ثوان
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// ===== دالة تحميل تفاصيل المنتج مباشرة =====
+function loadProductDetailsDirectly(productId) {
+    db.ref("products/" + productId).once("value", snap => {
+        const p = snap.val();
+        if (!p) {
+            progressManager.hideOverlay();
+            showNotification('الإعلان غير موجود أو تم حذفه', 'error');
+            showHome();
+            return;
+        }
+        
+        // التحقق من صلاحية عرض الإعلان
+        const status = p.status || ApprovalSystem.STATUS.PENDING;
+        if (status !== ApprovalSystem.STATUS.APPROVED && (!userUid || (userUid !== p.uid && !isAdmin))) {
+            progressManager.hideOverlay();
+            showNotification('لا يمكن عرض هذا الإعلان', 'error');
+            showHome();
+            return;
+        }
+        
+        // إخفاء جميع العناصر وإظهار التفاصيل فقط
+        document.querySelector('.topbar').style.display = 'none';
+        document.querySelector('.sidebar').style.display = 'none';
+        
+        const content = document.getElementById("content");
+        content.innerHTML = '';
+        
+        // التحقق من توثيق البائع
+        let isVerified = false;
+        if (p.uid) {
+            db.ref('users/' + p.uid).once('value', (userSnap) => {
+                const userData = userSnap.val();
+                if (userData) {
+                    isVerified = userData.isVerified || false;
+                }
+                displayProductDetails(p, productId, isVerified);
+            });
+        } else {
+            displayProductDetails(p, productId, false);
+        }
+        
+    }).catch(error => {
+        console.error("Error loading product details:", error);
+        progressManager.hideOverlay();
+        showNotification('حدث خطأ في تحميل الإعلان', 'error');
+        showHome();
+    });
+}
+
+// ===== دالة عرض تفاصيل المنتج في واجهة خاصة =====
+function displayProductDetails(p, productId, isVerified) {
+    // عرض الصور في التفاصيل
+    const imagesHTML = p.images && p.images.length > 0 
+        ? ImageManager.createImageDisplay(p.images)
+        : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
+    
+    const sellerClickable = userUid ? 'onclick="viewProfile(\'' + p.uid + '\', \'' + (p.seller || '') + '\');"' : '';
+    
+    const sellerWithLink = `
+        <p ${sellerClickable} style="${userUid ? 'cursor:pointer;' : ''}">
+            <strong>البائع:</strong> 
+            <span style="${userUid ? 'color:#38bdf8; text-decoration:underline; font-weight:bold;' : 'font-weight:bold;'}">
+                <span class="user-name-wrapper">
+                    ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
+                    ${p.seller || 'غير معروف'}
+                </span>
+            </span>
+        </p>
+    `;
+    
+    const actualStatus = p.status2 || 'available';
+    let actualStatusText = '';
+    let actualStatusColor = '#10b981';
+    
+    switch(actualStatus) {
+        case 'available':
+            actualStatusText = 'متاح';
+            actualStatusColor = '#10b981';
+            break;
+        case 'sold':
+            actualStatusText = 'مباع';
+            actualStatusColor = '#38bdf8';
+            break;
+        case 'reserved':
+            actualStatusText = 'محجوز';
+            actualStatusColor = '#f59e0b';
+            break;
+        default:
+            actualStatusText = 'متاح';
+            actualStatusColor = '#10b981';
+    }
+    
+    const content = document.getElementById("content");
+    content.innerHTML = `
+        <div class="form-box" style="max-width: 800px; margin: 20px auto;">
+            <h2>${escapeHTML(p.name)}</h2>
+            ${imagesHTML}
+            
+            <!-- نظام الروابط المباشرة - زر نسخ محسّن -->
+            <div class="post-link-system" style="margin: 20px 0;">
+                <button class="copy-link-btn" onclick="LinkManager.copyProductLink('${productId}', event)" 
+                        id="copyBtn-${productId}" title="نسخ رابط الإعلان"
+                        style="width: 200px; height: 50px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px;">
+                    <img src="img/copy.png" alt="نسخ" style="width: 24px; height: 24px;">
+                    <span>نسخ رابط الإعلان</span>
+                </button>
+            </div>
+            
+            <div style="background: rgba(31, 41, 55, 0.5); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <p><strong>حالة المنتج:</strong> <span style="font-weight:bold; color:${actualStatusColor}">${actualStatusText}</span></p>
+                <p><strong>السعر:</strong> <span style="color:#38bdf8; font-size: 24px; font-weight: bold;">${formatPrice(p.price)} د.ع</span></p>
+                <p><strong>القسم:</strong> ${p.category || 'غير محدد'}</p>
+                ${sellerWithLink}
+                <p><strong>رقم الهاتف:</strong> <a href="tel:${p.phone}" style="color:#38bdf8; text-decoration: none;">${p.phone}</a></p>
+                <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+                <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
+                ${p.description ? `<p><strong>الوصف:</strong> ${escapeHTML(p.description)}</p>` : ''}
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <button onclick="showHome()" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #38bdf8, #0ea5e9); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                    العودة للرئيسية
+                </button>
+                <button onclick="window.history.back()" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #6b7280, #4b5563); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                    رجوع
+                </button>
+            </div>
+        </div>
+    `;
+    
+    progressManager.hideOverlay();
 }
 
 // ===== متغيرات عامة =====
@@ -2061,6 +2259,10 @@ function showHome() {
     closeSidebar();
     progressManager.showTopProgressBar();
     
+    // إعادة إظهار العناصر المخفية
+    document.querySelector('.topbar').style.display = 'flex';
+    document.querySelector('.sidebar').style.display = 'block';
+    
     setTimeout(() => {
         const content = document.getElementById("content");
         if (!content) return;
@@ -2253,9 +2455,9 @@ function loadProducts() {
                     ? ImageManager.createImageDisplay(p.images)
                     : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
                 
-                // زر نسخ الرابط - صورة فقط في الزاوية
+                // زر نسخ الرابط - محسّن
                 const copyButtonHTML = `
-                    <button class="copy-link-btn" onclick="event.stopPropagation(); LinkManager.copyProductLink('${k}')" 
+                    <button class="copy-link-btn" onclick="LinkManager.copyProductLink('${k}', event)" 
                             id="cardCopyBtn-${k}" title="نسخ رابط الإعلان" 
                             style="position:absolute; top:15px; left:15px; z-index:2; width:40px; height:40px;">
                         <img src="img/copy.png" alt="نسخ">
@@ -2875,7 +3077,12 @@ function showDetails(k) {
                 ${imagesHTML}
                 
                 <!-- نظام الروابط المباشرة - زر نسخ فقط -->
-                ${LinkManager.createLinkSection(k)}
+                <div class="post-link-system">
+                    <button class="copy-link-btn" onclick="LinkManager.copyProductLink('${k}', event)" 
+                            id="copyBtn-${k}" title="نسخ رابط الإعلان">
+                        <img src="img/copy.png" alt="نسخ">
+                    </button>
+                </div>
                 
                 <p><strong>حالة الموافقة:</strong> <span style="font-weight:bold; color:${approvalStatus === ApprovalSystem.STATUS.PENDING || approvalStatus === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : approvalStatus === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${approvalStatusText}</span></p>
                 <p><strong>حالة المنتج:</strong> <span style="font-weight:bold; color:${actualStatusColor}">${actualStatusText}</span></p>
@@ -3160,18 +3367,24 @@ document.addEventListener("DOMContentLoaded", function() {
             closeSidebar();
             closeBudget();
             closeDetails();
+            
+            // إعادة إظهار العناصر المخفية إذا كانت
+            document.querySelector('.topbar').style.display = 'flex';
+            document.querySelector('.sidebar').style.display = 'block';
         }
     });
     
-    // معالجة الضغط على زر الرجوع في المتصفح
+    // معالجة الضغط على زر الرجوع
     window.addEventListener('popstate', function(event) {
-        const path = window.location.pathname;
-        if (path.includes('/p/')) {
-            const shortCode = path.split('/p/')[1];
-            if (shortCode && shortCode.length === 6) {
-                LinkManager.redirectFromShortCode(shortCode);
-            }
+        const urlParams = new URLSearchParams(window.location.search);
+        const shortCode = urlParams.get('p');
+        
+        if (shortCode && shortCode.length === 6) {
+            LinkManager.redirectFromShortCode(shortCode);
         } else {
+            // إعادة إظهار العناصر
+            document.querySelector('.topbar').style.display = 'flex';
+            document.querySelector('.sidebar').style.display = 'block';
             showHome();
         }
     });
