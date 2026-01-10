@@ -43,6 +43,70 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     gap: 4px;
 }
 
+/* ===== نظام الروابط المباشرة للمنشورات ===== */
+.post-link-system {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(17, 24, 39, 0.8));
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.post-link {
+    flex: 1;
+    padding: 10px 15px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 14px;
+    direction: ltr;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.copy-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.1));
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.copy-link-btn:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.2));
+    border-color: #38bdf8;
+}
+
+.copy-link-btn.copied {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.copy-link-btn img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) saturate(100%) invert(69%) sepia(95%) saturate(492%) hue-rotate(162deg) brightness(98%) contrast(101%);
+}
+
+.copy-link-btn.copied img {
+    filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);
+}
+
 /* ===== Budget Dialog ===== */
 .budget-btn {
   margin-left: 10px;
@@ -131,6 +195,8 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   width: 90%;
   max-width: 500px;
   border: 1px solid rgba(56, 189, 248, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .details-dialog h2 { 
   margin-top: 0; 
@@ -1074,6 +1140,20 @@ main {
     main {
         padding: 20px;
     }
+    
+    .post-link-system {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .post-link {
+        font-size: 12px;
+    }
+    
+    .copy-link-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1439,6 +1519,106 @@ class ProgressManager {
 
 // تهيئة Progress Manager
 const progressManager = new ProgressManager();
+
+// ===== نظام الروابط المباشرة =====
+class LinkManager {
+    // توليد رابط مباشر للمنشور
+    static generatePostLink(postId) {
+        // يمكنك تغيير النطاق حسب احتياجك
+        const domain = window.location.hostname === 'localhost' 
+            ? `${window.location.protocol}//${window.location.host}`
+            : 'https://a3len.store';
+        
+        return `${domain}/?post=${postId}`;
+    }
+    
+    // نسخ الرابط إلى الحافظة
+    static async copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (err) {
+            // Fallback للأنظمة القديمة
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                return true;
+            } catch (e) {
+                console.error('Fallback copy failed:', e);
+                document.body.removeChild(textArea);
+                return false;
+            }
+        }
+    }
+    
+    // عرض نظام الروابط في تفاصيل المنتج
+    static createLinkSection(postId) {
+        const postLink = this.generatePostLink(postId);
+        
+        return `
+            <div class="post-link-system">
+                <div class="post-link" id="postLink-${postId}">
+                    ${postLink}
+                </div>
+                <button class="copy-link-btn" onclick="LinkManager.copyLink('${postId}')" id="copyBtn-${postId}">
+                    <img src="img/copy.png" alt="نسخ">
+                    نسخ الرابط
+                </button>
+            </div>
+        `;
+    }
+    
+    // نسخ الرابط مع تغيير مظهر الزر
+    static async copyLink(postId) {
+        const link = this.generatePostLink(postId);
+        const copyBtn = document.getElementById(`copyBtn-${postId}`);
+        const originalText = copyBtn.innerHTML;
+        
+        const success = await this.copyToClipboard(link);
+        
+        if (success) {
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="نسخ"> ✓ تم النسخ!';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        } else {
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="نسخ"> ✗ فشل النسخ';
+            copyBtn.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.1))';
+            copyBtn.style.color = '#ef4444';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = '';
+                copyBtn.style.color = '';
+            }, 2000);
+        }
+    }
+    
+    // التحقق من وجود معامل post في الرابط
+    static checkForPostParameter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('post');
+        
+        if (postId) {
+            // عرض تفاصيل المنشور مباشرة
+            showDetails(postId);
+            return true;
+        }
+        return false;
+    }
+}
 
 // ===== متغيرات عامة =====
 let userUid = null;
@@ -2524,7 +2704,7 @@ async function saveProduct(k) {
     }
 }
 
-// ===== دالة عرض التفاصيل =====
+// ===== دالة عرض التفاصيل مع نظام الروابط =====
 function showDetails(k) {
     progressManager.showOverlay("جاري التحميل...", "انتظر قليلاً");
     
@@ -2614,6 +2794,10 @@ function showDetails(k) {
             detailsContent.innerHTML = `
                 <h2>${escapeHTML(p.name)}</h2>
                 ${imagesHTML}
+                
+                <!-- نظام الروابط المباشرة -->
+                ${LinkManager.createLinkSection(k)}
+                
                 <p><strong>حالة الموافقة:</strong> <span style="font-weight:bold; color:${approvalStatus === ApprovalSystem.STATUS.PENDING || approvalStatus === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : approvalStatus === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${approvalStatusText}</span></p>
                 <p><strong>حالة المنتج:</strong> <span style="font-weight:bold; color:${actualStatusColor}">${actualStatusText}</span></p>
                 <p><strong>السعر:</strong> ${formatPrice(p.price)} د.ع</p>
@@ -2877,7 +3061,13 @@ auth.onAuthStateChanged((user) => {
 
 // بدء الصفحة الرئيسية
 document.addEventListener("DOMContentLoaded", function() {
-    showHome();
+    // التحقق من وجود رابط منشور في URL
+    const hasPostParam = LinkManager.checkForPostParameter();
+    
+    if (!hasPostParam) {
+        showHome();
+    }
+    
     updateAuthUI();
     
     // إضافة معالجة الضغط على مفتاح ESC لإغلاق القائمة
@@ -2886,6 +3076,19 @@ document.addEventListener("DOMContentLoaded", function() {
             closeSidebar();
             closeBudget();
             closeDetails();
+        }
+    });
+    
+    // معالجة الضغط على زر الرجوع في المتصفح
+    window.addEventListener('popstate', function(event) {
+        if (window.location.search.includes('post=')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('post');
+            if (postId) {
+                showDetails(postId);
+            }
+        } else {
+            showHome();
         }
     });
 });
