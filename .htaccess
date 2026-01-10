@@ -1,5 +1,0 @@
-RewriteEngine On
-RewriteBase /
-
-# Ad page routing
-RewriteRule ^p/([A-Za-z0-9]+)$ post.html?id=$1 [L,QSA]
