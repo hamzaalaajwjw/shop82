@@ -1,8 +1,30 @@
 # أمن وتعزيز موقع a3len.store
 RewriteEngine On
 
+# ===== النظام الأساسي =====
+# إعادة توجيه جميع الطلبات إلى index.html مع الحفاظ على المسارات
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L,QSA]
+
+# ===== نظام الروابط الجديد p/ =====
+# معالجة الروابط المباشرة /p/ID
+RewriteRule ^p/([a-zA-Z0-9]+)$ index.html [L,QSA]
+
+# ===== ريداكت من الروابط القديمة =====
+# تحويل الروابط القديمة (?post=) إلى الجديدة (/p/)
+RewriteCond %{QUERY_STRING} ^post=([^&]+)
+RewriteRule ^index\.html$ /p/%1? [R=301,L]
+
+# ===== نظام صفحات الملف الشخصي =====
+# إعادة التوجيه لصفحات الملفات الشخصية
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^profile/([a-zA-Z0-9_-]+)/?$ profile.html?slug=$1 [L,QSA]
+
+# ===== حماية الملفات الحساسة =====
 # حماية ضد هجمات الملفات الحساسة
-<FilesMatch "\.(env|log|ini|sql|bak|old)$">
+<FilesMatch "\.(env|log|ini|sql|bak|old|config|py|sh|key)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
@@ -13,36 +35,94 @@ RewriteEngine On
     Deny from all
 </FilesMatch>
 
-# إعادة التوجيه لصفحات الملفات الشخصية
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^profile/([a-zA-Z0-9_-]+)/?$ profile.html?slug=$1 [L,QSA]
+# منع الوصول لمجلدات معينة
+RewriteRule ^(database|config|logs|backups)/.*$ - [F,L]
 
-# حماية ضد هجمات XSS
+# ===== أمان HTTP Headers =====
 <IfModule mod_headers.c>
+    # حماية ضد XSS
     Header set X-XSS-Protection "1; mode=block"
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
-    Header set Content-Security-Policy "default-src 'self' https://www.gstatic.com; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline';"
+    
+    # Content Security Policy محسنة
+    Header set Content-Security-Policy "default-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://*.supabase.co; script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://*.firebaseio.com https://*.supabase.co wss://*.firebaseio.com;"
+    
+    # حماية HSTS (للمستقبل إذا كان HTTPS)
+    # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+    # منع MIME Sniffing
+    Header always set X-Content-Type-Options nosniff
+    
+    # إعدادات CORS
+    Header set Access-Control-Allow-Origin "https://a3len.store"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 </IfModule>
 
+# ===== تحسين الأداء =====
 # ضغط Gzip للملفات
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml
+    AddOutputFilter DEFLATE js css
 </IfModule>
 
-# تعطيل فهرسة المجلدات
-Options -Indexes
-
-# إعدادات الكاش
+# ===== إعدادات الكاش =====
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType image/jpg "access plus 1 year"
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
     ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/json "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/ttf "access plus 1 year"
 </IfModule>
+
+# ===== إعدادات أخرى =====
+# تعطيل فهرسة المجلدات
+Options -Indexes
+
+# منع الوصول لملف .htaccess نفسه
+<Files .htaccess>
+    Order allow,deny
+    Deny from all
+</Files>
+
+# حماية ضد hotlinking
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^https://a3len\.store/.*$ [NC]
+RewriteCond %{HTTP_REFERER} !^https://www\.a3len\.store/.*$ [NC]
+RewriteRule \.(jpg|jpeg|png|gif|webp)$ - [F,NC,L]
+
+# معالجة أخطاء مخصصة
+ErrorDocument 404 /index.html
+ErrorDocument 403 /index.html
+ErrorDocument 500 /index.html
+
+# تحسين SEO - Canonical URL
+RewriteCond %{HTTP_HOST} ^www\.a3len\.store [NC]
+RewriteRule ^(.*)$ https://a3len.store/$1 [L,R=301]
+
+# إعدادات UTF-8
+AddDefaultCharset UTF-8
+
+# منع الوصول لملفات معينة
+<FilesMatch "^(README\.md|CHANGELOG\.txt|composer\.json|package\.json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# حماية ضد SQL injection محاولات
+RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{QUERY_STRING} (cmd|command|exec|execute|passthru|shell) [NC,OR]
+RewriteCond %{QUERY_STRING} (base64_encode|localhost|mosconfig) [NC,OR]
+RewriteCond %{QUERY_STRING} (GLOBALS|REQUEST)(=|\[|%) [NC]
+RewriteRule ^(.*)$ - [F,L]
