@@ -43,11 +43,11 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     gap: 4px;
 }
 
-/* ===== نظام الروابط المباشرة للمنشورات ===== */
+/* ===== نظام الروابط المباشرة المحسن ===== */
 .post-link-system {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
     margin: 15px 0;
     padding: 12px;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(17, 24, 39, 0.8));
@@ -55,34 +55,22 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
-.post-link {
-    flex: 1;
-    padding: 10px 15px;
-    background: rgba(15, 23, 42, 0.8);
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
-    font-family: monospace;
-    font-size: 14px;
-    direction: ltr;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .copy-link-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    gap: 8px;
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.1));
     border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 16px;
+    padding: 12px 24px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    padding: 0;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
 }
 
 .copy-link-btn:hover {
@@ -105,6 +93,10 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 
 .copy-link-btn.copied img {
     filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);
+}
+
+.copy-link-btn.copied span {
+    color: #10b981;
 }
 
 @keyframes pulse {
@@ -221,6 +213,15 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
   cursor: pointer; 
   font-weight: 600;
   width: 100%;
+}
+
+.details-dialog .back-home-btn { 
+  background: linear-gradient(135deg, #6b7280, #4b5563); 
+  margin-top: 10px;
+}
+
+.details-dialog .back-home-btn:hover { 
+  background: linear-gradient(135deg, #4b5563, #374151); 
 }
 
 /* ===== إضافة نظام المصادقة ===== */
@@ -1148,17 +1149,18 @@ main {
     }
     
     .post-link-system {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .post-link {
-        font-size: 12px;
+        padding: 10px;
     }
     
     .copy-link-btn {
         width: 100%;
-        height: 44px;
+        height: 50px;
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+    
+    .copy-link-btn span {
+        font-size: 13px;
     }
 }
 
@@ -1205,6 +1207,12 @@ main {
     .form-box {
         padding: 20px;
         margin: 10px;
+    }
+    
+    .copy-link-btn {
+        height: 48px;
+        font-size: 13px;
+        padding: 8px 12px;
     }
 }
 
@@ -1364,6 +1372,7 @@ img, svg {
 <div class="details-dialog" id="detailsDialog">
   <div id="detailsContent"></div>
   <button onclick="closeDetails()">رجوع للصفحة الرئيسية</button>
+  <button class="back-home-btn" onclick="goToHomePage()" style="display:none;">← العودة للموقع</button>
 </div>
 
 <!-- Firebase -->
@@ -1526,16 +1535,66 @@ class ProgressManager {
 // تهيئة Progress Manager
 const progressManager = new ProgressManager();
 
-// ===== نظام الروابط المباشرة =====
+// ===== نظام توليد الـ Short IDs =====
+function generateShortId() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// ===== نظام الروابط المباشرة المحسن =====
 class LinkManager {
-    // توليد رابط مباشر للمنشور
-    static generatePostLink(postId) {
-        // يمكنك تغيير النطاق حسب احتياجك
+    // توليد رابط مباشر جديد باستخدام Short ID
+    static generatePostLink(shortId) {
         const domain = window.location.hostname === 'localhost' 
             ? `${window.location.protocol}//${window.location.host}`
             : 'https://a3len.store';
         
-        return `${domain}/?post=${postId}`;
+        return `${domain}/p/${shortId}`;
+    }
+    
+    // توليد أو الحصول على Short ID للمنتج
+    static async getOrCreateShortId(productId) {
+        try {
+            // التحقق إذا كان المنتج لديه shortId بالفعل
+            const snapshot = await db.ref(`products/${productId}`).once('value');
+            const product = snapshot.val();
+            
+            if (product && product.shortId) {
+                return product.shortId;
+            }
+            
+            // إنشاء shortId جديد
+            let shortId;
+            let exists = true;
+            let attempts = 0;
+            
+            // التأكد من أن الـ shortId فريد
+            while (exists && attempts < 10) {
+                shortId = generateShortId();
+                const shortIdSnapshot = await db.ref(`shortIds/${shortId}`).once('value');
+                exists = shortIdSnapshot.exists();
+                attempts++;
+            }
+            
+            if (exists) {
+                // إذا فشلنا في إنشاء ID فريد، نستخدم ID مشفر من المنتج
+                shortId = btoa(productId).replace(/[+/=]/g, '').substring(0, 6);
+            }
+            
+            // حفظ الـ shortId في قاعدة البيانات
+            await db.ref(`products/${productId}`).update({ shortId });
+            await db.ref(`shortIds/${shortId}`).set(productId);
+            
+            return shortId;
+        } catch (error) {
+            console.error('Error getting shortId:', error);
+            // Fallback: استخدام ID المشفر
+            return btoa(productId).replace(/[+/=]/g, '').substring(0, 6);
+        }
     }
     
     // نسخ الرابط إلى الحافظة
@@ -1567,31 +1626,33 @@ class LinkManager {
     }
     
     // عرض نظام الروابط في تفاصيل المنتج
-    static createLinkSection(postId) {
-        const postLink = this.generatePostLink(postId);
+    static async createLinkSection(productId) {
+        const shortId = await this.getOrCreateShortId(productId);
+        const postLink = this.generatePostLink(shortId);
         
         return `
             <div class="post-link-system">
-                <div class="post-link" id="postLink-${postId}">
-                    ${postLink}
-                </div>
-                <button class="copy-link-btn" onclick="LinkManager.copyLink('${postId}')" id="copyBtn-${postId}" title="نسخ رابط الإعلان">
+                <button class="copy-link-btn" onclick="LinkManager.copyLink('${shortId}')" id="copyBtn-${shortId}" title="نسخ رابط الإعلان">
                     <img src="img/copy.png" alt="نسخ">
+                    <span>نسخ رابط الإعلان</span>
                 </button>
             </div>
         `;
     }
     
     // نسخ الرابط مع تغيير مظهر الزر
-    static async copyLink(postId) {
-        const link = this.generatePostLink(postId);
-        const copyBtn = document.getElementById(`copyBtn-${postId}`);
+    static async copyLink(shortId) {
+        const link = this.generatePostLink(shortId);
+        const copyBtn = document.getElementById(`copyBtn-${shortId}`);
+        
+        if (!copyBtn) return;
+        
         const originalHTML = copyBtn.innerHTML;
         
         const success = await this.copyToClipboard(link);
         
         if (success) {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);"><span>تم النسخ!</span>';
             copyBtn.classList.add('copied');
             copyBtn.title = 'تم النسخ!';
             
@@ -1601,7 +1662,7 @@ class LinkManager {
                 copyBtn.title = 'نسخ رابط الإعلان';
             }, 1500);
         } else {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);">';
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);"><span>فشل النسخ</span>';
             copyBtn.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.1))';
             
             setTimeout(() => {
@@ -1611,8 +1672,27 @@ class LinkManager {
         }
     }
     
-    // التحقق من وجود معامل post في الرابط
-    static checkForPostParameter() {
+    // التحقق من وجود رابط مباشر في URL
+    static async checkForDirectLink() {
+        const path = window.location.pathname;
+        
+        if (path.startsWith('/p/')) {
+            const shortId = path.split('/')[2];
+            
+            if (shortId && shortId.length === 6) {
+                // البحث عن المنتج باستخدام الـ shortId
+                const snapshot = await db.ref(`shortIds/${shortId}`).once('value');
+                const productId = snapshot.val();
+                
+                if (productId) {
+                    // عرض تفاصيل المنتج مباشرة
+                    await showDetails(productId);
+                    return true;
+                }
+            }
+        }
+        
+        // التحقق من المعلمة القديمة للتوافق
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('post');
         
@@ -1621,6 +1701,7 @@ class LinkManager {
             showDetails(postId);
             return true;
         }
+        
         return false;
     }
 }
@@ -1657,14 +1738,12 @@ async function compressImage(imageFile) {
             const img = new Image();
             
             img.onload = function() {
-                // تحديد الأبعاد القصوى للصورة
                 const MAX_WIDTH = 1200;
                 const MAX_HEIGHT = 1200;
                 
                 let width = img.width;
                 let height = img.height;
                 
-                // تقليل الأبعاد إذا كانت الصورة كبيرة جداً
                 if (width > MAX_WIDTH || height > MAX_HEIGHT) {
                     if (width > height) {
                         if (width > MAX_WIDTH) {
@@ -1679,40 +1758,29 @@ async function compressImage(imageFile) {
                     }
                 }
                 
-                // تحديد جودة الضغط بناءً على الحجم الأصلي
-                let quality = 0.8; // جودة 80% افتراضياً
+                let quality = 0.8;
                 
-                // إذا كانت الصورة كبيرة جداً (أكبر من 2MB)، نخفض الجودة أكثر
                 if (imageFile.size > 2 * 1024 * 1024) {
                     quality = 0.6;
                 }
                 
-                // إذا كانت الصورة كبيرة جداً جداً (أكبر من 5MB)، نخفض الجودة أكثر
                 if (imageFile.size > 5 * 1024 * 1024) {
                     quality = 0.4;
                 }
                 
-                // إنشاء عنصر Canvas
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
                 
                 const ctx = canvas.getContext('2d');
-                
-                // رسم الصورة على Canvas
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // تحويل Canvas إلى Blob مع ضغط
                 canvas.toBlob(function(blob) {
                     if (!blob) {
                         reject(new Error('فشل في ضغط الصورة'));
                         return;
                     }
                     
-                    console.log(`✅ تم ضغط الصورة: ${(imageFile.size / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-                    console.log(`📊 نسبة الضغط: ${Math.round((1 - (blob.size / imageFile.size)) * 100)}%`);
-                    
-                    // إنشاء File جديد من Blob المضغوط
                     const compressedFile = new File([blob], imageFile.name, {
                         type: 'image/jpeg',
                         lastModified: Date.now()
@@ -1746,7 +1814,6 @@ class ApprovalSystem {
         EDITED_PENDING: 'edited_pending'
     };
     
-    // تسجيل نشاط الموافقة
     static async logApprovalAction(adminId, productId, action, reason = '') {
         try {
             const logRef = db.ref('approval_logs').push();
@@ -1764,7 +1831,6 @@ class ApprovalSystem {
         }
     }
     
-    // إرسال إشعار للمستخدم
     static async sendNotification(userId, title, message) {
         try {
             const notificationRef = db.ref('notifications/' + userId).push();
@@ -1786,40 +1852,24 @@ class ApprovalSystem {
 class ImageManager {
     static async uploadProductImages(images) {
         const imageUrls = [];
-        console.log('📤 بدء رفع', images.length, 'صورة');
         
         for (let i = 0; i < images.length; i++) {
             let file = images[i];
             const originalSize = file.size;
             
-            // ضغط الصورة قبل الرفع
-            console.log(`🔧 جاري ضغط الصورة ${i + 1}...`);
-            progressManager.updateOverlayText("جاري معالجة الصورة...", "قد يستغرق بضع ثوان");
-            
             try {
-                // ضغط الصورة إذا كانت أكبر من 500KB
                 if (file.size > 500 * 1024) {
-                    console.log(`📦 حجم الصورة الأصلي: ${(file.size / 1024).toFixed(1)}KB`);
                     file = await compressImage(file);
-                    console.log(`✅ تم ضغط الصورة بنجاح`);
-                } else {
-                    console.log(`📦 الصورة صغيرة (${(file.size / 1024).toFixed(1)}KB)، لا تحتاج لضغط`);
                 }
             } catch (compressError) {
                 console.error('⚠️ فشل ضغط الصورة، سيتم رفع الأصل:', compressError.message);
-                // نستمر بالملف الأصلي في حالة الفشل
             }
             
-            // اسم ملف بسيط مع الوقت
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 10);
-            const fileExtension = 'jpg'; // دائماً نستخدم jpeg بعد الضغط
-            const fileName = `${timestamp}_${random}.${fileExtension}`;
+            const fileName = `${timestamp}_${random}.jpg`;
             
             try {
-                progressManager.updateOverlayText("جاري رفع الصورة...", "يرجى الانتظار");
-                
-                // رفع الصورة إلى Supabase
                 const { data, error } = await supabaseClient.storage
                     .from('ads-images')
                     .upload(`products/${fileName}`, file);
@@ -1829,14 +1879,12 @@ class ImageManager {
                     continue;
                 }
                 
-                // جلب الرابط
                 const { data: urlData } = await supabaseClient.storage
                     .from('ads-images')
                     .getPublicUrl(`products/${fileName}`);
                 
                 if (urlData?.publicUrl) {
                     imageUrls.push(urlData.publicUrl);
-                    console.log(`✅ تم الرفع: ${(file.size / 1024).toFixed(1)}KB`);
                 }
                 
             } catch (err) {
@@ -1844,14 +1892,11 @@ class ImageManager {
             }
         }
         
-        console.log('🎯 النتيجة:', imageUrls.length, 'من', images.length, 'صورة مرفوعة');
         return imageUrls;
     }
     
-    // حذف الصورة من Supabase
     static async deleteImage(imageUrl) {
         try {
-            // استخراج اسم الملف من الرابط
             const urlParts = imageUrl.split('/');
             const fileName = urlParts[urlParts.length - 1];
             
@@ -1869,7 +1914,6 @@ class ImageManager {
                 return false;
             }
             
-            console.log(`✅ تم حذف الصورة: ${fileName}`);
             return true;
         } catch (err) {
             console.error('❌ خطأ غير متوقع في حذف الصورة:', err.message || err);
@@ -1882,7 +1926,6 @@ class ImageManager {
             return '<div class="no-image">🚫 لا توجد صور متاحة</div>';
         }
         
-        // عرض الصورة الأولى فقط
         return `
             <div class="product-images">
                 <img src="${images[0]}" class="slider-image" alt="صورة المنتج" 
@@ -1896,14 +1939,12 @@ class ImageManager {
 function handleImageSelect(event) {
     const files = Array.from(event.target.files);
     
-    // التحقق من عدد الصور - صورة واحدة فقط
     if (files.length > 1) {
         alert("يمكنك رفع صورة واحدة فقط كحد أقصى");
         event.target.value = '';
         return;
     }
     
-    // التحقق من نوع الملفات
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     const invalidFiles = files.filter(file => !validTypes.includes(file.type));
     
@@ -1913,8 +1954,7 @@ function handleImageSelect(event) {
         return;
     }
     
-    // التحقق من حجم الصورة (الحد الأقصى 15MB)
-    const maxSize = 15 * 1024 * 1024; // 15MB
+    const maxSize = 15 * 1024 * 1024;
     const oversizedFiles = files.filter(file => file.size > maxSize);
     
     if (oversizedFiles.length > 0) {
@@ -1923,10 +1963,7 @@ function handleImageSelect(event) {
         return;
     }
     
-    // تحديث الصور المحددة - صورة واحدة فقط
     selectedImages = files.slice(0, 1);
-    
-    // عرض المعاينة
     displayImagePreview();
 }
 
@@ -1934,7 +1971,6 @@ function displayImagePreview() {
     const previewContainer = document.getElementById('imagePreview');
     if (!previewContainer) return;
     
-    // مسح المعاينة السابقة
     imagePreviewUrls = [];
     previewContainer.innerHTML = '';
     
@@ -1943,7 +1979,6 @@ function displayImagePreview() {
         return;
     }
     
-    // إنشاء معاينة للصورة المختارة
     selectedImages.forEach((file, index) => {
         const reader = new FileReader();
         
@@ -1973,7 +2008,6 @@ function removeImage(index) {
     imagePreviewUrls.splice(index, 1);
     displayImagePreview();
     
-    // تحديث input file
     const imageInput = document.getElementById('images');
     if (imageInput) {
         imageInput.value = '';
@@ -2074,7 +2108,6 @@ function loadProducts() {
     const s = searchInput ? searchInput.value.toLowerCase() : '';
     const c = catSelect ? catSelect.value : '';
     
-    // عرض Skeleton Loading
     const productsContainer = document.getElementById('products');
     if (productsContainer) {
         productsContainer.innerHTML = progressManager.createSkeletonCards(6);
@@ -2095,28 +2128,20 @@ function loadProducts() {
             
             const price = parseFloat(p.price) || 0;
             
-            // تحديد ما إذا كان يجب عرض الإعلان
             let showPost = false;
-            
-            // حالة الإعلان
             const status = p.status || ApprovalSystem.STATUS.PENDING;
             
-            // إذا كان المستخدم مسجلاً
             if (userUid) {
-                // إذا كان المسؤول يرى كل شيء
                 if (isAdmin) {
                     showPost = true;
                 }
-                // إذا كان مالك الإعلان يرى إعلاناته بجميع حالاتها
                 else if (p.uid === userUid) {
                     showPost = true;
                 }
-                // إذا كان الإعلان معتمداً، يظهر للجميع
                 else if (status === ApprovalSystem.STATUS.APPROVED) {
                     showPost = true;
                 }
             }
-            // إذا لم يكن مسجلاً، يرى فقط الإعلانات المعتمدة
             else if (status === ApprovalSystem.STATUS.APPROVED) {
                 showPost = true;
             }
@@ -2126,12 +2151,10 @@ function loadProducts() {
             if ((!c || p.category === c) && p.name.toLowerCase().includes(s)) {
                 if (budget && price > budget) return;
                 
-                // تحديد لون وشكل الحالة
                 let statusBadge = '';
                 let statusClass = '';
                 let statusText = '';
                 
-                // عرض حالة المنتج الفعلية (status2) إذا كانت معتمدة
                 if (status === ApprovalSystem.STATUS.APPROVED) {
                     const actualStatus = p.status2 || 'available';
                     
@@ -2153,7 +2176,6 @@ function loadProducts() {
                             statusText = '✅ متاح';
                     }
                 } else {
-                    // حالات الموافقة الأخرى
                     switch(status) {
                         case ApprovalSystem.STATUS.PENDING:
                             statusClass = 'status-pending';
@@ -2173,7 +2195,6 @@ function loadProducts() {
                     }
                 }
                 
-                // شريط الانتظار الأصفر للإعلانات المعلقة
                 const pendingBar = (status === ApprovalSystem.STATUS.PENDING || status === ApprovalSystem.STATUS.EDITED_PENDING) ? 
                     `<div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; font-size: 13px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.3);">
                         ⏳ بانتظار موافقة المسؤول
@@ -2181,10 +2202,7 @@ function loadProducts() {
                 
                 statusBadge = `<div class="product-status ${statusClass}">${statusText}</div>`;
                 
-                // الحصول على معلومات البائع
                 let isVerified = false;
-                
-                // التحقق من توثيق البائع
                 if (p.uid) {
                     db.ref('users/' + p.uid).once('value', (userSnap) => {
                         const userData = userSnap.val();
@@ -2194,20 +2212,10 @@ function loadProducts() {
                     });
                 }
                 
-                // عرض الصور في البطاقة
                 const imagesHTML = p.images && p.images.length > 0 
                     ? ImageManager.createImageDisplay(p.images)
                     : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
                 
-                // زر الرابط - صورة فقط
-                const copyButtonHTML = `
-                    <button class="copy-link-btn" onclick="event.stopPropagation(); LinkManager.copyLink('${k}')" 
-                            id="cardCopyBtn-${k}" title="نسخ رابط الإعلان" style="position:absolute; top:15px; left:15px; z-index:2;">
-                        <img src="img/copy.png" alt="نسخ">
-                    </button>
-                `;
-                
-                // قسم البائع - قابل للنقر إذا كان المستخدم مسجل
                 const sellerClickable = userUid ? 'onclick="viewProfile(\'' + p.uid + '\', \'' + (p.seller || '') + '\'); event.stopPropagation();"' : '';
                 
                 const sellerSection = `
@@ -2227,7 +2235,6 @@ function loadProducts() {
                     key: k,
                     html: `
                         <div class="card" onclick="showDetails('${k}')">
-                            ${copyButtonHTML}
                             ${pendingBar}
                             ${imagesHTML}
                             <h3>${escapeHTML(p.name)}</h3>
@@ -2250,7 +2257,6 @@ function loadProducts() {
             }
         });
 
-        // ترتيب البطاقات
         if (userUid) {
             htmlCards = htmlCards.sort((a, b) => {
                 if (a.uid === userUid && b.uid !== userUid) return -1;
@@ -2338,14 +2344,12 @@ async function deleteProduct(k) {
             return;
         }
         
-        // حذف الصور من Supabase
         if (product.images && product.images.length > 0) {
             for (let imageUrl of product.images) {
                 await ImageManager.deleteImage(imageUrl);
             }
         }
         
-        // تحديث عداد منتجات المستخدم
         if (product.uid) {
             db.ref('users/' + product.uid).once('value', (userSnapshot) => {
                 const userData = userSnapshot.val();
@@ -2360,7 +2364,6 @@ async function deleteProduct(k) {
             });
         }
         
-        // حذف المنتج من Firebase
         db.ref("products/" + k).remove().then(() => {
             progressManager.showSuccess("تم حذف الإعلان بنجاح");
             loadProducts();
@@ -2401,7 +2404,6 @@ async function showPublish(p = null, k = null) {
     progressManager.showTopProgressBar();
     
     setTimeout(async () => {
-        // التحقق من صلاحية النشر (للنشر الجديد فقط)
         let canPublishNow = true;
         if (!k) {
             canPublishNow = await checkPublishPermission();
@@ -2413,14 +2415,12 @@ async function showPublish(p = null, k = null) {
              <small style="color:#38bdf8; font-size:12px;">اسم البائع هو اسم المستخدم المسجل</small>` :
             `<input id="seller" placeholder="اسم البائع" value="${sellerName}" maxlength="30">`;
         
-        // إعادة تعيين الصور المختارة
         selectedImages = [];
         imagePreviewUrls = [];
         
         const content = document.getElementById("content");
         if (!content) return;
         
-        // عرض حالة الإعلان الحالي
         const currentStatus = p ? (p.status || ApprovalSystem.STATUS.PENDING) : ApprovalSystem.STATUS.PENDING;
         let statusMessage = '';
         
@@ -2472,7 +2472,6 @@ async function showPublish(p = null, k = null) {
                     <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
                 </select>
                 
-                <!-- إضافة خاصية الحالة (متاح/مباع/محجوز) -->
                 <select id="status" ${isAdmin || (p && p.uid === userUid) ? '' : 'disabled'}>
                     <option value="available" ${(p && (p.status2 === "available" || (!p.status2 && p.status === "approved"))) ? "selected" : ""}>متاح</option>
                     <option value="sold" ${p && p.status2 === "sold" ? "selected" : ""}>مباع</option>
@@ -2480,7 +2479,6 @@ async function showPublish(p = null, k = null) {
                 </select>
                 <small style="color:#9ca3af; font-size:12px;">${isAdmin ? 'تغيير حالة الإعلان' : 'يمكنك تغيير الحالة بعد النشر'}</small>
                 
-                <!-- رفع الصور - صورة واحدة فقط -->
                 <div class="image-upload-container">
                     <label class="file-input-label">
                         📷 اختر صورة الإعلان (صورة واحدة فقط)
@@ -2509,7 +2507,6 @@ async function showPublish(p = null, k = null) {
                 ${p ? `<button onclick="showHome()" style="background:linear-gradient(135deg, #6b7280, #4b5563); margin-top:10px;">إلغاء</button>` : ''}
             </div>`;
             
-            // تحديث عرض المؤقت إذا كان غير متاح
             if (!p && !canPublishNow) {
                 updatePublishTimerDisplay();
             }
@@ -2520,7 +2517,6 @@ async function showPublish(p = null, k = null) {
 
 // ===== دالة حفظ المنتج مع نظام الموافقة =====
 async function saveProduct(k) {
-    // التحقق من المؤقت للنشر الجديد فقط
     if (!k) {
         const canPublishNow = await checkPublishPermission();
         if (!canPublishNow) {
@@ -2579,7 +2575,6 @@ async function saveProduct(k) {
         let imageUrls = [];
         let oldImages = [];
         
-        // إذا كان تعديلاً، احتفظ بالصورة الحالية
         if (k) {
             const productRef = db.ref("products/" + k);
             const snapshot = await productRef.once("value");
@@ -2590,18 +2585,15 @@ async function saveProduct(k) {
             }
         }
         
-        // إذا تم اختيار صور جديدة، حذف القديمة ورفع الجديدة
         if (selectedImages.length > 0) {
             progressManager.updateOverlayText("جاري معالجة الصورة...", "سيتم ضغط الصورة تلقائياً");
             
-            // حذف الصور القديمة إذا كانت موجودة
             if (oldImages.length > 0) {
                 for (let oldImage of oldImages) {
                     await ImageManager.deleteImage(oldImage);
                 }
             }
             
-            // رفع الصور الجديدة (سيتم ضغطها تلقائياً في uploadProductImages)
             const uploadedUrls = await ImageManager.uploadProductImages(selectedImages.slice(0, 1));
             
             if (uploadedUrls.length > 0) {
@@ -2609,7 +2601,6 @@ async function saveProduct(k) {
             }
         }
         
-        // تحضير بيانات المنتج
         const data = {
             name: name,
             price: priceNum,
@@ -2623,19 +2614,15 @@ async function saveProduct(k) {
             lastUpdated: firebase.database.ServerValue.TIMESTAMP
         };
         
-        // تحديد حالة الإعلان بناءً على ما إذا كان جديداً أو تعديلاً
         if (!k) {
-            // إعلان جديد: حالة معلقة
             data.status = ApprovalSystem.STATUS.PENDING;
             data.createdAt = firebase.database.ServerValue.TIMESTAMP;
             data.timestamp = firebase.database.ServerValue.TIMESTAMP;
         } else {
-            // تعديل إعلان موجود
             const productRef = db.ref("products/" + k);
             const snapshot = await productRef.once("value");
             const existingProduct = snapshot.val();
             
-            // إذا كان الإعلان معتمداً مسبقاً، يصبح التعديل معلقاً
             if (existingProduct && existingProduct.status === ApprovalSystem.STATUS.APPROVED) {
                 data.status = ApprovalSystem.STATUS.EDITED_PENDING;
                 data.originalData = {
@@ -2650,26 +2637,20 @@ async function saveProduct(k) {
                     images: existingProduct.images || []
                 };
             } else {
-                // إذا كان معلقاً سابقاً، يبقى معلقاً
                 data.status = existingProduct?.status || ApprovalSystem.STATUS.PENDING;
             }
         }
         
-        // إضافة الصور إذا كانت موجودة
         if (imageUrls.length > 0) {
             data.images = imageUrls;
         }
         
-        // حفظ المنتج في Firebase
         const ref = k ? db.ref("products/" + k) : db.ref("products").push();
         await ref.set(data);
         
-        // تحديث الوقت والحساب للنشر الجديد فقط
         if (!k && userUid) {
-            // حفظ وقت النشر الأخير
             saveLastPublishTime();
             
-            // تحديث عداد منتجات المستخدم
             db.ref('users/' + userUid).once('value', (snapshot) => {
                 const userData = snapshot.val();
                 if (userData) {
@@ -2687,9 +2668,7 @@ async function saveProduct(k) {
             });
         }
         
-        // إرسال إشعار للمسؤول
         if (userUid && isAdmin) {
-            // إذا كان المسؤول هو من ينشر، يعتمد مباشرة
             db.ref("products/" + ref.key).update({
                 status: ApprovalSystem.STATUS.APPROVED,
                 approvedAt: firebase.database.ServerValue.TIMESTAMP,
@@ -2701,7 +2680,6 @@ async function saveProduct(k) {
             progressManager.showSuccess(k ? "تم تحديث الإعلان بنجاح وجاري انتظار الموافقة" : "تم نشر الإعلان بنجاح وجاري انتظار الموافقة");
         }
         
-        // إعادة تعيين المتغيرات
         selectedImages = [];
         imagePreviewUrls = [];
         
@@ -2720,29 +2698,28 @@ async function saveProduct(k) {
 }
 
 // ===== دالة عرض التفاصيل مع نظام الروابط =====
-function showDetails(k) {
+async function showDetails(k) {
     progressManager.showOverlay("جاري التحميل...", "انتظر قليلاً");
     
-    db.ref("products/" + k).once("value", snap => {
-        const p = snap.val();
+    try {
+        const snapshot = await db.ref("products/" + k).once("value");
+        const p = snapshot.val();
+        
         if (!p) {
             progressManager.hideOverlay();
             alert("الإعلان غير موجود أو تم حذفه");
             return;
         }
         
-        // التحقق من توثيق البائع
         let isVerified = false;
         if (p.uid) {
-            db.ref('users/' + p.uid).once('value', (userSnap) => {
-                const userData = userSnap.val();
-                if (userData) {
-                    isVerified = userData.isVerified || false;
-                }
-            });
+            const userSnap = await db.ref('users/' + p.uid).once('value');
+            const userData = userSnap.val();
+            if (userData) {
+                isVerified = userData.isVerified || false;
+            }
         }
         
-        // عرض الصور في التفاصيل
         const imagesHTML = p.images && p.images.length > 0 
             ? ImageManager.createImageDisplay(p.images)
             : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
@@ -2781,7 +2758,6 @@ function showDetails(k) {
                 approvalStatusText = '✅ معتمد';
         }
         
-        // عرض الحالة الفعلية للمنتج
         const actualStatus = p.status2 || 'available';
         let actualStatusText = '';
         let actualStatusColor = '#10b981';
@@ -2805,13 +2781,15 @@ function showDetails(k) {
         }
         
         const detailsContent = document.getElementById("detailsContent");
+        const linkSection = await LinkManager.createLinkSection(k);
+        
         if (detailsContent) {
             detailsContent.innerHTML = `
                 <h2>${escapeHTML(p.name)}</h2>
                 ${imagesHTML}
                 
                 <!-- نظام الروابط المباشرة -->
-                ${LinkManager.createLinkSection(k)}
+                ${linkSection}
                 
                 <p><strong>حالة الموافقة:</strong> <span style="font-weight:bold; color:${approvalStatus === ApprovalSystem.STATUS.PENDING || approvalStatus === ApprovalSystem.STATUS.EDITED_PENDING ? '#f59e0b' : approvalStatus === ApprovalSystem.STATUS.REJECTED ? '#ef4444' : '#10b981'}">${approvalStatusText}</span></p>
                 <p><strong>حالة المنتج:</strong> <span style="font-weight:bold; color:${actualStatusColor}">${actualStatusText}</span></p>
@@ -2828,14 +2806,27 @@ function showDetails(k) {
         const dialog = document.getElementById("detailsDialog");
         if (dialog) {
             dialog.style.display = "block";
+            
+            // التحقق إذا كان المستخدم قد فتح المنشور من رابط مباشر
+            const isDirectLink = window.location.pathname.startsWith('/p/') || window.location.search.includes('post=');
+            const backHomeBtn = dialog.querySelector('.back-home-btn');
+            const normalBackBtn = dialog.querySelector('button:not(.back-home-btn)');
+            
+            if (isDirectLink) {
+                if (normalBackBtn) normalBackBtn.style.display = 'none';
+                if (backHomeBtn) backHomeBtn.style.display = 'block';
+            } else {
+                if (normalBackBtn) normalBackBtn.style.display = 'block';
+                if (backHomeBtn) backHomeBtn.style.display = 'none';
+            }
         }
         
         progressManager.hideOverlay();
-    }).catch(error => {
+    } catch (error) {
         console.error("Error loading details:", error);
         progressManager.hideOverlay();
         alert("حدث خطأ في تحميل التفاصيل");
-    });
+    }
 }
 
 function closeDetails() {
@@ -2843,6 +2834,11 @@ function closeDetails() {
     if (dialog) {
         dialog.style.display = "none";
     }
+}
+
+// ===== دالة الذهاب إلى الصفحة الرئيسية من رابط مباشر =====
+function goToHomePage() {
+    window.location.href = 'https://a3len.store';
 }
 
 // ===== دوال المصادقة =====
@@ -2943,7 +2939,6 @@ async function checkPublishPermission() {
     }
     
     return new Promise((resolve) => {
-        // التحقق من وقت النشر الأخير في قاعدة بيانات Firebase
         db.ref('users/' + userUid + '/lastPublish').once('value', (userSnap) => {
             const lastPublish = userSnap.val();
             if (!lastPublish) {
@@ -3080,11 +3075,11 @@ auth.onAuthStateChanged((user) => {
 });
 
 // بدء الصفحة الرئيسية
-document.addEventListener("DOMContentLoaded", function() {
-    // التحقق من وجود رابط منشور في URL
-    const hasPostParam = LinkManager.checkForPostParameter();
+document.addEventListener("DOMContentLoaded", async function() {
+    // التحقق من وجود رابط مباشر في URL
+    const hasDirectLink = await LinkManager.checkForDirectLink();
     
-    if (!hasPostParam) {
+    if (!hasDirectLink) {
         showHome();
     }
     
@@ -3099,18 +3094,19 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
     
-    // معالجة الضغط على زر الرجوع في المتصفح
-    window.addEventListener('popstate', function(event) {
-        if (window.location.search.includes('post=')) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const postId = urlParams.get('post');
-            if (postId) {
-                showDetails(postId);
-            }
-        } else {
-            showHome();
+    // تحديث التاريخ في الروابط القديمة
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('post')) {
+        // إعادة توجيه الروابط القديمة إلى التنسيق الجديد
+        const postId = urlParams.get('post');
+        try {
+            const shortId = await LinkManager.getOrCreateShortId(postId);
+            const newUrl = `/p/${shortId}`;
+            window.history.replaceState({}, '', newUrl);
+        } catch (error) {
+            console.error('Error updating URL:', error);
         }
-    });
+    }
 });
 </script>
 </body>
