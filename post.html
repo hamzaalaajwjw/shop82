@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>الإعلان</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="ad-page" class="container">
+  <div id="ad-content"></div>
+</div>
+
+<script src="services/supabase.js"></script>
+<script src="script.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const adId = params.get("id");
+
+loadAdPage(adId);
+</script>
+</body>
+</html>
