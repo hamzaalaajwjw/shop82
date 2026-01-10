@@ -74,37 +74,43 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
 .copy-link-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.1));
-    color: #38bdf8;
     border: 1px solid rgba(56, 189, 248, 0.3);
     border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
     transition: all 0.3s ease;
+    padding: 0;
 }
 
 .copy-link-btn:hover {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.2));
     border-color: #38bdf8;
+    transform: scale(1.05);
 }
 
 .copy-link-btn.copied {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
-    color: #10b981;
     border-color: rgba(16, 185, 129, 0.3);
+    animation: pulse 0.5s;
 }
 
 .copy-link-btn img {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     filter: brightness(0) saturate(100%) invert(69%) sepia(95%) saturate(492%) hue-rotate(162deg) brightness(98%) contrast(101%);
 }
 
 .copy-link-btn.copied img {
     filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 /* ===== Budget Dialog ===== */
@@ -1152,7 +1158,7 @@ main {
     
     .copy-link-btn {
         width: 100%;
-        justify-content: center;
+        height: 44px;
     }
 }
 
@@ -1569,9 +1575,8 @@ class LinkManager {
                 <div class="post-link" id="postLink-${postId}">
                     ${postLink}
                 </div>
-                <button class="copy-link-btn" onclick="LinkManager.copyLink('${postId}')" id="copyBtn-${postId}">
+                <button class="copy-link-btn" onclick="LinkManager.copyLink('${postId}')" id="copyBtn-${postId}" title="نسخ رابط الإعلان">
                     <img src="img/copy.png" alt="نسخ">
-                    نسخ الرابط
                 </button>
             </div>
         `;
@@ -1581,28 +1586,28 @@ class LinkManager {
     static async copyLink(postId) {
         const link = this.generatePostLink(postId);
         const copyBtn = document.getElementById(`copyBtn-${postId}`);
-        const originalText = copyBtn.innerHTML;
+        const originalHTML = copyBtn.innerHTML;
         
         const success = await this.copyToClipboard(link);
         
         if (success) {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="نسخ"> ✓ تم النسخ!';
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);">';
             copyBtn.classList.add('copied');
+            copyBtn.title = 'تم النسخ!';
             
             setTimeout(() => {
-                copyBtn.innerHTML = originalText;
+                copyBtn.innerHTML = originalHTML;
                 copyBtn.classList.remove('copied');
-            }, 2000);
+                copyBtn.title = 'نسخ رابط الإعلان';
+            }, 1500);
         } else {
-            copyBtn.innerHTML = '<img src="img/copy.png" alt="نسخ"> ✗ فشل النسخ';
+            copyBtn.innerHTML = '<img src="img/copy.png" alt="✗" style="filter: brightness(0) saturate(100%) invert(28%) sepia(96%) saturate(6762%) hue-rotate(354deg) brightness(96%) contrast(99%);">';
             copyBtn.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.1))';
-            copyBtn.style.color = '#ef4444';
             
             setTimeout(() => {
-                copyBtn.innerHTML = originalText;
+                copyBtn.innerHTML = originalHTML;
                 copyBtn.style.background = '';
-                copyBtn.style.color = '';
-            }, 2000);
+            }, 1500);
         }
     }
     
@@ -2194,25 +2199,35 @@ function loadProducts() {
                     ? ImageManager.createImageDisplay(p.images)
                     : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
                 
-                const sellerSection = userDisplayName ? 
-                    `<div class="seller">
-                        👤 <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')">
+                // زر الرابط - صورة فقط
+                const copyButtonHTML = `
+                    <button class="copy-link-btn" onclick="event.stopPropagation(); LinkManager.copyLink('${k}')" 
+                            id="cardCopyBtn-${k}" title="نسخ رابط الإعلان" style="position:absolute; top:15px; left:15px; z-index:2;">
+                        <img src="img/copy.png" alt="نسخ">
+                    </button>
+                `;
+                
+                // قسم البائع - قابل للنقر إذا كان المستخدم مسجل
+                const sellerClickable = userUid ? 'onclick="viewProfile(\'' + p.uid + '\', \'' + (p.seller || '') + '\'); event.stopPropagation();"' : '';
+                
+                const sellerSection = `
+                    <div class="seller" ${sellerClickable} style="${userUid ? 'cursor:pointer;' : ''}">
+                        👤 <span style="${userUid ? 'color:#38bdf8; text-decoration:underline;' : ''}">
                             <span class="user-name-wrapper">
                                 ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
-                                ${p.seller}
+                                ${p.seller || 'غير معروف'}
                             </span>
                         </span> 
-                        | ☎ ${p.phone}
-                    </div>` :
-                    `<div class="seller">
-                        👤 ${p.seller} | ☎ ${p.phone}
-                    </div>`;
+                        | ☎ ${p.phone || 'غير متوفر'}
+                    </div>
+                `;
                 
                 htmlCards.push({
                     uid: p.uid,
                     key: k,
                     html: `
                         <div class="card" onclick="showDetails('${k}')">
+                            ${copyButtonHTML}
                             ${pendingBar}
                             ${imagesHTML}
                             <h3>${escapeHTML(p.name)}</h3>
@@ -2732,19 +2747,19 @@ function showDetails(k) {
             ? ImageManager.createImageDisplay(p.images)
             : '<div class="no-image">🚫 لا توجد صور متاحة</div>';
         
-        const sellerWithLink = userDisplayName ? 
-            `<p><strong>البائع:</strong> <span class="seller-link" onclick="viewProfile('${p.uid}', '${p.seller}')" style="font-weight:bold;">
-                <span class="user-name-wrapper">
-                    ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
-                    ${p.seller}
+        const sellerClickable = userUid ? 'onclick="viewProfile(\'' + p.uid + '\', \'' + (p.seller || '') + '\');"' : '';
+        
+        const sellerWithLink = `
+            <p ${sellerClickable} style="${userUid ? 'cursor:pointer;' : ''}">
+                <strong>البائع:</strong> 
+                <span style="${userUid ? 'color:#38bdf8; text-decoration:underline; font-weight:bold;' : 'font-weight:bold;'}">
+                    <span class="user-name-wrapper">
+                        ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
+                        ${p.seller || 'غير معروف'}
+                    </span>
                 </span>
-            </span></p>` :
-            `<p><strong>البائع:</strong> 
-                <span class="user-name-wrapper">
-                    ${isVerified ? '<span class="verified-badge"><img src="img/verify.png" alt="✓"> موثّق</span>' : ''}
-                    ${p.seller}
-                </span>
-            </p>`;
+            </p>
+        `;
         
         const approvalStatus = p.status || ApprovalSystem.STATUS.PENDING;
         let approvalStatusText = '';
@@ -2891,6 +2906,11 @@ function logoutUser() {
 }
 
 function viewProfile(userId, sellerName) {
+    if (!userUid) {
+        alert("يجب تسجيل الدخول أولاً لعرض الملف الشخصي");
+        return;
+    }
+    
     if (sellerName) {
         localStorage.setItem('profileSellerName', sellerName);
     }
