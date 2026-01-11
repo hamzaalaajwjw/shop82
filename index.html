@@ -43,11 +43,12 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     gap: 4px;
 }
 
-/* ===== نظام الروابط المباشرة المحسن ===== */
+/* ===== نظام الروابط المباشرة البسيط ===== */
 .post-link-system {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
     margin: 15px 0;
     padding: 12px;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(17, 24, 39, 0.8));
@@ -69,7 +70,7 @@ body, input, select, button, textarea { font-family: 'CustomFont', sans-serif; }
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
-    max-width: 200px;
+    max-width: 250px;
     margin: 0 auto;
 }
 
@@ -1537,7 +1538,7 @@ const progressManager = new ProgressManager();
 
 // ===== نظام توليد الـ Short IDs =====
 function generateShortId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < 6; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -1545,67 +1546,46 @@ function generateShortId() {
     return result;
 }
 
-// ===== نظام الروابط المباشرة المحسن =====
-class LinkManager {
-    // توليد رابط مباشر جديد باستخدام Short ID
-    static generatePostLink(shortId) {
-        const domain = window.location.hostname === 'localhost' 
-            ? `${window.location.protocol}//${window.location.host}`
-            : 'https://a3len.store';
-        
-        return `${domain}/p/${shortId}`;
-    }
-    
-    // توليد أو الحصول على Short ID للمنتج
-    static async getOrCreateShortId(productId) {
-        try {
-            // التحقق إذا كان المنتج لديه shortId بالفعل
-            const snapshot = await db.ref(`products/${productId}`).once('value');
-            const product = snapshot.val();
-            
-            if (product && product.shortId) {
-                return product.shortId;
-            }
-            
-            // إنشاء shortId جديد
-            let shortId;
-            let exists = true;
-            let attempts = 0;
-            
-            // التأكد من أن الـ shortId فريد
-            while (exists && attempts < 10) {
-                shortId = generateShortId();
-                const shortIdSnapshot = await db.ref(`shortIds/${shortId}`).once('value');
-                exists = shortIdSnapshot.exists();
-                attempts++;
-            }
-            
-            if (exists) {
-                // إذا فشلنا في إنشاء ID فريد، نستخدم ID مشفر من المنتج
-                shortId = btoa(productId).replace(/[+/=]/g, '').substring(0, 6);
-            }
-            
-            // حفظ الـ shortId في قاعدة البيانات
-            await db.ref(`products/${productId}`).update({ shortId });
-            await db.ref(`shortIds/${shortId}`).set(productId);
-            
-            return shortId;
-        } catch (error) {
-            console.error('Error getting shortId:', error);
-            // Fallback: استخدام ID المشفر
-            return btoa(productId).replace(/[+/=]/g, '').substring(0, 6);
+// توليد أو الحصول على Short ID للمنتج
+async function generateShortIdForProduct(productId) {
+    try {
+        // توليد ID قصير مكون من 6 أحرف
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let shortId = '';
+        for (let i = 0; i < 6; i++) {
+            shortId += chars.charAt(Math.floor(Math.random() * chars.length));
         }
+        
+        // حفظ في قاعدة البيانات
+        await db.ref('shortIds').child(shortId).set(productId);
+        await db.ref('products').child(productId).update({ shortId: shortId });
+        
+        return shortId;
+    } catch (error) {
+        console.error('Error generating short ID:', error);
+        // Fallback: استخدام آخر 6 أحرف من ID المنتج
+        return productId.substring(productId.length - 6);
+    }
+}
+
+// ===== نظام الروابط المباشرة البسيط =====
+class SimpleLinkManager {
+    // توليد رابط جديد - استخدم الهاش (#)
+    static generatePostLink(shortId) {
+        return `https://a3len.store/#p${shortId}`;
     }
     
-    // نسخ الرابط إلى الحافظة
-    static async copyToClipboard(text) {
+    // نسخ الرابط
+    static async copyLink(shortId) {
+        const link = this.generatePostLink(shortId);
+        
         try {
-            await navigator.clipboard.writeText(text);
-            return true;
+            await navigator.clipboard.writeText(link);
+            return { success: true, link: link };
         } catch (err) {
             // Fallback للأنظمة القديمة
             const textArea = document.createElement('textarea');
-            textArea.value = text;
+            textArea.value = link;
             textArea.style.position = 'fixed';
             textArea.style.left = '-999999px';
             textArea.style.top = '-999999px';
@@ -1616,42 +1596,56 @@ class LinkManager {
             try {
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                return true;
+                return { success: true, link: link };
             } catch (e) {
                 console.error('Fallback copy failed:', e);
                 document.body.removeChild(textArea);
-                return false;
+                return { success: false, link: link };
             }
         }
     }
     
-    // عرض نظام الروابط في تفاصيل المنتج
+    // إنشاء قسم الروابط في التفاصيل
     static async createLinkSection(productId) {
-        const shortId = await this.getOrCreateShortId(productId);
-        const postLink = this.generatePostLink(shortId);
-        
-        return `
-            <div class="post-link-system">
-                <button class="copy-link-btn" onclick="LinkManager.copyLink('${shortId}')" id="copyBtn-${shortId}" title="نسخ رابط الإعلان">
-                    <img src="img/copy.png" alt="نسخ">
-                    <span>نسخ رابط الإعلان</span>
-                </button>
-            </div>
-        `;
+        try {
+            // الحصول على أو إنشاء shortId للمنتج
+            const snapshot = await db.ref(`products/${productId}/shortId`).once('value');
+            let shortId = snapshot.val();
+            
+            if (!shortId || shortId.length !== 6) {
+                shortId = await generateShortIdForProduct(productId);
+            }
+            
+            const postLink = this.generatePostLink(shortId);
+            
+            return `
+                <div class="post-link-system">
+                    <button class="copy-link-btn" onclick="SimpleLinkManager.copyLinkButton('${shortId}')" 
+                            id="copyBtn-${shortId}" title="نسخ رابط الإعلان">
+                        <img src="img/copy.png" alt="نسخ">
+                        <span>📋 نسخ رابط الإعلان</span>
+                    </button>
+                    <small style="color:#9ca3af; font-size:12px; display:block; margin-top:5px;">
+                        ${postLink}
+                    </small>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error creating link section:', error);
+            return '<div style="color:#ef4444; text-align:center;">فشل في توليد الرابط</div>';
+        }
     }
     
     // نسخ الرابط مع تغيير مظهر الزر
-    static async copyLink(shortId) {
-        const link = this.generatePostLink(shortId);
+    static async copyLinkButton(shortId) {
+        const result = await this.copyLink(shortId);
         const copyBtn = document.getElementById(`copyBtn-${shortId}`);
         
         if (!copyBtn) return;
         
         const originalHTML = copyBtn.innerHTML;
         
-        const success = await this.copyToClipboard(link);
-        
-        if (success) {
+        if (result.success) {
             copyBtn.innerHTML = '<img src="img/copy.png" alt="✓" style="filter: brightness(0) saturate(100%) invert(61%) sepia(74%) saturate(444%) hue-rotate(107deg) brightness(91%) contrast(92%);"><span>تم النسخ!</span>';
             copyBtn.classList.add('copied');
             copyBtn.title = 'تم النسخ!';
@@ -1672,36 +1666,22 @@ class LinkManager {
         }
     }
     
-    // التحقق من وجود رابط مباشر في URL
-    static async checkForDirectLink() {
-        const path = window.location.pathname;
+    // التحقق من الروابط في الهاش
+    static async checkHashLinks() {
+        const hash = window.location.hash;
         
-        if (path.startsWith('/p/')) {
-            const shortId = path.split('/')[2];
-            
-            if (shortId && shortId.length === 6) {
-                // البحث عن المنتج باستخدام الـ shortId
-                const snapshot = await db.ref(`shortIds/${shortId}`).once('value');
+        if (hash.startsWith('#p') && hash.length === 8) { // #p + 6 chars
+            const shortId = hash.substring(2); // إزالة #p
+            if (shortId.length === 6) {
+                // ابحث عن المنتج بواسطة shortId
+                const snapshot = await db.ref('shortIds').child(shortId).once('value');
                 const productId = snapshot.val();
-                
                 if (productId) {
-                    // عرض تفاصيل المنتج مباشرة
-                    await showDetails(productId);
+                    showDetails(productId);
                     return true;
                 }
             }
         }
-        
-        // التحقق من المعلمة القديمة للتوافق
-        const urlParams = new URLSearchParams(window.location.search);
-        const postId = urlParams.get('post');
-        
-        if (postId) {
-            // عرض تفاصيل المنشور مباشرة
-            showDetails(postId);
-            return true;
-        }
-        
         return false;
     }
 }
@@ -1855,7 +1835,6 @@ class ImageManager {
         
         for (let i = 0; i < images.length; i++) {
             let file = images[i];
-            const originalSize = file.size;
             
             try {
                 if (file.size > 500 * 1024) {
@@ -2648,6 +2627,9 @@ async function saveProduct(k) {
         const ref = k ? db.ref("products/" + k) : db.ref("products").push();
         await ref.set(data);
         
+        // توليد shortId بعد الحفظ
+        const shortId = await generateShortIdForProduct(ref.key);
+        
         if (!k && userUid) {
             saveLastPublishTime();
             
@@ -2668,6 +2650,9 @@ async function saveProduct(k) {
             });
         }
         
+        // نسخ الرابط تلقائياً بعد النجاح
+        const linkResult = await SimpleLinkManager.copyLink(shortId);
+        
         if (userUid && isAdmin) {
             db.ref("products/" + ref.key).update({
                 status: ApprovalSystem.STATUS.APPROVED,
@@ -2675,9 +2660,17 @@ async function saveProduct(k) {
                 approvedBy: userUid
             });
             
-            progressManager.showSuccess("تم نشر الإعلان بنجاح وتم اعتماده تلقائياً");
+            if (linkResult.success) {
+                progressManager.showSuccess(`تم نشر الإعلان واعتماده تلقائياً\n✅ تم نسخ الرابط: a3len.store/#p${shortId}`);
+            } else {
+                progressManager.showSuccess("تم نشر الإعلان واعتماده تلقائياً\n🔗 الرابط: a3len.store/#p" + shortId);
+            }
         } else {
-            progressManager.showSuccess(k ? "تم تحديث الإعلان بنجاح وجاري انتظار الموافقة" : "تم نشر الإعلان بنجاح وجاري انتظار الموافقة");
+            if (linkResult.success) {
+                progressManager.showSuccess(k ? `تم تحديث الإعلان بنجاح\n✅ تم نسخ الرابط: a3len.store/#p${shortId}` : `تم نشر الإعلان بنجاح\n✅ تم نسخ الرابط: a3len.store/#p${shortId}`);
+            } else {
+                progressManager.showSuccess(k ? "تم تحديث الإعلان بنجاح\n🔗 الرابط: a3len.store/#p" + shortId : "تم نشر الإعلان بنجاح\n🔗 الرابط: a3len.store/#p" + shortId);
+            }
         }
         
         selectedImages = [];
@@ -2685,7 +2678,7 @@ async function saveProduct(k) {
         
         setTimeout(() => {
             showHome();
-        }, 1000);
+        }, 1500);
         
     } catch (error) {
         console.error("Error saving product:", error);
@@ -2781,7 +2774,7 @@ async function showDetails(k) {
         }
         
         const detailsContent = document.getElementById("detailsContent");
-        const linkSection = await LinkManager.createLinkSection(k);
+        const linkSection = await SimpleLinkManager.createLinkSection(k);
         
         if (detailsContent) {
             detailsContent.innerHTML = `
@@ -2807,8 +2800,8 @@ async function showDetails(k) {
         if (dialog) {
             dialog.style.display = "block";
             
-            // التحقق إذا كان المستخدم قد فتح المنشور من رابط مباشر
-            const isDirectLink = window.location.pathname.startsWith('/p/') || window.location.search.includes('post=');
+            // التحقق إذا كان المستخدم قد فتح المنشور من رابط مباشر (هاش)
+            const isDirectLink = window.location.hash.startsWith('#p');
             const backHomeBtn = dialog.querySelector('.back-home-btn');
             const normalBackBtn = dialog.querySelector('button:not(.back-home-btn)');
             
@@ -3076,10 +3069,10 @@ auth.onAuthStateChanged((user) => {
 
 // بدء الصفحة الرئيسية
 document.addEventListener("DOMContentLoaded", async function() {
-    // التحقق من وجود رابط مباشر في URL
-    const hasDirectLink = await LinkManager.checkForDirectLink();
+    // التحقق من وجود رابط مباشر في الهاش
+    const hasHashLink = await SimpleLinkManager.checkHashLinks();
     
-    if (!hasDirectLink) {
+    if (!hasHashLink) {
         showHome();
     }
     
@@ -3094,18 +3087,23 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
     });
     
-    // تحديث التاريخ في الروابط القديمة
+    // الاستماع لتغييرات الهاش
+    window.addEventListener('hashchange', function() {
+        SimpleLinkManager.checkHashLinks();
+    });
+    
+    // تحويل الروابط القديمة (للتوافق)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('post')) {
-        // إعادة توجيه الروابط القديمة إلى التنسيق الجديد
         const postId = urlParams.get('post');
-        try {
-            const shortId = await LinkManager.getOrCreateShortId(postId);
-            const newUrl = `/p/${shortId}`;
-            window.history.replaceState({}, '', newUrl);
-        } catch (error) {
-            console.error('Error updating URL:', error);
-        }
+        // البحث عن المنتج وعرضه
+        db.ref('products').child(postId).once('value', (snap) => {
+            if (snap.exists()) {
+                showDetails(postId);
+                // تحديث الـ URL لإزالة المعلمة
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        });
     }
 });
 </script>
