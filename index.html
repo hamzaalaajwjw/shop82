@@ -2042,6 +2042,7 @@ function loadProducts() {
                                 <span>${p.category || 'غير محدد'}</span>
                                 <span>${p.province || 'غير محدد'}</span>
                                 <span>توصيل: ${p.delivery || 'لا'}</span>
+                                ${p.area ? `<span>المنطقة: ${p.area}</span>` : ''}
                             </div>
                             ${sellerSection}
                             <div class="actions">
@@ -2272,6 +2273,12 @@ async function showPublish(p = null, k = null) {
                     <option value="">اختر المحافظة</option>
                     ${provinces.map(pr => `<option value="${pr}" ${p && p.province === pr ? "selected" : ""}>${pr}</option>`).join("")}
                 </select>
+                
+                <!-- حقل المنطقة الجديد -->
+                <input id="area" placeholder="المنطقة (20 حرف عربي فقط)" value="${p ? (p.area || "") : ""}" 
+                       maxlength="20" oninput="validateArabicArea(this)">
+                <small style="color:#9ca3af; font-size:12px;">المنطقة مثل: المنصور، الكرادة، الشعب، حي الجامعة</small>
+                
                 <select id="delivery">
                     <option value="نعم" ${p && p.delivery === "نعم" ? "selected" : ""}>نعم</option>
                     <option value="لا" ${p && p.delivery === "لا" ? "selected" : ""}>لا</option>
@@ -2323,6 +2330,29 @@ async function showPublish(p = null, k = null) {
     }, 300);
 }
 
+// ===== دالة التحقق من حقل المنطقة =====
+function validateArabicArea(input) {
+    // السماح فقط بالحروف العربية والمسافات والأرقام
+    let value = input.value;
+    
+    // إزالة أي حروف غير عربية أو أرقام
+    let cleaned = value.replace(/[^ء-ي0-9\s]/g, '');
+    
+    // التأكد من ألا يتجاوز 20 حرف
+    if (cleaned.length > 20) {
+        cleaned = cleaned.substring(0, 20);
+    }
+    
+    input.value = cleaned;
+    
+    // إضافة فئة خطأ إذا كان الحقل فارغاً ولكن المستخدم قد بدأ الكتابة
+    if (value.length > 0 && cleaned.length === 0) {
+        input.style.borderColor = '#ef4444';
+    } else {
+        input.style.borderColor = cleaned.length > 0 ? '#10b981' : '';
+    }
+}
+
 // ===== دالة حفظ المنتج مع نظام الموافقة =====
 async function saveProduct(k) {
     // التحقق من المؤقت للنشر الجديد فقط
@@ -2338,6 +2368,7 @@ async function saveProduct(k) {
     const price = document.getElementById("price")?.value.trim();
     const phone = document.getElementById("phone")?.value.trim();
     const province = document.getElementById("province")?.value;
+    const area = document.getElementById("area")?.value.trim();
     const status = document.getElementById("status")?.value || "available";
     
     if (!name || !price || !phone || !province) {
@@ -2428,6 +2459,11 @@ async function saveProduct(k) {
             lastUpdated: firebase.database.ServerValue.TIMESTAMP
         };
         
+        // إضافة المنطقة إذا تم إدخالها
+        if (area && area.length > 0) {
+            data.area = area.substring(0, 20); // التأكد من ألا تتجاوز 20 حرف
+        }
+        
         // تحديد حالة الإعلان بناءً على ما إذا كان جديداً أو تعديلاً
         if (!k) {
             // إعلان جديد: حالة معلقة
@@ -2450,6 +2486,7 @@ async function saveProduct(k) {
                     seller: existingProduct.seller,
                     phone: existingProduct.phone,
                     province: existingProduct.province,
+                    area: existingProduct.area || "",
                     delivery: existingProduct.delivery,
                     status2: existingProduct.status2 || "available",
                     images: existingProduct.images || []
@@ -2621,6 +2658,7 @@ function showDetails(k) {
                 ${sellerWithLink}
                 <p><strong>رقم الهاتف:</strong> ${p.phone}</p>
                 <p><strong>المحافظة:</strong> ${p.province || 'غير محدد'}</p>
+                ${p.area ? `<p><strong>المنطقة:</strong> ${p.area}</p>` : ''}
                 <p><strong>التوصيل:</strong> ${p.delivery || 'لا'}</p>
                 ${p.uid === userUid ? `<p style="color:#38bdf8; font-size:14px; margin-top:10px;">هذا إعلانك</p>` : ""}
             `;
